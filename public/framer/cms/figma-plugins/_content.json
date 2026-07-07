@@ -1,0 +1,462 @@
+{
+  "collection": "Figma Plugins",
+  "fields": [
+    {
+      "id": "hRIrJZw4n",
+      "name": "Image",
+      "type": "image"
+    },
+    {
+      "id": "BiqNOwiFK",
+      "name": "Title",
+      "type": "string"
+    },
+    {
+      "id": "ZOC01MTie",
+      "name": "Link",
+      "type": "link"
+    },
+    {
+      "id": "wuxeEilrb",
+      "name": "Tag",
+      "type": "string"
+    },
+    {
+      "id": "q1ympk56m",
+      "name": "Featured",
+      "type": "boolean"
+    },
+    {
+      "id": "MyFEhb8oW",
+      "name": "Featured Text",
+      "type": "enum"
+    },
+    {
+      "id": "qmcrbQtwe",
+      "name": "Content",
+      "type": "formattedText"
+    }
+  ],
+  "items": [
+    {
+      "id": "xzLOZB68p",
+      "slug": "random-hues",
+      "fields": {
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/NgfJDkcYiQmn310fN9tnvW3nhk.png",
+          "local": "public/framer/cms/figma-plugins/random-hues__image.png"
+        },
+        "Title": {
+          "type": "string",
+          "value": "Random Hues"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.figma.com/community/widget/1128028298799358676/random-hues"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Plugin"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured Text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Explore millions of color hues/shades/tones in your <strong>Figma</strong> and <strong>FigJam</strong> design files.</p>"
+        }
+      }
+    },
+    {
+      "id": "PtNgSetAi",
+      "slug": "gradient-map",
+      "fields": {
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/MxdNBc8ptgNmjzag3fH0TLOgyE.png",
+          "local": "public/framer/cms/figma-plugins/gradient-map__image.png"
+        },
+        "Title": {
+          "type": "string",
+          "value": "Gradient Map"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.figma.com/community/plugin/1280452653001223747/gradient-map"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Plugin"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured Text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Create a cool gradient map directly from the selected image in Figma.</p>"
+        }
+      }
+    },
+    {
+      "id": "d4BfjnvDJ",
+      "slug": "uilogos",
+      "fields": {
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/AEJoDeQlG4Bnqj6mmmOqRWrjVvI.png",
+          "local": "public/framer/cms/figma-plugins/uilogos__image.png"
+        },
+        "Title": {
+          "type": "string",
+          "value": "uiLogos"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.figma.com/community/plugin/1120667703468196103/uilogos"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Plugin"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured Text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p><strong>Loreum ipusm</strong> for logos.</p>"
+        }
+      }
+    },
+    {
+      "id": "bRfvY5Zje",
+      "slug": "3dicons",
+      "fields": {
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/JndtmsE8FwgB6kJ9prxca3Hqvw.png",
+          "local": "public/framer/cms/figma-plugins/3dicons__image.png"
+        },
+        "Title": {
+          "type": "string",
+          "value": "3dicons"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.figma.com/community/plugin/1107546399747513238/3dicons"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Plugin"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured Text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Use 1400+ 3dicons within Figma or Figjam files quickly.</p>"
+        }
+      }
+    },
+    {
+      "id": "E8gRNSWFH",
+      "slug": "figma-to-html",
+      "fields": {
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/moK5ko2HFkF8p38hza89DPnprc.png",
+          "local": "public/framer/cms/figma-plugins/figma-to-html__image.png"
+        },
+        "Title": {
+          "type": "string",
+          "value": "Figma to HTML"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.figma.com/community/plugin/1037108608720448600/figma-to-html-with-framer"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Plugin"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured Text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Export your Figma designs by simply copying what's on the canvas and pasting it in Framer.</p>"
+        }
+      }
+    },
+    {
+      "id": "eBh75FRMj",
+      "slug": "gif-export",
+      "fields": {
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/KA27u8Zp4kI7kC0VpTYKosOSD5E.png",
+          "local": "public/framer/cms/figma-plugins/gif-export__image.png"
+        },
+        "Title": {
+          "type": "string",
+          "value": "GIF Export"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.figma.com/community/plugin/878338850782783595/gif-export"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Plugin"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured Text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Ever wanted to export a frame with a gif in it?</p>"
+        }
+      }
+    },
+    {
+      "id": "sblaHMXIC",
+      "slug": "table-creator",
+      "fields": {
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/jYHhRyxDZHjMXMDlZpXX1fK33mk.png",
+          "local": "public/framer/cms/figma-plugins/table-creator__image.png"
+        },
+        "Title": {
+          "type": "string",
+          "value": "Table Creator"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.figma.com/community/plugin/885838970710285271/table-creator"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Plugin"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured Text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Create custom-styled tables which can be easily resized, edited and automatically adjust to content.</p>"
+        }
+      }
+    },
+    {
+      "id": "KjL4rBu33",
+      "slug": "map-maker",
+      "fields": {
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/7LqDRCwhgjNV43TEU10dKyt6U.png",
+          "local": "public/framer/cms/figma-plugins/map-maker__image.png"
+        },
+        "Title": {
+          "type": "string",
+          "value": "Map Maker"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.figma.com/community/plugin/731312569747199418/map-maker"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Plugin"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured Text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Make a customized map blazing fast.</p>"
+        }
+      }
+    },
+    {
+      "id": "DDN1wlWBj",
+      "slug": "able",
+      "fields": {
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/FY1xZjg7YmVAm962kdsOr5nyQ.png",
+          "local": "public/framer/cms/figma-plugins/able__image.png"
+        },
+        "Title": {
+          "type": "string",
+          "value": "Able"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.figma.com/community/plugin/734693888346260052/able-friction-free-accessibility"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Plugin"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured Text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Able makes accessibility easy, while looking and feeling like Figma!</p>"
+        }
+      }
+    },
+    {
+      "id": "zV5uZl0vh",
+      "slug": "content-reel",
+      "fields": {
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/lfJ2rzwlwMZGNcQWn5HB8jzPEfo.png",
+          "local": "public/framer/cms/figma-plugins/content-reel__image.png"
+        },
+        "Title": {
+          "type": "string",
+          "value": "Content Reel"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.figma.com/community/plugin/731627216655469013/content-reel"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Plugin"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured Text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Design layouts more efficiently by pulling text strings, images, and icons from one palette.</p>"
+        }
+      }
+    },
+    {
+      "id": "kNvNfZURV",
+      "slug": "curve-text",
+      "fields": {
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/AeapnuZm3PoAfayrGwLFoSK6Q.png",
+          "local": "public/framer/cms/figma-plugins/curve-text__image.png"
+        },
+        "Title": {
+          "type": "string",
+          "value": "Curve Text"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.figma.com/community/plugin/1331748701210388011"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Plugin"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured Text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>From circles, squares, arches, to custom paths – bend your text any way you want! 🧵</p>"
+        }
+      }
+    },
+    {
+      "id": "vCGejCx6w",
+      "slug": "noise-texture",
+      "fields": {
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/V8V6v1Z9tG3D2figiBK1Lt9UjtM.png",
+          "local": "public/framer/cms/figma-plugins/noise-texture__image.png"
+        },
+        "Title": {
+          "type": "string",
+          "value": "Noise & Texture"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.figma.com/community/plugin/1138854718618193875/noise-texture"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Plugin"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured Text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Dynamically generates seamless tiled noise, textures, patterns, gradients, and more</p>"
+        }
+      }
+    }
+  ]
+}

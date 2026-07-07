@@ -1,0 +1,162 @@
+{
+  "collection": "Changelog",
+  "fields": [
+    {
+      "id": "zET7qV4Nt",
+      "name": "Title",
+      "type": "string"
+    },
+    {
+      "id": "XYVM0MnSr",
+      "name": "Date",
+      "type": "date"
+    },
+    {
+      "id": "FcShjwLRE",
+      "name": "Name",
+      "type": "string"
+    },
+    {
+      "id": "zyOz6m186",
+      "name": "Emoji",
+      "type": "string"
+    },
+    {
+      "id": "a8mzqwWVP",
+      "name": "Description",
+      "type": "formattedText"
+    }
+  ],
+  "items": [
+    {
+      "id": "eK4ZyBVZc",
+      "slug": "v0-5",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "v0.5"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2024-08-30T00:00:00.000Z"
+        },
+        "Name": {
+          "type": "string",
+          "value": "Funny title"
+        },
+        "Emoji": {
+          "type": "string",
+          "value": "🖼️"
+        },
+        "Description": {
+          "type": "formattedText",
+          "value": "<p>In this update, we’ve completely overhauled the mobile interface to enhance user engagement and ensure seamless navigation across devices. Personalized user profiles now allow for a more tailored experience, while our new advanced search functionality makes finding what you need quicker and more intuitive. We’ve also beefed up security to keep your data safe and introduced an interactive feedback system, encouraging real-time communication and continuous improvement based on user input.</p><ul><li data-preset-tag=\"p\"><p>Updated button stylings across various pages</p></li><li data-preset-tag=\"p\"><p>Improved headers in blogs</p></li><li data-preset-tag=\"p\"><p>Added a new video to <a href=\"/work/spin\">/Spin</a></p></li><li data-preset-tag=\"p\"><p><br></p></li></ul>"
+        }
+      }
+    },
+    {
+      "id": "gpiEYD2UI",
+      "slug": "v0-4",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "v0.4"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2024-07-22T00:00:00.000Z"
+        },
+        "Name": {
+          "type": "string",
+          "value": "Mobile Rehab: We Cleaned Up Our Act"
+        },
+        "Emoji": {
+          "type": "string",
+          "value": "🏴‍☠️"
+        },
+        "Description": {
+          "type": "formattedText",
+          "value": "<p>In this update, we’ve completely overhauled the mobile interface to enhance user engagement and ensure seamless navigation across devices. Personalized user profiles now allow for a more tailored experience, while our new advanced search functionality makes finding what you need quicker and more intuitive. We’ve also beefed up security to keep your data safe and introduced an interactive feedback system, encouraging real-time communication and continuous improvement based on user input.</p><ul><li data-preset-tag=\"p\"><p>Overall Enhancements:</p></li><li data-preset-tag=\"p\"><p>Overhauled the mobile experience for supreme usability.</p></li><li data-preset-tag=\"p\"><p>Introduced personalized user profiles.</p></li><li data-preset-tag=\"p\"><p>Unveiled an advanced search function.</p></li><li data-preset-tag=\"p\"><p>Fortified security measures.</p></li><li data-preset-tag=\"p\"><p>Launched a real-time feedback system for continuous engagement.</p></li></ul>"
+        }
+      }
+    },
+    {
+      "id": "FQhTBUfFT",
+      "slug": "v0-3",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "v0.3"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2024-04-20T00:00:00.000Z"
+        },
+        "Name": {
+          "type": "string",
+          "value": "Navigation Nightmares No More: We Woke Up"
+        },
+        "Emoji": {
+          "type": "string",
+          "value": "🍔"
+        },
+        "Description": {
+          "type": "formattedText",
+          "value": "<p>Our latest update focuses on usability and accessibility, starting with a new collapsible sidebar that enhances site navigation without cluttering the user interface. We’ve introduced interactive tutorials to help users make the most of our features, significantly improved site speed for a frictionless experience, and made accessibility enhancements to ensure our site is welcoming to all users. Additionally, SEO enhancements have been implemented to improve visibility and drive more organic traffic.</p><ul><li data-preset-tag=\"p\"><p>Design and Usability Improvements:</p></li><li data-preset-tag=\"p\"><p>Gave the project pages a new coat of paint and smoother scrolling.</p></li><li data-preset-tag=\"p\"><p>Made testimonials easier to navigate.</p></li><li data-preset-tag=\"p\"><p>Adjusted layouts for optimal spacing.</p></li><li data-preset-tag=\"p\"><p>Enhanced the backend for easier content management.</p></li><li data-preset-tag=\"p\"><p>Added new tools to our toolkit.</p></li><li data-preset-tag=\"p\"><p>Squashed minor bugs for smoother performance.</p></li></ul>"
+        }
+      }
+    },
+    {
+      "id": "AihZn2lXp",
+      "slug": "v0-2",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "v0.2"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2024-03-19T00:00:00.000Z"
+        },
+        "Name": {
+          "type": "string",
+          "value": "Beauty and the Bugs: A Design Glow-Up"
+        },
+        "Emoji": {
+          "type": "string",
+          "value": "🍄"
+        },
+        "Description": {
+          "type": "formattedText",
+          "value": "<p>With this release, we’ve given the project pages a fresh look and smoother scrolling to enhance user interaction. The testimonials section has been redesigned for easier navigation, and overall site layouts have been optimized for consistency and usability. Our backend enhancements have streamlined content management, and new tools have been added to our toolkit to boost site functionality. We’ve also tackled and resolved minor bugs to ensure a more stable and reliable user experience.</p><ul><li data-preset-tag=\"p\"><p>Design and Usability Improvements:</p></li><li data-preset-tag=\"p\"><p>Gave the project pages a new coat of paint and smoother scrolling.</p></li><li data-preset-tag=\"p\"><p>Made testimonials easier to navigate.</p></li><li data-preset-tag=\"p\"><p>Adjusted layouts for optimal spacing.</p></li><li data-preset-tag=\"p\"><p>Enhanced the backend for easier content management.</p></li><li data-preset-tag=\"p\"><p>Added new tools to our toolkit.</p></li><li data-preset-tag=\"p\"><p>Squashed minor bugs for smoother performance.</p></li></ul>"
+        }
+      }
+    },
+    {
+      "id": "kkTAUraCA",
+      "slug": "v0-1",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "v0.1"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2024-02-14T00:00:00.000Z"
+        },
+        "Name": {
+          "type": "string",
+          "value": "Mood Swings: Now Matching Your System’s Dark Side"
+        },
+        "Emoji": {
+          "type": "string",
+          "value": "👀"
+        },
+        "Description": {
+          "type": "formattedText",
+          "value": "<p>This foundational update brings a host of enhancements starting with an automatic theme adjustment feature that matches your system’s settings, providing a personalized experience right from the start. Our color palette has been revamped for more vibrant and engaging visuals, and button interactions have been enhanced for fun usability. We’ve completely overhauled the experience section to deepen user engagement, added a quick-copy email feature for convenience, and refined our spatial arrangements for a polished look. Additionally, the footer has been redesigned for better aesthetics, and the layers page is now prominently featured on the homepage for easier access. We’ve also ironed out minor glitches to ensure smoother navigation and overall performance.</p><ul><li data-preset-tag=\"p\"><p>Site-Wide Updates:</p></li><li data-preset-tag=\"p\"><p>Adapted our site to automatically match your system’s theme.</p></li><li data-preset-tag=\"p\"><p>Revamped our color palette for a more vibrant look.</p></li><li data-preset-tag=\"p\"><p>Enhanced button interactions for fun usability.</p></li><li data-preset-tag=\"p\"><p>Completely overhauled the experience section.</p></li><li data-preset-tag=\"p\"><p>Added a quick copy feature for email.</p></li><li data-preset-tag=\"p\"><p>Refined our spacing across all pages.</p></li><li data-preset-tag=\"p\"><p>Redesigned the footer for better aesthetics.</p></li><li data-preset-tag=\"p\"><p>Featured the layers page prominently on the homepage.</p></li><li data-preset-tag=\"p\"><p>Resolved minor issues for a smoother user experience.</p></li></ul>"
+        }
+      }
+    }
+  ]
+}

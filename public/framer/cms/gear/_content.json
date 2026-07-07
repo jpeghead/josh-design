@@ -1,0 +1,1334 @@
+{
+  "collection": "Gear",
+  "fields": [
+    {
+      "id": "ShyTvUz5N",
+      "name": "Title",
+      "type": "string"
+    },
+    {
+      "id": "glnkhE_Oe",
+      "name": "Image",
+      "type": "image"
+    },
+    {
+      "id": "rBIXSvsjx",
+      "name": "Date",
+      "type": "date"
+    },
+    {
+      "id": "A5ImPFmrW",
+      "name": "Link",
+      "type": "link"
+    },
+    {
+      "id": "KkzsQBx71",
+      "name": "Tag",
+      "type": "string"
+    },
+    {
+      "id": "okgU0gwH7",
+      "name": "Featured",
+      "type": "boolean"
+    },
+    {
+      "id": "CGoNJvmZ7",
+      "name": "Featured text",
+      "type": "enum"
+    },
+    {
+      "id": "u0LL2z_Kl",
+      "name": "Description",
+      "type": "string"
+    }
+  ],
+  "items": [
+    {
+      "id": "nYUVmNJBY",
+      "slug": "tesla-model-3-performance-2018",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Tesla Model 3 Performance (2018)"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/P2iKcxNxkmeP7M2XXSbAvEZ3Vc.png",
+          "local": "public/framer/cms/gear/tesla-model-3-performance-2018__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2018-11-24T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.tesla.com/model3-performance"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Car"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "The 2018 Tesla Model 3 Performance delivers exhilarating acceleration, precise handling, and long-range capability, all in a sleek, modern design, redefining electric driving."
+        }
+      }
+    },
+    {
+      "id": "D9rhNBG1X",
+      "slug": "dji-avata-2-fly-more-combo",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "DJI Avata 2 Fly More Combo"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/9po1xhSO3JKmkTcELewT4EkzL8.png",
+          "local": "public/framer/cms/gear/dji-avata-2-fly-more-combo__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2024-11-19T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/dp/B0CS6HVW6P/ref=twister_B0CZT4VP3N?_encoding=UTF8&th=1"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Drone"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "The DJI Avata 2 Fly More Combo offers immersive FPV flying with advanced stabilization, extended battery life, and smooth controls, perfect for capturing stunning aerial footage."
+        }
+      }
+    },
+    {
+      "id": "TM8DaXSoo",
+      "slug": "dji-mavic-3-pro-fly-more-combo",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "DJI Mavic 3 Pro Fly More Combo "
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/gpHWRxTFvobmLEo1GcCITjlvfE.png",
+          "local": "public/framer/cms/gear/dji-mavic-3-pro-fly-more-combo__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2024-11-21T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/DJI-controller-Triple-Camera-Hasselblad-Transmission/dp/B0BV21WGH6?th=1"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Drone"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "The DJI Mavic 3 Pro Fly More Combo combines a triple-camera system, long flight time, and obstacle sensing, making it ideal for professional aerial photography."
+        }
+      }
+    },
+    {
+      "id": "lwOX4dGXt",
+      "slug": "virgil-abloh-x-ikea-markerad-temporary-wall-clock",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Virgil Abloh x IKEA MARKERAD \"TEMPORARY\" Wall Clock"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/zpOupgpb1OBVDUbM7tYa9e85XY.png",
+          "local": "public/framer/cms/gear/virgil-abloh-x-ikea-markerad-temporary-wall-clock__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2019-11-01T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://stockx.com/virgil-abloh-x-ikea-markerad-temporary-wall-clock-white"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Lifestyle"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Here is some default text."
+        }
+      }
+    },
+    {
+      "id": "M75WKYfVa",
+      "slug": "virgil-abloh-x-ikea-markerad-wet-grass-rug-195x132-cm",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Virgil Abloh x IKEA MARKERAD \"WET GRASS\" Rug 195x132 CM"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/B3pJJZl8Pj2hQeCcKsmNNShQ.png",
+          "local": "public/framer/cms/gear/virgil-abloh-x-ikea-markerad-wet-grass-rug-195x132-cm__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2019-11-01T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://stockx.com/virgil-abloh-x-ikea-markerad-wet-grass-rug-green"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "LIfestyle"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Here is some default text."
+        }
+      }
+    },
+    {
+      "id": "HFtuNTEpv",
+      "slug": "tesla-s3xy-short-shorts",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Tesla “S3XY” Short Shorts"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/yRigv269yA59MRIo0IbWlgfOY.png",
+          "local": "public/framer/cms/gear/tesla-s3xy-short-shorts__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2020-05-15T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.vanityfair.com/style/2020/07/elon-musk-tesla-short-shorts-sec?srsltid=AfmBOoovpfNkoVqbVYfMue13X7B1ug9kUU_ttrETn0gvgohu3H96Z5Ra"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Fun"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Here is some default text."
+        }
+      }
+    },
+    {
+      "id": "c_AyNNJnc",
+      "slug": "cyberbeer-cyberstein-limited-edition",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Cyberbeer + Cyberstein Limited Edition"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/WmpP42KNJ7DjlVLtzSbJTk8qKc.png",
+          "local": "public/framer/cms/gear/cyberbeer-cyberstein-limited-edition__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2023-10-13T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://shop.tesla.com/product/cyberstein?sku=1949545-00-A"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Fun"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "This limited edition set combines style and taste with a collectible design. Perfect for enthusiasts, it’s a standout piece in any collection."
+        }
+      }
+    },
+    {
+      "id": "zwt3MFRpK",
+      "slug": "tc-helicon-goxlr",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "TC-Helicon GoXLR"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/yI9sGUWsNzrs8NUQdg4KQ5ZFybM.png",
+          "local": "public/framer/cms/gear/tc-helicon-goxlr__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2020-06-17T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/Revolutionary-Broadcaster-4-Channel-Motorized-Officially/dp/B07JKNG4NV"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Audio"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Here is some default text."
+        }
+      }
+    },
+    {
+      "id": "R2NVdNiTL",
+      "slug": "steelseries-arctis-nova-pro",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "SteelSeries Arctis Nova Pro"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/SpHb9Pff50EEyi8n7ArwuFLTibQ.png",
+          "local": "public/framer/cms/gear/steelseries-arctis-nova-pro__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2024-05-22T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/SteelSeries-Arctis-Wireless-Multi-System-Headset/dp/B09ZWCYQTX/ref=sr_1_4?crid=28P1QUATJKKQ6&dib=eyJ2IjoiMSJ9.0245jVVDHvJIr4RwhyoHq7yz4hO-yQFXLupQrjM46naFrr3ZqkFeJu4PaudsIE09fZkm_PHk6hOtsAIG9jYmrXpu-KJgASMRi6pVOyWBkKmwwilYhKPQbqXIO0LV0680CLCjlmqZX-NVMJUBhbU_HjzpxAozQDnYUxfy22tSP8LhDXJYyhXnHb86Qp8qK3kLOnfj3xoiMc5niG97vKVUx9FwCMRMyPwn_wCCQixqKWkbgDMWWODwiCVybm47ViW4TGBkbeHxhQXxDpcuaXeC0eUpFE-CpJeuhBzRT879A_U.WTdEhPuqljamAvqF7VdXOqy_WXCgSOZiLl3o2Fg8rE4&dib_tag=se&keywords=steelseries+arctis+pro&qid=1730874487&s=electronics&sprefix=steelseries+arctis+pro%2Celectronics%2C161&sr=1-4"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Audio"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "The Arctis Nova Pro headphones bring studio-quality sound to your gaming and multimedia. With top-tier audio clarity and a sleek, comfortable design, these headphones elevate every auditory detail, ideal for both gaming and music."
+        }
+      }
+    },
+    {
+      "id": "ZUm14heLf",
+      "slug": "sonos-one",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Sonos One"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/AlD1WyH2u2RR1nYXoKGjxNEXl4M.png",
+          "local": "public/framer/cms/gear/sonos-one__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2021-10-14T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/All-new-Sonos-One-Streaming-Incredible/dp/B074XLMYY5?th=1"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Audio"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Here is some default text."
+        }
+      }
+    },
+    {
+      "id": "s6I4vb1Kb",
+      "slug": "starship-torch",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Starship Torch"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/1LBGbbfpnL56q3Ey0Jnc6J9a1U.png",
+          "local": "public/framer/cms/gear/starship-torch__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2023-04-01T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://shop.spacex.com/products/starship-torch"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Fun"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Here is some default text."
+        }
+      }
+    },
+    {
+      "id": "Uo0i5NTCa",
+      "slug": "beats-studio-buds",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Beats Studio Buds +"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/8KgROFzVcUS7XajKj2mkvekhOY4.png",
+          "local": "public/framer/cms/gear/beats-studio-buds__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2024-05-17T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/Beats-Cancelling-Compatibility-Microphone-Headphones/dp/B0BZK2Z2TC?th=1"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Audio"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Compact, powerful, and stylish, the Beats Studio Buds + deliver premium sound on the go. Enjoy noise cancellation and crystal-clear audio in a lightweight, comfortable design ideal for all-day use."
+        }
+      }
+    },
+    {
+      "id": "dMNii9Oer",
+      "slug": "apple-airpods-pro-2",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Apple AirPods Pro 2"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/EaPdc2RxzViL0gm7rmqTr9MXs.png",
+          "local": "public/framer/cms/gear/apple-airpods-pro-2__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2022-09-23T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/Apple-Cancellation-Transparency-Personalized-High-Fidelity/dp/B0D1XD1ZV3/ref=sr_1_1_sspa?crid=INE8S3USCB4Y&dib=eyJ2IjoiMSJ9.DIzjxQ3AYJQGx63vBQJPY7jhKZI3cgYytNqpKvB5fW1rArA116W_L1cNHLFFdTJ1Rn8BQLzvbY-STkrF_XJCT0YSM60BoKyBnu4BPv12gCzwXWiQwwBK7G391j1SMuYnWpcyyibFEdKqHRgdzd_Fsl731iVj7rMwZZ1jEVgP6-tMykt4_jq2IQutuHUL0EEkaTtluUwSFNY-3NBmchGE-vygYCbmgQ-2DYtxAlHG7UI.p7-hg1iB8kDA9GF1ge9Rz1hM9G-GLt5KnGXeu9HYp98&dib_tag=se&keywords=apple+airpods&qid=1730873832&sprefix=apple+airpods%2Caps%2C180&sr=8-1-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY&psc=1"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Audio"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Here is some default text."
+        }
+      }
+    },
+    {
+      "id": "Rfm4j0rKR",
+      "slug": "sonos-arc-ultra-sub-4",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Sonos Arc Ultra + Sub 4"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/zLI8OY6I1DrquVMxi7pu0WG8bSs.png",
+          "local": "public/framer/cms/gear/sonos-arc-ultra-sub-4__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2024-11-02T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.sonos.com/en-us/shop/premium-immersive-set-arc-ultra-sub-era-100-pair"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Audio"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Experience immersive audio with the Sonos Arc Ultra, enhanced by the Sub 4 for deep, resonant bass. Perfect for any room, this setup transforms movie nights and music sessions alike with powerful sound and crystal-clear dialogue."
+        }
+      }
+    },
+    {
+      "id": "rK0zs2iRj",
+      "slug": "shure-sm7b-microphone",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Shure SM7B Microphone"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/8mhBgWyvwyZv0LIMejdsE8XOSFQ.png",
+          "local": "public/framer/cms/gear/shure-sm7b-microphone__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2020-03-20T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/Shure-SM7B-Cardioid-Dynamic-Microphone/dp/B0002E4Z8M/ref=sr_1_3?crid=22A0JTLVIC0FM&dib=eyJ2IjoiMSJ9.3Rhd3ZzgYplmKvTVT0z3wPxBskEVJ0CndPdGbYCfJ0GqO_LtolCV3otaz4wWwURmuBf4KFXY-Qf8deSKeD7u9HevNgosjRMQJSkPKMU7GWP089ClEMeKIP8X6IYZcK7uU77_VS7TVcHn9JBQg9ac8auh6DOsaaFpfRSMbCsnDCZO8lKKRT71L-eEHHwNTUGmf-RO1PhtDCsDtSxMGSY4-nLyh7r0ahOvit53DOCDb0gXTJ5h4VZdp8kMmEoNno5MgaIMdAbChs_uIZWUhJxD8CMfxXqlzGzadbNGNafXQ9Y.PCihjcl_8AwAFoAIrNEKhy4lrTKPHl2FqsNS_KeeLmA&dib_tag=se&keywords=shure+sm7b&qid=1730800861&sprefix=shure+%2Caps%2C142&sr=8-3"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Audio"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Here is some default text."
+        }
+      }
+    },
+    {
+      "id": "y62tGeqsr",
+      "slug": "nomad-titanium-apple-watch-band-45mm",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Nomad Titanium Apple Watch Band 45mm"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/3z3sEwgn8dWTwtKf7Y00osa4.png",
+          "local": "public/framer/cms/gear/nomad-titanium-apple-watch-band-45mm__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2024-04-23T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/Nomad-Titanium-Band-Silver-Hardware/dp/B095W2WCYJ"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Wearable"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Crafted from durable titanium, this watch band by Nomad adds a touch of elegance to your Apple Watch. Perfectly complementing the modern, minimalist aesthetic, it’s both rugged and refined."
+        }
+      }
+    },
+    {
+      "id": "KX9LCEBSV",
+      "slug": "meta-quest-3",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Meta Quest 3"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/lev9InkKn5Ot9kOcjnpf9kWeIfs.png",
+          "local": "public/framer/cms/gear/meta-quest-3__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2024-02-22T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/Meta-Quest-512GB-Powerful-Ultimate-Experiences/dp/B0DDWH41HB/ref=asc_df_B0DDWH41HB/?tag=hyprod-20&linkCode=df0&hvadid=716250609048&hvpos=&hvnetw=g&hvrand=9921722870530765620&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9015642&hvtargid=pla-2371054702028&psc=1&mcid=87088931f4e235d6970b7ac9e16b8b0d"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "AR/VR"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Step into the future of VR with Meta Quest 3. This device offers an immersive experience with intuitive controls, perfect for exploring new virtual landscapes, gaming, and interactive learning."
+        }
+      }
+    },
+    {
+      "id": "WcM_0y9yW",
+      "slug": "gucci-guilty-parfum-pour-homme-90ml",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Gucci Guilty Parfum Pour Homme, 90ml"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/KRR42W60uYRp2nSfWTDACzLxGME.png",
+          "local": "public/framer/cms/gear/gucci-guilty-parfum-pour-homme-90ml__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2022-12-25T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.gucci.com/us/en/pr/beauty/fragrances/fragrances-for-men/gucci-guilty-for-men/gucci-guilty-parfum-pour-homme-90ml-p-703097999990099"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Lifestyle"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Here is some default text."
+        }
+      }
+    },
+    {
+      "id": "mfEIpo3lH",
+      "slug": "bobovr-s3-pro-battery-strap-accessories-dual-battery-chargin",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "BOBOVR S3 Pro Battery Strap Accessories Dual Battery+ Charging Dock Combo"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/LFf8MQLIbOiMPNJk1N5DtiaDLY.png",
+          "local": "public/framer/cms/gear/bobovr-s3-pro-battery-strap-accessories-dual-battery-chargin__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2024-07-31T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/BOBOVR-Battery-Accessories-Charging-Compatible/dp/B0D583FMR5"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "AR/VR"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Extend your VR sessions with the BOBOVR S3 Pro Battery Strap. Featuring dual batteries and a charging dock combo, this accessory is designed for seamless, uninterrupted VR experiences."
+        }
+      }
+    },
+    {
+      "id": "ouVbXivOW",
+      "slug": "oura-ring-gen3-horizon-brushed-titanium",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Oura Ring Gen3 Horizon - Brushed Titanium"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/JEYdRWBne2Id5Oul5mCB2M56lc.png",
+          "local": "public/framer/cms/gear/oura-ring-gen3-horizon-brushed-titanium__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2023-01-17T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/Oura-Ring-Gen3-Horizon-Titanium/dp/B0CSRK3LDY/ref=asc_df_B0CSRK3LDY/?tag=hyprod-20&linkCode=df0&hvadid=692875362841&hvpos=&hvnetw=g&hvrand=4782363192381872113&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9015642&hvtargid=pla-2281435181938&mcid=89d6306d3a3a3a0a812536018724f718&hvocijid=4782363192381872113-B0CSRK3LDY-&hvexpln=73&th=1"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Wearable"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Here is some default text."
+        }
+      }
+    },
+    {
+      "id": "O7tt6VApC",
+      "slug": "apple-watch-ultra",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Apple Watch Ultra"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/TSZmV3muzXr0oln0SF8fyd0tf8.png",
+          "local": "public/framer/cms/gear/apple-watch-ultra__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2023-05-10T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/Apple-Cellular-Smartwatch-Precision-Extra-Long/dp/B0CSTHHVBM/ref=asc_df_B0CSTHHVBM/?tag=hyprod-20&linkCode=df0&hvadid=692875362841&hvpos=&hvnetw=g&hvrand=8795243615795108523&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9015642&hvtargid=pla-2281435178618&mcid=44df7ad690ad36399aaf06c49008d63c&hvocijid=8795243615795108523-B0CSTHHVBM-&hvexpln=73&th=1"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Wearable"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Here is some default text."
+        }
+      }
+    },
+    {
+      "id": "BafYjExi5",
+      "slug": "apple-magic-trackpad-black",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Apple Magic Trackpad - Black"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/KilgpnZsgFAxo9brtlNPQ5BA5Q.png",
+          "local": "public/framer/cms/gear/apple-magic-trackpad-black__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2023-05-19T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/Apple-Magic-Trackpad-Wireless-Rechargable/dp/B09V4FL2TC?ref_=ast_sto_dp&th=1&psc=1"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Mouse"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Here is some default text."
+        }
+      }
+    },
+    {
+      "id": "Xulcempkt",
+      "slug": "apple-magic-keyboard-with-touch-id-and-numeric-keypad",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Apple Magic Keyboard with Touch ID and Numeric Keypad"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/XXc0131yXBs3aAf0hypJ4UH5Hc.png",
+          "local": "public/framer/cms/gear/apple-magic-keyboard-with-touch-id-and-numeric-keypad__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2022-08-17T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/Apple-Keyboard-Numeric-Computers-Silicon/dp/B09V3JXSS9/ref=sr_1_1?crid=15A7AVLEB6IL9&dib=eyJ2IjoiMSJ9.1ig9Fu9ezVoKTjP-yTdT9iem2hq3JdboxOeJ2ipbU_v8BA_174mZh0TVAjLBWxcYPtnSepJntB0zYbmfniJc_V_Olx8y8GzVOFspBOquuktDyNVX5jh8WCikYgdVDGGEI7Swuq_Kc-iLf4B2vL_HipfiJc5T4uxQgtHJ2ythtzGJjWnAjcdIwXYs9Vfj0gtP89_XULlWGJcNMfelE2PoYF2OyfFA73uOftAUoiav9hU7AdQhKW7YtIXJFjKnoiAvgQiv1fxP3YIC407x74hxu20hXbL1FxetGHL2Ic5nuIs.4V7PTMDv1gtPI45VPxqWFWN82QpfWHjFoJ9hNRFmwMw&dib_tag=se&keywords=apple%2Bmagic%2Bkeyboard%2Bwith%2Btouch%2Bid&qid=1730797507&s=electronics&sprefix=apple%2Bmagic%2Bkeyboard%2Celectronics%2C160&sr=1-1&th=1"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Keyboard"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Here is some default text."
+        }
+      }
+    },
+    {
+      "id": "RkQo4YCkW",
+      "slug": "samsung-49-qled-gaming-monitor-c49hg90dme",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Samsung 49\" QLED Gaming Monitor C49HG90DME"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/1ohARl5SMkLOwmH58yf1lYNaqI.png",
+          "local": "public/framer/cms/gear/samsung-49-qled-gaming-monitor-c49hg90dme__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2018-06-02T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/SAMSUNG-DisplayHDR-FreeSync-Adjustable-LS49CG932SNXZA/dp/B0CDQMQQS2/ref=asc_df_B0CDQMQQS2/?tag=hyprod-20&linkCode=df0&hvadid=692875362841&hvpos=&hvnetw=g&hvrand=13798467215986624356&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9015642&hvtargid=pla-2281435183138&psc=1&mcid=812503f18c833926a72d91d2e4ac57f6&hvocijid=13798467215986624356-B0CDQMQQS2-&hvexpln=73"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Monitor"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Here is some default text."
+        }
+      }
+    },
+    {
+      "id": "d934apO82",
+      "slug": "super73-rx-mojave-obsidian",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Super73 RX Mojave Obsidian"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/VJE9pW2YhPzgsoPqwArRZ7l6UsM.png",
+          "local": "public/framer/cms/gear/super73-rx-mojave-obsidian__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2021-05-22T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://super73.com/collections/r-series-bikes"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "EBike"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Here is some default text."
+        }
+      }
+    },
+    {
+      "id": "oq7lpDOzN",
+      "slug": "anker-prime-27-650mah-power-bank-250w-and-100w-charging-base",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Anker Prime 27,650mAh Power Bank (250W) and 100W Charging Base"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/4hifBbWFULyWSHGGzO46K60bQBQ.png",
+          "local": "public/framer/cms/gear/anker-prime-27-650mah-power-bank-250w-and-100w-charging-base__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2024-02-16T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/Anker-Charging-Portable-Charger-Compatible/dp/B0D3PK2JQ8/ref=asc_df_B0D3PK2JQ8/?tag=hyprod-20&linkCode=df0&hvadid=692875362841&hvpos=&hvnetw=g&hvrand=18038100561892497825&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9015642&hvtargid=pla-2281435181938&mcid=8222587777fb3308ac9ab7efa3225eda&hvocijid=18038100561892497825-B0D3PK2JQ8-&hvexpln=73&th=1"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Gear"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Keep your devices powered up with the Anker Prime Power Bank, featuring 250W output and a 100W charging base. With fast-charging capabilities, this power bank is essential for anyone on the go."
+        }
+      }
+    },
+    {
+      "id": "gUlgrAbyM",
+      "slug": "iphone-15-pro-max-natural-titanium",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "iPhone 15 Pro Max - Natural Titanium"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/0194PQYEOutTVwr9gNGyA5nspQ.png",
+          "local": "public/framer/cms/gear/iphone-15-pro-max-natural-titanium__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2023-09-22T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.amazon.com/Boost-Mobile-Apple-iPhone-Intelligence/dp/B0DGLY5QXW?ref_=ast_sto_dp&th=1"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Phone"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Apple’s latest in mobile technology, the iPhone 15 Pro Max, features a sleek natural titanium finish with cutting-edge performance, a pro camera system, and enhanced durability."
+        }
+      }
+    },
+    {
+      "id": "Vn_hq45oO",
+      "slug": "apple-vision-pro",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Apple Vision Pro"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/2V3Mrr5OzJOxkbdqN5QBS0kfaiU.png",
+          "local": "public/framer/cms/gear/apple-vision-pro__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2024-01-08T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.apple.com/apple-vision-pro/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "AR/VR"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Apple’s Vision Pro offers a groundbreaking AR experience, combining advanced optics with sleek design. Dive into augmented reality with unparalleled clarity and comfort for professional or personal use."
+        }
+      }
+    },
+    {
+      "id": "YTrgROhpG",
+      "slug": "logitech-mx-keys-s",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Logitech MX Keys S"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/TPINJBQasYVshyCsgC9tdVto.png",
+          "local": "public/framer/cms/gear/logitech-mx-keys-s__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2024-02-22T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://amzn.to/3T3wNVw"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Keyboard"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "The Logitech MX Keys S is engineered for comfort and efficiency, featuring tactile feedback, backlit keys, and a seamless typing experience, making it an ideal choice for extended work sessions."
+        }
+      }
+    },
+    {
+      "id": "RO8BKaRZJ",
+      "slug": "logitech-mx-master-3s",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Logitech MX Master 3S"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/mI6s3RFYB3zMVCJ10KKcgS6qNg.png",
+          "local": "public/framer/cms/gear/logitech-mx-master-3s__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2024-02-22T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://amzn.to/3TctP18"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Mouse"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Known for its ergonomic design, the MX Master 3S by Logitech combines precision and comfort, making it the ultimate tool for productivity with customizable buttons and enhanced scrolling."
+        }
+      }
+    },
+    {
+      "id": "pTADXQlGn",
+      "slug": "glorious-xxl-extended-mousepad",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Glorious XXL Extended Mousepad"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/ZCjmZPM0gTXtC4VVv2DMXQCcEo.png",
+          "local": "public/framer/cms/gear/glorious-xxl-extended-mousepad__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2023-11-30T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://amzn.to/3T12AGF"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Accessories"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "The Glorious XXL Mousepad offers a spacious and smooth surface, perfect for both gaming and work setups, providing precision and control for all your tasks."
+        }
+      }
+    },
+    {
+      "id": "zwNwIh72J",
+      "slug": "samsung-odyssey-ark",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "SAMSUNG Odyssey Ark"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/nf6RFaaT75UAHRof4nnvpOnEs.png",
+          "local": "public/framer/cms/gear/samsung-odyssey-ark__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2023-07-12T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://amzn.to/431Jg0x"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Monitor"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "The Odyssey Ark monitor takes gaming and productivity to a new level, with a massive curved display, high refresh rates, and immersive visuals that put you at the center of every experience."
+        }
+      }
+    },
+    {
+      "id": "ad9dVvzbE",
+      "slug": "apple-16-inch-macbook-pro-m2-ultra",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Apple 16-Inch MacBook Pro M2 Ultra"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/FjGCjA5uqK4zYoL5cfcpW7U5iSc.png",
+          "local": "public/framer/cms/gear/apple-16-inch-macbook-pro-m2-ultra__image.png"
+        },
+        "Date": {
+          "type": "date",
+          "value": "2023-05-22T00:00:00.000Z"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://amzn.to/3T7z6qJ"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Computer"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Description": {
+          "type": "string",
+          "value": "With the powerful M2 Ultra chip, the 16-Inch MacBook Pro delivers unmatched performance for creative professionals, featuring a stunning display, excellent battery life, and seamless multitasking."
+        }
+      }
+    }
+  ]
+}

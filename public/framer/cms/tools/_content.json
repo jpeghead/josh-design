@@ -1,0 +1,987 @@
+{
+  "collection": "Tools",
+  "fields": [
+    {
+      "id": "YYpyeL8ol",
+      "name": "Title",
+      "type": "string"
+    },
+    {
+      "id": "yY6Djl3Da",
+      "name": "Icon",
+      "type": "image"
+    },
+    {
+      "id": "EtRWJzpcS",
+      "name": "Description",
+      "type": "string"
+    },
+    {
+      "id": "Xysx_28XM",
+      "name": "Link",
+      "type": "link"
+    },
+    {
+      "id": "u95devvGN",
+      "name": "Tag",
+      "type": "string"
+    },
+    {
+      "id": "EhZB9p0CM",
+      "name": "Featured",
+      "type": "boolean"
+    },
+    {
+      "id": "WAoUWDVnC",
+      "name": "Featured text",
+      "type": "enum"
+    }
+  ],
+  "items": [
+    {
+      "id": "zOwqL1cad",
+      "slug": "bezi",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Bezi"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/xxlKaU7fIyKDAjkcujzAW7MQRM.jpg",
+          "local": "public/framer/cms/tools/bezi__icon.jpg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "A collaborative spatial design platform."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://bezi.com"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "YYl0AbD0V",
+      "slug": "figma",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Figma"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/MT3LtDgWNz9TiVIDSASLL9IU3hw.svg",
+          "local": "public/framer/cms/tools/figma__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "King of all design tools has been crowed. "
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.figma.com/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "ER6z2OHH_",
+      "slug": "framer",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Framer"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/CMNvczsoNBvTIVz5rt6cOp8CSWs.svg",
+          "local": "public/framer/cms/tools/framer__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "This site is built with Framer."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.framer.com/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "qNpxToP3v",
+      "slug": "zeplin",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Zeplin"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/8EWblGdvxNerU8VnU3N4JdoIq0.svg",
+          "local": "public/framer/cms/tools/zeplin__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Only use sparingly when needed. Most teams just use Figma dev tools now."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://zeplin.io/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "DdxHJCpuS",
+      "slug": "arc-browser",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Arc Browser"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/MRVU8CbsPW08JAQIFhF9cPFs.svg",
+          "local": "public/framer/cms/tools/arc-browser__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Best browser out, period."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://arc.net/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "cx1L66Ejn",
+      "slug": "notion",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Notion"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/gmHuiyaUaanHxASCGtMNvTyyA.svg",
+          "local": "public/framer/cms/tools/notion__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "My app for organizing tasks & life."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.notion.so/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "eXVh5TE64",
+      "slug": "openai",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "OpenAI"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/3eyksUjxyyXEWcQATrLblfgl0OY.svg",
+          "local": "public/framer/cms/tools/openai__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Chat & solve problems with Ai."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://openai.com/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "Fus3ba62x",
+      "slug": "midjourney",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "MidJourney"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/PWV8TtnmNPvSSE4mSjnPC2x1U.svg",
+          "local": "public/framer/cms/tools/midjourney__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Ai image generation."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.midjourney.com/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "CofDEvgEc",
+      "slug": "hugging-face",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Hugging Face"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/sTbmB2wK46k5TfbL4GtO0XIhw8.svg",
+          "local": "public/framer/cms/tools/hugging-face__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Open sourced Ai models for Stable Diffusion."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://huggingface.co/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "WWB7JA43D",
+      "slug": "webflow",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Webflow"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/sclKyxSaKeYbhJEIF4YU6HW2FI.svg",
+          "local": "public/framer/cms/tools/webflow__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "More complex than Framer, but comes with a ton of flexibility."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://webflow.com/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "it3YYX8q4",
+      "slug": "squarespace",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Squarespace"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/fwX7NPO01hgAoe1NRuqDft69g.svg",
+          "local": "public/framer/cms/tools/squarespace__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Love the simplicity. Pick a site template, customize it and go live."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.squarespace.com/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "omBHjirUb",
+      "slug": "slack",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Slack"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/Yjwjlvz2qeI7Eo3VwS8oXkPfKoc.svg",
+          "local": "public/framer/cms/tools/slack__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "The defacto way for teams to communicate."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://slack.com/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "XqTifz5uC",
+      "slug": "sketch",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Sketch"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/DIMfux9hWB7jvB9O358OrqM92MI.svg",
+          "local": "public/framer/cms/tools/sketch__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Figma has my heart, but Sketch is still a solid design alternative."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.sketch.com/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "J3clD4tsc",
+      "slug": "trello",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Trello"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/h17Y5NLKrWLfttpefT8tmkJRC8A.svg",
+          "local": "public/framer/cms/tools/trello__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Not used as much anymore, but I still find the UX to be great."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://trello.com/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "PKvAwK_SC",
+      "slug": "procreate",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Procreate"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/Buw5YK2rh3uUR4VDpUQZDqedc34.svg",
+          "local": "public/framer/cms/tools/procreate__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "When I want to draw, this is the app I use."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://procreate.com/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "GJQk715QR",
+      "slug": "mailchimp",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Mailchimp"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/Os5LALK3AHDsow2i4vGYUKdvdw.svg",
+          "local": "public/framer/cms/tools/mailchimp__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Great tool for capturing and blasting out emails."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://mailchimp.com/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "qq7sayGqW",
+      "slug": "jira",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Jira"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/cRl63Ao0jH8Yhs8dGUvgFIY6Pr0.svg",
+          "local": "public/framer/cms/tools/jira__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "It's what the devs use, so it's what I use."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.atlassian.com/software/jira"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "LHBqHqmUP",
+      "slug": "gumroad",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Gumroad"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/PcHkFMPHeGroRjcY2EVhCHUw8.svg",
+          "local": "public/framer/cms/tools/gumroad__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Fantastic site for selling digital goods."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://gumroad.com/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "HpVByes70",
+      "slug": "grammarly",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Grammarly"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/AT0bjGdjiJbcANA6MJCyCeYBAE.svg",
+          "local": "public/framer/cms/tools/grammarly__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Great tool for checking spelling errers."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://app.grammarly.com/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "jvreAWzgZ",
+      "slug": "google-meet",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Google Meet"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/iG8kkGyx4xtDijLEXRBXmbY1mtM.svg",
+          "local": "public/framer/cms/tools/google-meet__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Zoom is nice, but I prefer Google Meets UX."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://meet.google.com/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "BWONiupOJ",
+      "slug": "google-docs",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Google Docs"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/TQTgYvRfweI6MYLsIAeoYSbH6U.svg",
+          "local": "public/framer/cms/tools/google-docs__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Simple and easy way to share docs."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.google.com/docs/about/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "vaxuzskSI",
+      "slug": "dropbox",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Dropbox"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/K6lLOtVXbI56fUtFsMvX4pAY.svg",
+          "local": "public/framer/cms/tools/dropbox__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Love how seemless this storage solution blends into the OS."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://dropbox.com/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "u0ay9xRhz",
+      "slug": "canva",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Canva"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/Y8ZeBOgy5n4ctFyJD1blizfT8E.svg",
+          "local": "public/framer/cms/tools/canva__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "I use this when I need to batch edit social media content."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.canva.com/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "fd7QXlwP0",
+      "slug": "adobe-photoshop",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Adobe Photoshop"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/57pmK9be7B3W4VgHupre0OQ.svg",
+          "local": "public/framer/cms/tools/adobe-photoshop__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Only open this when I need to, so not very often."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.adobe.com/products/photoshop.html"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "qT8m7vI0c",
+      "slug": "adobe-premier-pro",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Adobe Premier Pro"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/D6whBFvGHCO96UYIUQjUBO3g4b0.svg",
+          "local": "public/framer/cms/tools/adobe-premier-pro__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "My prefered video editing software."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.adobe.com/products/premiere.html"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "uuME9bzMq",
+      "slug": "adobe-after-effects",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Adobe After Effects"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/PwfdhYXlHwbfsRAQoWKNZkCcc.svg",
+          "local": "public/framer/cms/tools/adobe-after-effects__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "I only use this for more complex projects."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.adobe.com/products/aftereffects.html"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    },
+    {
+      "id": "XxgugFZtz",
+      "slug": "asana",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Asana"
+        },
+        "Icon": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/E1wDovnVcI96JSiwmtZ13dCx0.svg",
+          "local": "public/framer/cms/tools/asana__icon.svg"
+        },
+        "Description": {
+          "type": "string",
+          "value": "Not my favorite, but it's came a long way."
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://asana.com/"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Tool"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        }
+      }
+    }
+  ]
+}

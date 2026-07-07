@@ -1,0 +1,133 @@
+{
+  "collection": "Downloads",
+  "fields": [
+    {
+      "id": "pF69i5MFH",
+      "name": "Title",
+      "type": "string"
+    },
+    {
+      "id": "SESNzFI2x",
+      "name": "Price - New - Dollar",
+      "type": "number"
+    },
+    {
+      "id": "U9jdJf5Io",
+      "name": "Price - New - Cents",
+      "type": "number"
+    },
+    {
+      "id": "wRGrbFrnC",
+      "name": "Price - Old - Dollar",
+      "type": "number"
+    },
+    {
+      "id": "kpn1ZcTxI",
+      "name": "Price - Old - Cents",
+      "type": "number"
+    },
+    {
+      "id": "SGm1nXobg",
+      "name": "Link",
+      "type": "link"
+    },
+    {
+      "id": "RtfVac8BE",
+      "name": "Image",
+      "type": "image"
+    },
+    {
+      "id": "rOSi6D86y",
+      "name": "Tag",
+      "type": "string"
+    },
+    {
+      "id": "rTxmYdEY6",
+      "name": "Featured",
+      "type": "boolean"
+    },
+    {
+      "id": "tuPHj8BFw",
+      "name": "Featured text",
+      "type": "enum"
+    },
+    {
+      "id": "n7rpQ59EP",
+      "name": "Descriptions",
+      "type": "string"
+    },
+    {
+      "id": "UREnK6gtB",
+      "name": "Image 2",
+      "type": "image"
+    },
+    {
+      "id": "j2qhv2R77",
+      "name": "Image 3",
+      "type": "image"
+    }
+  ],
+  "items": [
+    {
+      "id": "hd5yL95ax",
+      "slug": "xenomorph-typeface",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Xenomorph Typeface"
+        },
+        "Price - New - Dollar": {
+          "type": "number",
+          "value": 0
+        },
+        "Price - New - Cents": {
+          "type": "number",
+          "value": 0
+        },
+        "Price - Old - Dollar": {
+          "type": "number",
+          "value": 0
+        },
+        "Price - Old - Cents": {
+          "type": "number",
+          "value": 0
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://jpeghead.gumroad.com/l/xenomorphtypefacebyjoshwhitehead"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/RlPAcX7wq8mLlyZAQP3gPWqSY.png",
+          "local": "public/framer/cms/downloads/xenomorph-typeface__image.png"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Resource"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Descriptions": {
+          "type": "string",
+          "value": "A fun typeface inspired by one my favorite SciFi movies."
+        },
+        "Image 2": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/qIODSV3e1JLEzpEGPqLtVmJUyc.png",
+          "local": "public/framer/cms/downloads/xenomorph-typeface__image-2.png"
+        },
+        "Image 3": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/rYqAj8Dl0eH0FBFrQKqG3U2Ni40.png",
+          "local": "public/framer/cms/downloads/xenomorph-typeface__image-3.png"
+        }
+      }
+    }
+  ]
+}

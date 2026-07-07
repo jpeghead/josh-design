@@ -1,0 +1,707 @@
+{
+  "collection": "Links",
+  "fields": [
+    {
+      "id": "iQw8uPZSK",
+      "name": "Title",
+      "type": "string"
+    },
+    {
+      "id": "bEDj5eLVZ",
+      "name": "Link",
+      "type": "link"
+    },
+    {
+      "id": "li8iMUlGT",
+      "name": "Content",
+      "type": "formattedText"
+    },
+    {
+      "id": "qVSiVFoO9",
+      "name": "Tag",
+      "type": "string"
+    },
+    {
+      "id": "d3BKs7WPS",
+      "name": "Featured",
+      "type": "boolean"
+    },
+    {
+      "id": "salDqII2e",
+      "name": "Featured text",
+      "type": "enum"
+    },
+    {
+      "id": "Ut838_TxB",
+      "name": "Image",
+      "type": "image"
+    }
+  ],
+  "items": [
+    {
+      "id": "IA9gyXTic",
+      "slug": "boneyard",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Boneyard"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.boneyardcollective.com/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p><strong>A creative studio building AI-powered tools &amp; experiences.</strong></p>"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/kfFG7jlWtkKWny7poGdhg4CgHUY.png",
+          "local": "public/framer/cms/links/boneyard__image.png"
+        }
+      }
+    },
+    {
+      "id": "M8NKRliMB",
+      "slug": "splinespiration",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Splinespiration"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://splinespiration.com/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>The library with free to download 3d Spline projects for educational purposes.</p>"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/GPVZFSyEwpCdkL57cLbTcaI79g.png",
+          "local": "public/framer/cms/links/splinespiration__image.png"
+        }
+      }
+    },
+    {
+      "id": "G1LKJU9PC",
+      "slug": "godly",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Godly"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://godly.website/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Astronomically good web design inspiration. Only the best of the best.</p>"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/w7COpMcBUJl6OXcVLDFQ1XiK1bc.png",
+          "local": "public/framer/cms/links/godly__image.png"
+        }
+      }
+    },
+    {
+      "id": "TVwYvnt6y",
+      "slug": "design-spells",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Design Spells"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.designspells.com/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Design details that feel like magic.</p>"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/FNl6nUsR0ObdPmrKuWJAcNVZv4.png",
+          "local": "public/framer/cms/links/design-spells__image.png"
+        }
+      }
+    },
+    {
+      "id": "p4jQC_ecq",
+      "slug": "skybox-ai",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Skybox AI"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://skybox.blockadelabs.com/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Craft 360° worlds in just one click</p>"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/3DB1HnWR1biAi9abyMMmzcncVY.png",
+          "local": "public/framer/cms/links/skybox-ai__image.png"
+        }
+      }
+    },
+    {
+      "id": "QmsvJalI0",
+      "slug": "landing-folio",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Landing Folio"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.landingfolio.com/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>The Best Landing Page Design Inspiration, Templates and More.</p>"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/cwA9pChuhUxTAgPn23pDWw55U.png",
+          "local": "public/framer/cms/links/landing-folio__image.png"
+        }
+      }
+    },
+    {
+      "id": "gJJIHA4WZ",
+      "slug": "flowstep",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Flowstep"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://flowstep.design/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Access UX recordings and screenshots of top products.</p>"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/SaHnoaRlNmceunkKDVWeM7WMI.png",
+          "local": "public/framer/cms/links/flowstep__image.png"
+        }
+      }
+    },
+    {
+      "id": "Oe67Gpfe6",
+      "slug": "style-guides",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Style Guides"
+        },
+        "Link": {
+          "type": "link",
+          "value": "http://styleguides.io/examples.html"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Real life pattern libraries, code standards documents and content style guides.</p>"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/GkwSvvfY5R8H0xyo9hzo5nCQ.png",
+          "local": "public/framer/cms/links/style-guides__image.png"
+        }
+      }
+    },
+    {
+      "id": "oaIxVCC8C",
+      "slug": "sass-interface",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Sass Interface"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://saasinterface.com/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>World's largest gallery of SaaS app UI and UX design examples.</p>"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/kJkVavqEKgWKBz8ufLtdH97yGJc.png",
+          "local": "public/framer/cms/links/sass-interface__image.png"
+        }
+      }
+    },
+    {
+      "id": "hyjGxQd_0",
+      "slug": "mobbin",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Mobbin"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://mobbin.com/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Discover real-world design inspiration.</p>"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/PekS6nZWIoxXCpQ4o30ayAaW79A.png",
+          "local": "public/framer/cms/links/mobbin__image.png"
+        }
+      }
+    },
+    {
+      "id": "u8ttAnsgM",
+      "slug": "morflax-studio",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Morflax Studio"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://studio.morflax.com/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>A simple 3D toolset that gives you the power to make cool things in just minutes. Right in your browser.</p>"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/RRCFGQ3YN0AaNZWkHeJWbwla7bA.png",
+          "local": "public/framer/cms/links/morflax-studio__image.png"
+        }
+      }
+    },
+    {
+      "id": "K_5tnIQld",
+      "slug": "trace",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Trace"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.trace.zip/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Find, Remix and Create SwiftUI Components.</p>"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/G2JkaBmzx5gPrf5PuMgpQDyfn4.png",
+          "local": "public/framer/cms/links/trace__image.png"
+        }
+      }
+    },
+    {
+      "id": "lACdOy4Hq",
+      "slug": "kern-club",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Kern Club"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.kernclub.com/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Bad ass people who want to <em>kern</em> their fonts just right.</p>"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/ggTedQk8zzELTxqoCXHGnUDsZbg.png",
+          "local": "public/framer/cms/links/kern-club__image.png"
+        }
+      }
+    },
+    {
+      "id": "rgWJyJaqq",
+      "slug": "product-onboarding",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Product Onboarding"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://www.productonboarding.com/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>A free library of product onboarding examples from across the internet.</p>"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/gDA3CVZ2yj7bab1OWlWG1ScApk.svg",
+          "local": "public/framer/cms/links/product-onboarding__image.svg"
+        }
+      }
+    },
+    {
+      "id": "Tn6myI87r",
+      "slug": "labs-google",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Labs Google"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://labs.google/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Labs.Google is Google's home for the latest AI tools, technology and discourse.</p>"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/KVv4wgZRjzqt2HM61Dks6B2co.webp",
+          "local": "public/framer/cms/links/labs-google__image.webp"
+        }
+      }
+    },
+    {
+      "id": "enbDRacZL",
+      "slug": "shots",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Shots"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://shots.so/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>Create Amazing Mockups</p>"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": true
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/CvzLLOHytcp9JxMGaROQAFmkXW8.jpg",
+          "local": "public/framer/cms/links/shots__image.jpg"
+        }
+      }
+    },
+    {
+      "id": "bpbR2YXMF",
+      "slug": "overrides",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Overrides"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://overrrides.com/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": "<p>71 components &amp; overrides to take your Framer game to the next level.</p>"
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/ya8WJcYJhKayUJ1aRFJDjjrak.webp",
+          "local": "public/framer/cms/links/overrides__image.webp"
+        }
+      }
+    },
+    {
+      "id": "DACrTwrU5",
+      "slug": "my-mind",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "My Mind"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://mymind.com/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": ""
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/u2xuRLOTlryc9vaSroDKmz3g4.png",
+          "local": "public/framer/cms/links/my-mind__image.png"
+        }
+      }
+    },
+    {
+      "id": "UFVqJCJAz",
+      "slug": "best-we-got",
+      "fields": {
+        "Title": {
+          "type": "string",
+          "value": "Best we got"
+        },
+        "Link": {
+          "type": "link",
+          "value": "https://bestwegot.com/"
+        },
+        "Content": {
+          "type": "formattedText",
+          "value": ""
+        },
+        "Tag": {
+          "type": "string",
+          "value": "Link"
+        },
+        "Featured": {
+          "type": "boolean",
+          "value": false
+        },
+        "Featured text": {
+          "type": "enum",
+          "value": "Favorite"
+        },
+        "Image": {
+          "type": "image",
+          "url": "https://framerusercontent.com/images/4GbDwBm7DXZIAkQEK1etyXJcYw.png",
+          "local": "public/framer/cms/links/best-we-got__image.png"
+        }
+      }
+    }
+  ]
+}
