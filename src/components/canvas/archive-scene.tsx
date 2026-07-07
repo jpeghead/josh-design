@@ -19,7 +19,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { EffectComposer, Bloom, Noise, Vignette } from "@react-three/postprocessing";
-import { eras, artifacts, accent, type Artifact } from "@/content/archive";
+import { eras, artifacts, accent, floorLabels, type Artifact } from "@/content/archive";
 
 /* ------------------------------------------------------------ constants */
 
@@ -283,16 +283,14 @@ const LINE_FRAG = /* glsl */ `
 
 /* ------------------------------------------------------------ the line */
 
-function buildLineCurve(): THREE.CatmullRomCurve3 {
+function buildBaseCurve(): THREE.CatmullRomCurve3 {
   const pts: THREE.Vector3[] = [];
   pts.push(new THREE.Vector3(-4.2, 0.25, 10.5));
   pts.push(new THREE.Vector3(-2.6, 0.5, 8.5));
   for (let i = 0; i < ERAS; i++) {
     const { s, center, rowLen } = eraAnchors(i);
     const z = -i * CH;
-    // approach weave
     pts.push(new THREE.Vector3(-s * 1.6, 1.35 + (i % 2) * 0.5, z + CH * 0.55));
-    // flourish: loop around the batch's wire
     const lx = center.x - s * 1.1;
     const half = Math.min(rowLen / 2 + 0.8, 6);
     pts.push(new THREE.Vector3(lx, WIRE_Y + 0.35, z + half * 0.7));
@@ -305,48 +303,289 @@ function buildLineCurve(): THREE.CatmullRomCurve3 {
   return new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.35);
 }
 
-function TheLine({ refs }: { refs: SceneRefs }) {
-  const core = useRef<THREE.ShaderMaterial>(null!);
-  const glow = useRef<THREE.ShaderMaterial>(null!);
+const BASE_CURVE = buildBaseCurve();
 
-  const { coreGeo, glowGeo } = useMemo(() => {
-    const curve = buildLineCurve();
-    return {
-      coreGeo: new THREE.TubeGeometry(curve, 1400, 0.011, 6, false),
-      glowGeo: new THREE.TubeGeometry(curve, 700, 0.032, 6, false),
-    };
-  }, []);
+/** Find the curve parameter closest to a world z (the walk runs along -z). */
+function tAtZ(z: number): number {
+  let best = 0;
+  let bestD = Infinity;
+  for (let k = 0; k <= 400; k++) {
+    const t = k / 400;
+    const d = Math.abs(BASE_CURVE.getPointAt(t).z - z);
+    if (d < bestD) {
+      bestD = d;
+      best = t;
+    }
+  }
+  return best;
+}
+
+/** Birth points on the braid: Gunner (Nov 2009, NC), Nolan (2021, LA). */
+const T_GUNNER = tAtZ(-53);
+const T_NOLAN = tAtZ(-127);
+
+/**
+ * A thread of the family braid: the base path offset by a rotating radius —
+ * two big threads intertwined the whole way, kid threads orbiting wider
+ * from their birth point onward.
+ */
+function buildThread(phase: number, radius: number, tStart = 0): THREE.CatmullRomCurve3 {
+  const pts: THREE.Vector3[] = [];
+  const N = 420;
+  const up = new THREE.Vector3(0, 1, 0);
+  const side = new THREE.Vector3();
+  const upv = new THREE.Vector3();
+  for (let k = 0; k <= N; k++) {
+    const t = tStart + (1 - tStart) * (k / N);
+    const P = BASE_CURVE.getPointAt(t);
+    const T = BASE_CURVE.getTangentAt(t);
+    side.crossVectors(T, up).normalize();
+    upv.crossVectors(side, T).normalize();
+    const theta = t * Math.PI * 26 + phase;
+    // birth: kid threads flare out of the braid, then settle into orbit
+    const flare = tStart > 0 ? THREE.MathUtils.smoothstep((t - tStart) / 0.03, 0, 1) : 1;
+    const r = radius * flare;
+    P.addScaledVector(side, Math.cos(theta) * r).addScaledVector(upv, Math.sin(theta) * r);
+    pts.push(P);
+  }
+  return new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.1);
+}
+
+type ThreadSpec = {
+  id: string;
+  phase: number;
+  radius: number;
+  tube: number;
+  color: string;
+  glowColor: string;
+  tStart: number;
+};
+
+const THREADS: ThreadSpec[] = [
+  // Josh — gold. Samantha — rose. Together since junior year, the whole way.
+  { id: "josh", phase: 0, radius: 0.085, tube: 0.011, color: "0.82, 0.64, 0.30", glowColor: "0.82, 0.64, 0.30", tStart: 0 },
+  { id: "sam", phase: Math.PI, radius: 0.085, tube: 0.011, color: "0.85, 0.42, 0.34", glowColor: "0.85, 0.42, 0.34", tStart: 0 },
+  // The boys — brighter, smaller, orbiting wider.
+  { id: "gunner", phase: Math.PI / 2, radius: 0.19, tube: 0.006, color: "1.0, 0.86, 0.55", glowColor: "1.0, 0.86, 0.55", tStart: T_GUNNER },
+  { id: "nolan", phase: (3 * Math.PI) / 2, radius: 0.19, tube: 0.006, color: "1.0, 0.86, 0.55", glowColor: "1.0, 0.86, 0.55", tStart: T_NOLAN },
+];
+
+function threadFrag(color: string) {
+  return `
+  uniform float uHead;
+  uniform float uGlow;
+  varying vec2 vUv;
+  void main() {
+    if (vUv.x > uHead) discard;
+    float tail = smoothstep(uHead - 0.02, uHead, vUv.x);
+    vec3 c = vec3(${color}) * (0.85 + tail * 1.6);
+    gl_FragColor = vec4(c * uGlow, uGlow >= 1.0 ? 1.0 : 0.32);
+  }`;
+}
+
+function FamilyBraid({ refs }: { refs: SceneRefs }) {
+  const mats = useRef<THREE.ShaderMaterial[]>([]);
+
+  const threads = useMemo(
+    () =>
+      THREADS.map((spec) => {
+        const curve = buildThread(spec.phase, spec.radius, spec.tStart);
+        return {
+          spec,
+          coreGeo: new THREE.TubeGeometry(curve, 1000, spec.tube, 5, false),
+          glowGeo: new THREE.TubeGeometry(curve, 500, spec.tube * 2.8, 5, false),
+        };
+      }),
+    []
+  );
 
   useFrame(() => {
     const p = THREE.MathUtils.clamp(refs.progress.current ?? 0, 0, 1);
-    // the line draws just ahead of you — always leading, never finished behind
     const head = THREE.MathUtils.clamp(p * 0.94 + 0.055, 0, 1);
-    if (core.current) core.current.uniforms.uHead.value = head;
-    if (glow.current) glow.current.uniforms.uHead.value = head;
+    for (const m of mats.current) {
+      if (!m) continue;
+      const tStart = m.userData.tStart as number;
+      // kid threads draw on their own clock, from birth
+      m.uniforms.uHead.value =
+        tStart > 0 ? THREE.MathUtils.clamp((head - tStart) / (1 - tStart), 0, 1) : head;
+    }
   });
 
+  let mi = 0;
   return (
     <>
-      <mesh geometry={coreGeo}>
-        <shaderMaterial
-          ref={core}
-          vertexShader={DEVELOP_VERT}
-          fragmentShader={LINE_FRAG}
-          uniforms={{ uHead: { value: 0 }, uGlow: { value: 1.0 } }}
-        />
-      </mesh>
-      <mesh geometry={glowGeo}>
-        <shaderMaterial
-          ref={glow}
-          vertexShader={DEVELOP_VERT}
-          fragmentShader={LINE_FRAG}
-          uniforms={{ uHead: { value: 0 }, uGlow: { value: 0.35 } }}
-          transparent
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
+      {threads.map(({ spec, coreGeo, glowGeo }) => (
+        <group key={spec.id}>
+          <mesh geometry={coreGeo}>
+            <shaderMaterial
+              ref={(el: THREE.ShaderMaterial | null) => {
+                if (el) {
+                  el.userData.tStart = spec.tStart;
+                  mats.current[mi++] = el;
+                }
+              }}
+              vertexShader={DEVELOP_VERT}
+              fragmentShader={threadFrag(spec.color)}
+              uniforms={{ uHead: { value: 0 }, uGlow: { value: 1.0 } }}
+            />
+          </mesh>
+          <mesh geometry={glowGeo}>
+            <shaderMaterial
+              ref={(el: THREE.ShaderMaterial | null) => {
+                if (el) {
+                  el.userData.tStart = spec.tStart;
+                  mats.current[mi++] = el;
+                }
+              }}
+              vertexShader={DEVELOP_VERT}
+              fragmentShader={threadFrag(spec.glowColor)}
+              uniforms={{ uHead: { value: 0 }, uGlow: { value: 0.33 } }}
+              transparent
+              depthWrite={false}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+        </group>
+      ))}
+      {/* the wedding ring — 2008, the year everything doubled down */}
+      <mesh position={BASE_CURVE.getPointAt(tAtZ(-44)).toArray()} rotation={[Math.PI / 2.6, 0.4, 0]}>
+        <torusGeometry args={[0.34, 0.022, 10, 48]} />
+        <meshStandardMaterial
+          color="#c8a24b"
+          emissive="#c8a24b"
+          emissiveIntensity={0.9}
+          roughness={0.25}
+          metalness={0.9}
         />
       </mesh>
     </>
+  );
+}
+
+/* ----------------------------------------------------- floor tape labels */
+
+function makeLabelTexture(text: string): THREE.CanvasTexture {
+  const c = document.createElement("canvas");
+  c.width = 1024;
+  c.height = 96;
+  const g = c.getContext("2d")!;
+  g.clearRect(0, 0, 1024, 96);
+  g.font = "600 34px ui-monospace, monospace";
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  const grd = g.createLinearGradient(0, 0, 1024, 0);
+  grd.addColorStop(0, "rgba(190,120,80,0)");
+  grd.addColorStop(0.5, "rgba(215,150,95,0.95)");
+  grd.addColorStop(1, "rgba(190,120,80,0)");
+  g.fillStyle = grd;
+  g.fillText(text.toUpperCase(), 512, 50);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function FloorLabels() {
+  const labels = useMemo(
+    () =>
+      floorLabels.map((l) => ({
+        ...l,
+        tex: makeLabelTexture(l.text),
+        w: Math.min(3.2 + l.text.length * 0.075, 9),
+      })),
+    []
+  );
+  return (
+    <>
+      {labels.map((l, i) => (
+        <mesh
+          key={i}
+          position={[i % 2 === 0 ? -0.4 : 0.4, 0.02, l.z]}
+          rotation={[-Math.PI / 2, 0, (i % 2 === 0 ? 1 : -1) * 0.06]}
+        >
+          <planeGeometry args={[l.w, l.w * 0.094]} />
+          <meshBasicMaterial map={l.tex} transparent opacity={0.85} depthWrite={false} />
+        </mesh>
+      ))}
+    </>
+  );
+}
+
+/* --------------------------------------------- remote years: the signals */
+
+function SignalPulses() {
+  const HOME = useMemo(() => new THREE.Vector3(1.6, 2.0, -114), []);
+  const FAR = useMemo(() => new THREE.Vector3(-17, 3.4, -124), []);
+  const curve = useMemo(
+    () =>
+      new THREE.CatmullRomCurve3([
+        HOME,
+        new THREE.Vector3(-7, 4.6, -118),
+        FAR,
+      ]),
+    [HOME, FAR]
+  );
+  const lineGeo = useMemo(() => new THREE.TubeGeometry(curve, 100, 0.004, 4, false), [curve]);
+  const pulses = useRef<(THREE.Mesh | null)[]>([]);
+  const N = 7;
+
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    for (let i = 0; i < N; i++) {
+      const m = pulses.current[i];
+      if (!m) continue;
+      const out = i % 2 === 0; // work goes out, home pulls back
+      let f = (t * 0.11 + i / N) % 1;
+      if (!out) f = 1 - f;
+      curve.getPointAt(f, m.position);
+      const s = 0.5 + Math.sin(t * 5 + i) * 0.2;
+      m.scale.setScalar(s);
+    }
+  });
+
+  return (
+    <group>
+      <mesh geometry={lineGeo}>
+        <meshBasicMaterial color="#5c4a33" transparent opacity={0.5} />
+      </mesh>
+      {Array.from({ length: N }, (_, i) => (
+        <mesh
+          key={i}
+          ref={(el: THREE.Mesh | null) => {
+            pulses.current[i] = el;
+          }}
+        >
+          <sphereGeometry args={[0.05, 8, 8]} />
+          <meshBasicMaterial color={i % 2 === 0 ? "#e2c078" : "#f1ece2"} />
+        </mesh>
+      ))}
+      {/* the far city — a cold glow you never move to */}
+      <mesh position={FAR}>
+        <sphereGeometry args={[0.12, 12, 12]} />
+        <meshBasicMaterial color="#9fb9d9" />
+      </mesh>
+      <pointLight position={FAR} color="#7fa0c9" intensity={2.2} distance={9} decay={1.8} />
+    </group>
+  );
+}
+
+/* ------------------------------------------------------- the home beacon */
+
+function HomeBeacon() {
+  const light = useRef<THREE.PointLight>(null!);
+  useFrame(({ clock }) => {
+    if (light.current)
+      light.current.intensity = 2.6 + Math.sin(clock.elapsedTime * 1.1) * 0.5;
+  });
+  const z = -(ERAS - 1) * CH - 11;
+  return (
+    <group position={[0, 0, z]}>
+      {/* a porch light in the dark — where it started, where it ends */}
+      <mesh position={[0, 2.6, 0]}>
+        <sphereGeometry args={[0.09, 12, 12]} />
+        <meshBasicMaterial color="#ffd9a0" />
+      </mesh>
+      <pointLight ref={light} position={[0, 2.6, 0]} color="#ffd9a0" distance={14} decay={1.6} intensity={2.6} />
+    </group>
   );
 }
 
@@ -716,7 +955,10 @@ export function ArchiveScene({ refs }: { refs: SceneRefs }) {
       aria-hidden
     >
       <Rig refs={refs} />
-      <TheLine refs={refs} />
+      <FamilyBraid refs={refs} />
+      <FloorLabels />
+      <SignalPulses />
+      <HomeBeacon />
       <Wires />
       <BatchLights />
       {artifacts.map((a) => (

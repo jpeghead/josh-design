@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { detectTier, type CanvasTier } from "./capability";
 import { ArchiveScene } from "./archive-scene";
-import { eras, type Artifact } from "@/content/archive";
+import { eras, milestones, route, type Artifact } from "@/content/archive";
 import { identityLine } from "@/content/about";
 
 const WALK_VH = 120 * eras.length;
@@ -38,6 +38,9 @@ export function ArchiveExperience() {
   const [develop, setDevelop] = useState<number | null>(null);
   const [heroK, setHeroK] = useState(0);
   const [phase, setPhase] = useState<"hero" | "walk" | "finale">("hero");
+  const [toast, setToast] = useState<string | null>(null);
+  const crossed = useRef<Set<number>>(new Set());
+  const toastTimer = useRef<number>(0);
 
   const spacer = useRef<HTMLDivElement>(null);
   const progress = useRef(0);
@@ -73,6 +76,14 @@ export function ArchiveExperience() {
       const k = Math.min(p / 0.045, 1);
       setHeroK((prev) => (Math.abs(prev - k) > 0.02 || (k === 1) !== (prev === 1) ? k : prev));
       setPhase(p < 0.055 ? "hero" : p > 0.93 ? "finale" : "walk");
+      for (let mi = 0; mi < milestones.length; mi++) {
+        if (!crossed.current.has(mi) && p >= milestones[mi].p) {
+          crossed.current.add(mi);
+          setToast(milestones[mi].text);
+          window.clearTimeout(toastTimer.current);
+          toastTimer.current = window.setTimeout(() => setToast(null), 4200);
+        }
+      }
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
@@ -116,7 +127,7 @@ export function ArchiveExperience() {
             className="animate-marquee whitespace-nowrap font-mono text-[9px] tracking-[0.3em]"
             style={{ color: RED_DIM, animationDirection: "reverse", animationDuration: "80s" }}
           >
-            {`KODAK ▸ TRI-X 400 ▸ DEVELOPED BY HAND ▸ AGITATE GENTLY ▸ DO NOT OPEN THE DOOR ▸ `.repeat(8)}
+            {route.repeat(5)}
           </div>
         </div>
 
@@ -190,6 +201,18 @@ export function ArchiveExperience() {
                 agitate to develop — move across the print
               </p>
             )}
+          </div>
+        )}
+
+        {/* milestone toast — the life line, spoken quietly */}
+        {toast && phase === "walk" && (
+          <div
+            key={toast}
+            className="absolute inset-x-0 bottom-32 flex justify-center animate-rise"
+          >
+            <p className="max-w-md px-6 text-center font-display text-2xl italic" style={{ color: BONE, textShadow: "0 1px 18px rgba(0,0,0,0.8)" }}>
+              {toast}
+            </p>
           </div>
         )}
 

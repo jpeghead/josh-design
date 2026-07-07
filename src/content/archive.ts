@@ -195,3 +195,37 @@ export const artifacts: Artifact[] = [
 export function artifactsByEra(eraId: EraId): Artifact[] {
   return artifacts.filter((a) => a.eraId === eraId);
 }
+
+/* ------------------------------------------------------------------ life */
+
+/**
+ * The life line — the beats that run underneath the work. These drive the
+ * braid, the floor labels, and the milestone toasts in the walk.
+ */
+export type Milestone = { p: number; text: string };
+
+export const milestones: Milestone[] = [
+  { p: 0.07, text: "Samantha. Since junior year." },
+  { p: 0.3, text: "Married in 2008 — the same year I enlisted." },
+  { p: 0.38, text: "Gunner. November 1, 2009." },
+  { p: 0.63, text: "West, to Los Angeles." },
+  { p: 0.8, text: "Nolan. 2021." },
+  { p: 0.9, text: "Home. Cincinnati, 2023." },
+];
+
+/** The route, as film-rebate markings. */
+export const route =
+  "OHIO ▸ PARRIS ISLAND, SC ▸ CAMP GEIGER ▸ FORT MEADE, MD ▸ MCAS NEW RIVER, NC ▸ CINCINNATI ▸ LOS ANGELES ▸ REMOTE — HOME & EVERYWHERE ▸ CINCINNATI, OHIO ▸ HOME ▸ ";
+
+/** Floor labels — tape on the darkroom floor, place by z along the walk. */
+export const floorLabels: { z: number; text: string }[] = [
+  { z: 6, text: "CINCINNATI, OHIO — WHERE IT STARTS" },
+  { z: -38, text: "PARRIS ISLAND ▸ CAMP GEIGER ▸ FORT MEADE ▸ MCAS NEW RIVER" },
+  { z: -44, text: "MARRIED · 2008" },
+  { z: -53, text: "GUNNER · NOV 1, 2009 · NORTH CAROLINA" },
+  { z: -86, text: "BACK TO CINCINNATI · 2013" },
+  { z: -101, text: "LOS ANGELES, CA · 2014" },
+  { z: -114, text: "REMOTE — HOME & EVERYWHERE · 2019 →" },
+  { z: -127, text: "NOLAN · 2021 · LOS ANGELES" },
+  { z: -139, text: "CINCINNATI, OHIO · HOME · 2023" },
+];
