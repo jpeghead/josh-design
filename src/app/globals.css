@@ -200,3 +200,15 @@ html.darkroom-mode header nav a:hover {
 html.darkroom-mode header button {
   border-color: color-mix(in srgb, var(--color-bone) 25%, transparent);
 }
+
+/* Chapter HUD ink — flips with the chapter's world. */
+.hud-ink { color: var(--color-graphite); }
+.hud-tick { background: var(--color-graphite); }
+html.chapter-dark .hud-ink { color: var(--color-bone); }
+html.chapter-dark .hud-tick { background: var(--color-bone); }
+html.chapter-dark header a,
+html.chapter-dark header button,
+html.chapter-dark header nav a { color: var(--color-bone); }
+html.chapter-dark header nav a:not([aria-current]) {
+  color: color-mix(in srgb, var(--color-bone) 55%, transparent);
+}

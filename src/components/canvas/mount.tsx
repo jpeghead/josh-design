@@ -3,15 +3,15 @@
 import dynamic from "next/dynamic";
 
 /**
- * Client mount for the Archive experience. Loaded lazily so the canvas never
- * blocks first paint or the server-rendered content layer — which renders
- * first, always, and remains the fallback tier.
+ * Client mount for the chapters experience. Lazy — the story engine never
+ * blocks first paint; the server-rendered content layer renders first and
+ * remains the fallback tier.
  */
-const ArchiveExperience = dynamic(
-  () => import("./archive-experience").then((m) => m.ArchiveExperience),
+const ChaptersExperience = dynamic(
+  () => import("../chapters/engine").then((m) => m.ChaptersExperience),
   { ssr: false }
 );
 
 export function ArchiveMount() {
-  return <ArchiveExperience />;
+  return <ChaptersExperience />;
 }
