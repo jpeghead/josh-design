@@ -80,7 +80,7 @@ function spiral(cx: number, cy: number, r0: number, turns: number, n = 160): [nu
 
 /* -------------------------------------------------------------- the path */
 
-export const SPIRAL_C: [number, number] = [4780, 520];
+export const SPIRAL_C: [number, number] = [4960, 520];
 
 function S(style: EraStyle, pts: [number, number][], amp = 0): Stroke {
   return { style, pts: amp > 0 ? wob(dense(pts), amp) : dense(pts) };
@@ -88,7 +88,29 @@ function S(style: EraStyle, pts: [number, number][], amp = 0): Stroke {
 
 export const STROKES: Stroke[] = [
   // —— childhood: the first marks ——————————————————————————————
-  S("crayon", wave(160, 420, 520, 26, 2.2), 3.5),
+  S("crayon", wave(160, 380, 520, 26, 2), 3.5),
+  // the sun — every kid draws the sun first
+  S(
+    "crayon",
+    (() => {
+      const pts: [number, number][] = [
+        [380, 520],
+        [402, 430],
+        [374, 302],
+      ];
+      for (const q of circle(330, 302, 44, 0, 1, 24)) pts.push(q);
+      // rays
+      for (let r = 0; r < 5; r++) {
+        const a = -0.6 + r * 1.25;
+        pts.push([330 + Math.cos(a) * 44, 302 + Math.sin(a) * 44]);
+        pts.push([330 + Math.cos(a) * 66, 302 + Math.sin(a) * 66]);
+        pts.push([330 + Math.cos(a) * 44, 302 + Math.sin(a) * 44]);
+      }
+      pts.push([420, 520]);
+      return pts;
+    })(),
+    3
+  ),
   // rocket
   S(
     "crayon",
@@ -192,6 +214,17 @@ export const STROKES: Stroke[] = [
       [1810, 572],
     ],
     1.2
+  ),
+  // a life study on the canvas — the first time the line draws a person
+  S(
+    "sketch",
+    (() => {
+      const pts: [number, number][] = [[1810, 572]];
+      for (const q of circle(1878, 452, 13, Math.PI * 1.5, 1, 14)) pts.push(q);
+      pts.push([1874, 466], [1888, 492], [1866, 516], [1892, 542], [1996, 560]);
+      return pts;
+    })(),
+    1
   ),
   // perspective study: lines to a vanishing point
   S(
@@ -317,6 +350,14 @@ export const STROKES: Stroke[] = [
     [3730, 582],
     [4040, 582],
   ]),
+  // the cursor — the tool that replaced the pencil, drawn by the pencil
+  S("vector", [
+    [4040, 582],
+    [3952, 468],
+    [3992, 508],
+    [3962, 510],
+    [3952, 468],
+  ]),
 
   // —— the app era: the system multiplies —————————————————————
   S("system", [
@@ -355,10 +396,39 @@ export const STROKES: Stroke[] = [
     [4330, 628],
     [4330, 412],
   ]),
+  // Nolan — the second small bright loop
+  S(
+    "system",
+    (() => {
+      const pts: [number, number][] = [[4430, 520]];
+      for (const q of circle(4470, 486, 20, Math.PI * 0.5, 1, 20)) pts.push(q);
+      pts.push([4510, 520]);
+      return pts;
+    })()
+  ),
+  // home again — the childhood house, redrawn by the hand that left
+  S("system", [
+    [4510, 520],
+    [4536, 520],
+    [4536, 472],
+    [4520, 472],
+    [4584, 414],
+    [4648, 472],
+    [4632, 472],
+    [4632, 520],
+    [4536, 520],
+  ]),
+  S("system", [
+    [4566, 520],
+    [4566, 488],
+    [4602, 488],
+    [4602, 520],
+    [4680, 520],
+  ]),
   // strands begin — the one line echoes into color
-  S("flow", wave(4430, 4680, 520, 34, 2.2)),
+  S("flow", wave(4680, 4880, 520, 34, 2.2)),
   // the dive
-  S("flow", spiral(SPIRAL_C[0], SPIRAL_C[1], 170, 3.2)),
+  S("flow", spiral(SPIRAL_C[0], SPIRAL_C[1], 190, 4, 220)),
 ];
 
 /* ---------------------------------------------------- length precompute */
@@ -395,9 +465,20 @@ export function pointAtLen(L: number): [number, number] {
 
 export const STYLE: Record<
   EraStyle,
-  { width: number; color: string; alpha: number; echo?: { dx: number; dy: number; color: string }[] }
+  {
+    width: number;
+    color: string;
+    alpha: number;
+    echo?: { dx: number; dy: number; color: string; a?: number }[];
+  }
 > = {
-  crayon: { width: 5, color: "#33291f", alpha: 0.92 },
+  crayon: {
+    width: 5,
+    color: "#33291f",
+    alpha: 0.92,
+    // a second, slightly offset pass — wax on paper tooth
+    echo: [{ dx: 1.7, dy: 1.4, color: "#33291f", a: 0.26 }],
+  },
   sketch: { width: 3.2, color: "#2b241b", alpha: 0.95 },
   corps: { width: 2.6, color: "#232019", alpha: 1 },
   vector: { width: 2.2, color: "#1f2c3d", alpha: 1 },
@@ -469,7 +550,8 @@ export const CAPTIONS: Caption[] = [
   { x1: 2420, x2: 3240, text: "The Marines made me a photographer.", sub: "Parris Island · Camp Geiger · Fort Meade · MCAS New River" },
   { x1: 3255, x2: 3590, text: "Married in June. Enlisted the same year.", sub: "Gunner — November 1, 2009." },
   { x1: 3610, x2: 4090, text: "Taught myself to ship.", sub: "Cincinnati, then the jump west to Los Angeles." },
-  { x1: 4110, x2: 4560, text: "First designer in, Head of Design out. Twice.", sub: "Saucey · Hush · Spin · VGV — tap the work to open it." },
+  { x1: 4110, x2: 4420, text: "First designer in, Head of Design out. Twice.", sub: "Saucey · Hush · Spin · VGV — tap the work to open it." },
+  { x1: 4432, x2: 5000, text: "Nolan, 2021. Then we brought the whole line home.", sub: "Cincinnati, Ohio · 2023 — same house shape, steadier hand." },
   { a: 0.745, b: 0.83, text: "Somewhere along the way, the line stopped being something I drew —" },
   { a: 0.845, b: 0.915, text: "— and became somewhere I live.", sub: "OLO · Weaver · SignalScan · StoryMode · Mastery is Dead" },
 ];

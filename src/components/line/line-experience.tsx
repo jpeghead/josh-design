@@ -283,7 +283,7 @@ export function LineExperience() {
               for (const e of st2.echo) {
                 ctx.strokeStyle = e.color;
                 ctx.lineWidth = (st2.width * 0.8) / Math.sqrt(k.s);
-                ctx.globalAlpha = 0.55 * lineFade;
+                ctx.globalAlpha = (e.a ?? 0.55) * lineFade;
                 ctx.beginPath();
                 ctx.moveTo(sg.x1 + e.dx, sg.y1 + e.dy);
                 ctx.lineTo(
