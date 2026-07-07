@@ -1,11 +1,14 @@
 "use client";
 
 /**
- * The Archive scene — one continuous camera move through seven era chambers.
- * No cuts, no flicks: the environment (background, fog, light) transforms
- * continuously as the camera dollies forward. Artifacts hang in space as
- * mounted boards with real thickness; real images where they exist, labeled
- * empty frames where scans are pending.
+ * The Archive scene — a walk through seven lit exhibits.
+ *
+ * Staging rules (learned the hard way):
+ *  - Nothing floats. Work stands on the floor with weight and contact shadow.
+ *  - Each era is ONE composed scene in its own pool of light, alternating
+ *    sides of an S-curve path. Between scenes: quiet.
+ *  - The camera arrives, slows, turns its head toward the work, then releases.
+ *    Dwell is where the emotion lives — not the motion.
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -14,31 +17,48 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { EffectComposer, Noise, Vignette } from "@react-three/postprocessing";
 import { eras, artifacts, accent, type Artifact } from "@/content/archive";
 
-/** Chamber depth along the walk (world units per era). */
-const CH = 26;
-/** Camera Z at progress 0 / 1. */
-const Z_START = 10;
-const Z_END = -(eras.length - 1) * CH - 8;
+/* ------------------------------------------------------------ constants */
+
+const CH = 26; // distance between era scenes along the walk
+const ERAS = eras.length;
+const DWELL = 0.82; // 0..1 — how hard the camera lingers at each scene
+
+/** Base artwork height per era — scale contrast is part of the story. */
+const ERA_HEIGHT: Record<string, number> = {
+  childhood: 1.4, // a kid's work, small and low
+  poster: 2.3, // printed big, mounted on board
+  military: 2.5, // prints in the dark, larger than life
+  logos: 1.4,
+  web: 1.8,
+  app: 1.9,
+  today: 1.9,
+};
 
 export type SceneRefs = {
-  /** Scroll progress 0..1, written by the experience shell every frame. */
   progress: React.RefObject<number>;
-  /** Called (throttled by value-change) with the era index under the camera. */
   onEra: (i: number) => void;
-  /** Called with the artifact nearest the camera (or null). */
   onArtifact: (a: Artifact | null) => void;
-  /** Navigate to an internal route (push-in target). */
   onNavigate: (href: string) => void;
 };
 
 /* ---------------------------------------------------------------- utils */
 
 const eraColors = eras.map((e) => new THREE.Color(e.bg));
+const sideOf = (i: number) => (i % 2 === 0 ? -1 : 1);
 
-function rampColor(out: THREE.Color, p: number) {
-  const t = THREE.MathUtils.clamp(p, 0, 1) * (eras.length - 1);
-  const i = Math.min(Math.floor(t), eras.length - 2);
+function rampColor(out: THREE.Color, e: number) {
+  const t = THREE.MathUtils.clamp(e, 0, ERAS - 1);
+  const i = Math.min(Math.floor(t), ERAS - 2);
   return out.copy(eraColors[i]).lerp(eraColors[i + 1], t - i);
+}
+
+/**
+ * Dwell curve: progress → era-float with plateaus at each scene.
+ * f(u) = u - A·sin(2πu)/2π slows to (1-A) speed at every integer.
+ */
+function dwellCurve(p: number): number {
+  const u = THREE.MathUtils.clamp(p, 0, 1) * (ERAS - 1);
+  return u - (DWELL * Math.sin(2 * Math.PI * u)) / (2 * Math.PI);
 }
 
 function parseAspect(aspect: string): number {
@@ -46,21 +66,121 @@ function parseAspect(aspect: string): number {
   return w / h || 1;
 }
 
-/** Deterministic layout: artifacts staggered left/right through their chamber. */
-function artifactTransform(a: Artifact) {
-  const list = artifacts.filter((x) => x.eraId === a.eraId);
-  const j = list.indexOf(a);
-  const era = eras.find((e) => e.id === a.eraId)!;
-  const side = j % 2 === 0 ? -1 : 1;
-  const spread = CH * 0.72;
-  const z = -era.index * CH - 3 - (j + 0.5) * (spread / Math.max(list.length, 1));
-  const x = side * (2.7 + ((j * 37) % 13) / 9);
-  const y = 1.55 + ((j * 23) % 11) / 10;
-  const rotY = side * (0.32 + ((j * 17) % 7) / 40);
-  return { x, y, z, rotY };
+/* --------------------------------------------------------------- layout */
+
+type Placement = {
+  pos: THREE.Vector3;
+  quat: THREE.Quaternion;
+  w: number;
+  h: number;
+  eraIndex: number;
+};
+
+/**
+ * Gallery layout, computed as a whole:
+ *  - pieces stand side by side on the floor, parallel to the path
+ *  - crowded eras break into salon-style ranks (front row + set-back row)
+ *  - the wall's standoff derives from its widest rank, so the full scene
+ *    always fits the frame with air around it
+ */
+type EraAnchor = { s: number; center: THREE.Vector3; dwellPoint: THREE.Vector3; D: number };
+
+const GAP = 0.7;
+const MAX_RANK = 12.0; // max meters of artwork per rank
+
+const { LAYOUT, ANCHORS } = (() => {
+  const layout = new Map<string, Placement>();
+  const anchors: EraAnchor[] = [];
+
+  for (let i = 0; i < ERAS; i++) {
+    const era = eras[i];
+    const s = sideOf(i);
+    const list = artifacts.filter((a) => a.eraId === era.id);
+
+    // Measure pieces.
+    const dims = list.map((a, j) => {
+      const baseH = ERA_HEIGHT[era.id] ?? 2;
+      const h = baseH * (1 + (j % 3 === 1 ? 0.1 : j % 3 === 2 ? -0.08 : 0));
+      const w = Math.min(h * parseAspect(a.aspect), 4.4);
+      return { w, h };
+    });
+
+    // Chunk into ranks.
+    const ranks: number[][] = [[]];
+    let len = 0;
+    dims.forEach((d, j) => {
+      if (len + d.w > MAX_RANK && ranks[ranks.length - 1].length > 0) {
+        ranks.push([]);
+        len = 0;
+      }
+      ranks[ranks.length - 1].push(j);
+      len += d.w + GAP;
+    });
+    const rankLen = (r: number[]) =>
+      r.reduce((t, j) => t + dims[j].w, 0) + GAP * (r.length - 1);
+    const widest = Math.max(...ranks.map(rankLen));
+
+    // Standoff: the whole front rank fits a ~62° horizontal view with air.
+    const D = THREE.MathUtils.clamp(2.8 + widest * 0.58, 4.2, 10.5);
+    const center = new THREE.Vector3(s * D, 0, -i * CH);
+    const dwellPoint = new THREE.Vector3(s * 0.6, 1.58, -i * CH + 0.3);
+    anchors.push({ s, center, dwellPoint, D });
+
+    ranks.forEach((rank, r) => {
+      const L = rankLen(rank);
+      let cursor = -L / 2;
+      rank.forEach((j) => {
+        const a = list[j];
+        const { w, h } = dims[j];
+        const zOff = cursor + w / 2;
+        cursor += w + GAP;
+
+        const pos = new THREE.Vector3(
+          center.x + s * (r * 1.7 + ((j % 2) * 0.3)), // back ranks step away
+          h / 2 + 0.015,
+          center.z + zOff + (r % 2 ? 0.5 : 0)
+        );
+
+        const m = new THREE.Matrix4().lookAt(
+          pos,
+          new THREE.Vector3(dwellPoint.x, h * 0.42, dwellPoint.z),
+          new THREE.Vector3(0, 1, 0)
+        );
+        const quat = new THREE.Quaternion().setFromRotationMatrix(m);
+        const jitter = new THREE.Quaternion().setFromAxisAngle(
+          new THREE.Vector3(0, 1, 0),
+          ((j * 29) % 7) / 60 - 0.05
+        );
+        const lean = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -0.04);
+        quat.multiply(jitter).multiply(lean);
+
+        layout.set(a.id, { pos, quat, w, h, eraIndex: i });
+      });
+    });
+  }
+  return { LAYOUT: layout, ANCHORS: anchors };
+})();
+
+function eraAnchors(i: number): EraAnchor {
+  return ANCHORS[i];
 }
 
-/* ------------------------------------------------------- placeholder tex */
+/* ------------------------------------------------------- shared textures */
+
+let shadowTex: THREE.CanvasTexture | null = null;
+function getShadowTexture(): THREE.CanvasTexture {
+  if (shadowTex) return shadowTex;
+  const c = document.createElement("canvas");
+  c.width = c.height = 128;
+  const g = c.getContext("2d")!;
+  const grad = g.createRadialGradient(64, 64, 6, 64, 64, 62);
+  grad.addColorStop(0, "rgba(0,0,0,0.55)");
+  grad.addColorStop(1, "rgba(0,0,0,0)");
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 128, 128);
+  shadowTex = new THREE.CanvasTexture(c);
+  return shadowTex;
+}
 
 function makePlaceholderTexture(a: Artifact, dark: boolean): THREE.CanvasTexture {
   const r = parseAspect(a.aspect);
@@ -70,39 +190,27 @@ function makePlaceholderTexture(a: Artifact, dark: boolean): THREE.CanvasTexture
   c.width = W;
   c.height = H;
   const g = c.getContext("2d")!;
-
-  g.fillStyle = dark ? "#1d1c1a" : "#efe7d7";
+  g.fillStyle = dark ? "#201f1c" : "#efe6d3";
   g.fillRect(0, 0, W, H);
-  g.strokeStyle = dark ? "rgba(241,236,226,0.35)" : "rgba(38,34,27,0.35)";
+  g.strokeStyle = dark ? "rgba(241,236,226,0.3)" : "rgba(38,34,27,0.3)";
   g.setLineDash([10, 8]);
   g.lineWidth = 2;
   g.strokeRect(18, 18, W - 36, H - 36);
-
   g.setLineDash([]);
-  g.fillStyle = dark ? "rgba(241,236,226,0.5)" : "rgba(38,34,27,0.5)";
-  g.font = "500 18px ui-monospace, monospace";
+  g.fillStyle = dark ? "rgba(241,236,226,0.45)" : "rgba(38,34,27,0.45)";
+  g.font = "500 17px ui-monospace, monospace";
   g.textAlign = "center";
-  g.fillText("AWAITING SCAN", W / 2, H / 2 - 16);
-
+  g.fillText("AWAITING SCAN", W / 2, H / 2 - 14);
   g.fillStyle = dark ? "rgba(241,236,226,0.85)" : "rgba(38,34,27,0.85)";
-  g.font = `italic 600 ${Math.min(34, W / 10)}px Georgia, serif`;
-  g.fillText(a.title, W / 2, H / 2 + 22, W - 80);
-
+  g.font = `italic 600 ${Math.min(32, W / 11)}px Georgia, serif`;
+  g.fillText(a.title, W / 2, H / 2 + 22, W - 90);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
 
-/* ------------------------------------------------------------- artifact */
-
-/**
- * Non-suspending texture: the board exists in the scene from frame one (board
- * tone), the image attaches whenever it finishes decoding. No Suspense, no
- * pop-in of whole objects, no mount-timing races.
- */
 function useBoardTexture(a: Artifact, dark: boolean): THREE.Texture | null {
   const [map, setMap] = useState<THREE.Texture | null>(null);
-
   useEffect(() => {
     if (!a.image) {
       const t = makePlaceholderTexture(a, dark);
@@ -124,52 +232,50 @@ function useBoardTexture(a: Artifact, dark: boolean): THREE.Texture | null {
       tex?.dispose();
     };
   }, [a, dark]);
-
   return map;
 }
 
-function ArtifactBoard({ a, refs }: { a: Artifact; refs: SceneRefs }) {
+/* ------------------------------------------------------------- artifact */
+
+function ArtifactPiece({ a, refs }: { a: Artifact; refs: SceneRefs }) {
   const era = eras.find((e) => e.id === a.eraId)!;
   const map = useBoardTexture(a, era.dark);
-  return <BoardMesh a={a} refs={refs} map={map} />;
-}
-
-function BoardMesh({
-  a,
-  refs,
-  map,
-}: {
-  a: Artifact;
-  refs: SceneRefs;
-  map: THREE.Texture | null;
-}) {
   const group = useRef<THREE.Group>(null!);
-  const era = eras.find((e) => e.id === a.eraId)!;
-  const { x, y, z, rotY } = useMemo(() => artifactTransform(a), [a]);
-
-  const r = parseAspect(a.aspect);
-  const h = r >= 1 ? 2.1 : 2.5;
-  const w = Math.min(h * r, 4.4);
+  const place = LAYOUT.get(a.id)!;
+  const { w, h } = place;
 
   useFrame(({ camera }) => {
     const g = group.current;
     if (!g) return;
-    const dz = Math.abs(g.position.z - camera.position.z);
-    // Ease toward the camera as it passes — the "inspect" invitation.
-    const near = THREE.MathUtils.clamp(1 - dz / 7, 0, 1);
+    // A quiet acknowledgement as you stand before it — a breath, not a pop.
+    const d = g.position.distanceTo(camera.position);
+    const near = THREE.MathUtils.clamp(1 - d / 8, 0, 1);
     const k = near * near;
-    g.scale.setScalar(THREE.MathUtils.lerp(g.scale.x, 1 + k * 0.1, 0.08));
-    g.rotation.y = THREE.MathUtils.lerp(g.rotation.y, rotY * (1 - k * 0.85), 0.07);
+    const target = 1 + k * 0.03;
+    g.scale.setScalar(THREE.MathUtils.lerp(g.scale.x, target, 0.06));
   });
 
   return (
-    <group ref={group} position={[x, y, z]} rotation={[0, rotY, 0]}>
-      {/* Mounted board — real thickness, hand-cut edge tone */}
-      <mesh position={[0, 0, -0.038]}>
-        <boxGeometry args={[w + 0.1, h + 0.1, 0.07]} />
-        <meshStandardMaterial color={era.dark ? "#2a2925" : "#d8cdb8"} roughness={0.92} />
+    <group ref={group} position={place.pos} quaternion={place.quat}>
+      {/* contact shadow — weight on the floor */}
+      <mesh
+        position={[0, -h / 2 + 0.005, 0.15]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
+        <planeGeometry args={[w * 1.35, w * 0.5]} />
+        <meshBasicMaterial
+          map={getShadowTexture()}
+          transparent
+          opacity={era.dark ? 0.55 : 0.34}
+          depthWrite={false}
+        />
       </mesh>
-      {/* The work itself */}
+      {/* mounted board — thickness, hand-cut edge */}
+      <mesh position={[0, 0, -0.04]}>
+        <boxGeometry args={[w + 0.09, h + 0.09, 0.075]} />
+        <meshStandardMaterial color={era.dark ? "#26251f" : "#d9cdb4"} roughness={0.93} />
+      </mesh>
+      {/* the work */}
       <mesh
         onPointerOver={(e) => {
           e.stopPropagation();
@@ -187,34 +293,70 @@ function BoardMesh({
       >
         <planeGeometry args={[w, h]} />
         {map ? (
-          // emissiveMap lifts the artwork like a gallery picture light —
-          // legible even as the rooms darken.
           <meshStandardMaterial
             map={map}
-            roughness={0.68}
+            roughness={0.7}
             emissive="#ffffff"
             emissiveMap={map}
-            emissiveIntensity={era.dark ? 0.5 : 0.28}
+            emissiveIntensity={era.dark ? 0.42 : 0.2}
           />
         ) : (
-          <meshStandardMaterial color={era.dark ? "#232220" : "#e6ddca"} roughness={0.8} />
+          <meshStandardMaterial color={era.dark ? "#232220" : "#e6dcc6"} roughness={0.85} />
         )}
       </mesh>
     </group>
   );
 }
 
-/* ----------------------------------------------------------- thresholds */
+/* ------------------------------------------------------------ exhibits */
 
-function Thresholds() {
+function SceneLights() {
+  const spots = useRef<(THREE.SpotLight | null)[]>([]);
+  const targets = useMemo(
+    () =>
+      eras.map((_, i) => {
+        const { center } = eraAnchors(i);
+        const t = new THREE.Object3D();
+        t.position.set(center.x, 1.1, center.z);
+        return t;
+      }),
+    []
+  );
+
+  useFrame(({ camera }) => {
+    for (let i = 0; i < ERAS; i++) {
+      const s = spots.current[i];
+      if (!s) continue;
+      // Only nearby scenes burn bright — pools of light in the walk.
+      const dz = Math.abs(-i * CH - camera.position.z);
+      const near = THREE.MathUtils.clamp(1 - dz / (CH * 1.15), 0, 1);
+      s.intensity = 14 * near * near + 0.6;
+    }
+  });
+
   return (
     <>
-      {eras.slice(1).map((era) => (
-        <mesh key={era.id} position={[0, 0.02, -era.index * CH + CH / 2]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[10, 0.05]} />
-          <meshBasicMaterial color={accent} transparent opacity={0.55} />
-        </mesh>
-      ))}
+      {eras.map((era, i) => {
+        const { s, center } = eraAnchors(i);
+        return (
+          <group key={era.id}>
+            <primitive object={targets[i]} />
+            <spotLight
+              ref={(el: THREE.SpotLight | null) => {
+                spots.current[i] = el;
+                if (el) el.target = targets[i];
+              }}
+              position={[center.x - s * 1.6, 6.4, center.z + 2.6]}
+              angle={0.62}
+              penumbra={0.95}
+              distance={22}
+              decay={1.5}
+              color={era.light}
+              intensity={2}
+            />
+          </group>
+        );
+      })}
     </>
   );
 }
@@ -224,20 +366,19 @@ function Thresholds() {
 function Dust() {
   const ref = useRef<THREE.Points>(null!);
   const positions = useMemo(() => {
-    const n = 1600;
+    const n = 1500;
     const arr = new Float32Array(n * 3);
     for (let i = 0; i < n; i++) {
-      arr[i * 3] = (Math.random() - 0.5) * 18;
+      arr[i * 3] = (Math.random() - 0.5) * 20;
       arr[i * 3 + 1] = Math.random() * 5.5;
-      arr[i * 3 + 2] = 16 - Math.random() * (Math.abs(Z_END) + 40);
+      arr[i * 3 + 2] = 14 - Math.random() * (ERAS * CH + 36);
     }
     return arr;
   }, []);
 
   useFrame(({ clock }) => {
     if (ref.current) {
-      ref.current.position.y = Math.sin(clock.elapsedTime * 0.11) * 0.35;
-      ref.current.rotation.y = Math.sin(clock.elapsedTime * 0.05) * 0.03;
+      ref.current.position.y = Math.sin(clock.elapsedTime * 0.1) * 0.3;
     }
   });
 
@@ -247,11 +388,11 @@ function Dust() {
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
       <pointsMaterial
-        size={0.035}
+        size={0.03}
         sizeAttenuation
         transparent
-        opacity={0.5}
-        color="#cfc6b4"
+        opacity={0.38}
+        color="#d8cfbc"
         depthWrite={false}
         blending={THREE.AdditiveBlending}
       />
@@ -263,7 +404,7 @@ function Dust() {
 
 function Finale({ refs }: { refs: SceneRefs }) {
   const group = useRef<THREE.Points>(null!);
-  const zC = Z_END - 4;
+  const zC = -(ERAS - 1) * CH - 7;
 
   const [positions, colors] = useMemo(() => {
     const n = 3200;
@@ -271,9 +412,8 @@ function Finale({ refs }: { refs: SceneRefs }) {
     const col = new Float32Array(n * 3);
     const palette = [...eraColors, new THREE.Color(accent), new THREE.Color(accent)];
     for (let i = 0; i < n; i++) {
-      // A loose torus-cloud the camera lands inside — traces of every era.
       const a = Math.random() * Math.PI * 2;
-      const rad = 2.4 + Math.random() * 3.2;
+      const rad = 2.4 + Math.random() * 3.4;
       pos[i * 3] = Math.cos(a) * rad * (0.7 + Math.random() * 0.6);
       pos[i * 3 + 1] = 1.6 + (Math.random() - 0.5) * 3.4;
       pos[i * 3 + 2] = zC + Math.sin(a) * rad * 0.5 - Math.random() * 3;
@@ -283,23 +423,21 @@ function Finale({ refs }: { refs: SceneRefs }) {
       col[i * 3 + 2] = c.b;
     }
     return [pos, col];
-  }, []);
+  }, [zC]);
 
   useFrame(({ clock, pointer }) => {
     const g = group.current;
     if (!g) return;
     const p = refs.progress.current ?? 0;
-    const active = THREE.MathUtils.clamp((p - 0.82) / 0.18, 0, 1);
+    const active = THREE.MathUtils.clamp((p - 0.84) / 0.16, 0, 1);
     g.rotation.y = clock.elapsedTime * (0.03 + active * 0.12);
-    // The room answers the visitor — the field leans toward the pointer.
     g.rotation.x = THREE.MathUtils.lerp(g.rotation.x, pointer.y * 0.12 * active, 0.04);
     g.rotation.z = THREE.MathUtils.lerp(g.rotation.z, -pointer.x * 0.15 * active, 0.04);
-    const s = 1 + Math.sin(clock.elapsedTime * 0.6) * 0.02 * active;
-    g.scale.setScalar(s);
+    g.scale.setScalar(1 + Math.sin(clock.elapsedTime * 0.6) * 0.02 * active);
   });
 
   return (
-    <points ref={group} position={[0, 0, 0]}>
+    <points ref={group}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
         <bufferAttribute attach="attributes-color" args={[colors, 3]} />
@@ -317,69 +455,84 @@ function Finale({ refs }: { refs: SceneRefs }) {
   );
 }
 
-/* ------------------------------------------------------------ rig/world */
+/* ------------------------------------------------------------------ rig */
 
 function Rig({ refs }: { refs: SceneRefs }) {
   const { scene, camera } = useThree();
   const bg = useMemo(() => new THREE.Color(), []);
-  const key = useRef<THREE.DirectionalLight>(null!);
-  const lantern = useRef<THREE.PointLight>(null!);
   const ambient = useRef<THREE.AmbientLight>(null!);
+  const lantern = useRef<THREE.PointLight>(null!);
   const floorMat = useRef<THREE.MeshStandardMaterial>(null!);
   const lastEra = useRef(-1);
   const nearest = useRef<string | null>(null);
+  const gaze = useMemo(() => new THREE.Vector3(0, 1.4, 0), []);
 
   useMemo(() => {
-    scene.fog = new THREE.Fog("#f4eee2", 7, 44);
+    scene.fog = new THREE.Fog("#F3E9D7", 6, 42);
   }, [scene]);
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     const p = THREE.MathUtils.clamp(refs.progress.current ?? 0, 0, 1);
+    const e = dwellCurve(p); // era-float with dwell plateaus
+    const i = Math.round(THREE.MathUtils.clamp(e, 0, ERAS - 1));
+    const { dwellPoint } = eraAnchors(i);
 
-    // --- continuous dolly with gentle drift (never a cut) ---
-    const z = THREE.MathUtils.lerp(Z_START, Z_END, p);
-    const sway = Math.sin(p * Math.PI * 2.6) * 1.5;
-    const bob = Math.sin(p * Math.PI * 7) * 0.1;
-    camera.position.set(sway, 1.7 + bob, z);
-    camera.lookAt(sway * 0.35, 1.5, z - 9);
+    // Lead-in: open pulled back from the first exhibit — it waits ahead in
+    // the light. The first scroll carries you to it.
+    const lead = 1 - THREE.MathUtils.smoothstep(p, 0, 0.055);
 
-    // --- the environment transforms with the eras ---
-    rampColor(bg, p);
+    // How present we are at scene i (1 = standing in the exhibit).
+    const presence = THREE.MathUtils.clamp(1 - Math.abs(e - i) * 2.2, 0, 1) * (1 - lead);
+    const w = presence * presence * (3 - 2 * presence); // smoothstep
+
+    // --- camera: S-curve path, easing toward each exhibit, then releasing ---
+    const z = 2 - e * CH + lead * 10;
+    const x = THREE.MathUtils.lerp(0, dwellPoint.x, w);
+    const y = 1.62 + Math.sin(e * Math.PI * 2.2) * 0.05 * (1 - w);
+    camera.position.set(x, y, z);
+
+    // Gaze: down the walk between scenes; toward the work when arrived.
+    const { center } = eraAnchors(i);
+    const ahead = 1 - w;
+    gaze.set(
+      center.x * w + x * ahead * 0.3,
+      1.25 * w + 1.45 * ahead,
+      (center.z - 0.4) * w + (z - 10) * ahead
+    );
+    camera.lookAt(gaze);
+
+    // --- environment ramp ---
+    rampColor(bg, e);
     scene.background = bg;
-    const fog = scene.fog as THREE.Fog;
-    fog.color.copy(bg);
+    (scene.fog as THREE.Fog).color.copy(bg);
 
-    if (ambient.current) ambient.current.intensity = THREE.MathUtils.lerp(1.15, 0.38, p);
-    if (key.current) {
-      key.current.position.set(camera.position.x + 4, 7, z + 6);
-      key.current.target.position.set(camera.position.x, 1.2, z - 8);
-      key.current.target.updateMatrixWorld();
-      key.current.intensity = THREE.MathUtils.lerp(1.5, 0.7, p);
+    if (ambient.current) {
+      ambient.current.intensity = THREE.MathUtils.lerp(0.62, 0.18, e / (ERAS - 1));
+      ambient.current.color.set(eras[i].light).lerp(new THREE.Color("#ffffff"), 0.5);
     }
     if (lantern.current) {
-      lantern.current.position.set(camera.position.x, 2.6, z - 3.5);
-      lantern.current.intensity = THREE.MathUtils.lerp(0.0, 2.2, THREE.MathUtils.clamp((p - 0.3) / 0.5, 0, 1));
+      lantern.current.position.set(x, 2.4, z - 2.5);
+      lantern.current.intensity = THREE.MathUtils.lerp(0, 1.6, THREE.MathUtils.clamp((e - 3) / 2.4, 0, 1));
     }
-    if (floorMat.current) floorMat.current.color.copy(bg).multiplyScalar(0.86);
+    if (floorMat.current) floorMat.current.color.copy(bg).multiplyScalar(0.9);
 
-    // --- era + nearest-artifact callbacks (cheap, change-gated) ---
-    const eraIdx = Math.min(Math.round(p * (eras.length - 1)), eras.length - 1);
-    if (eraIdx !== lastEra.current) {
-      lastEra.current = eraIdx;
-      refs.onEra(eraIdx);
+    // --- HUD callbacks ---
+    if (i !== lastEra.current) {
+      lastEra.current = i;
+      refs.onEra(i);
     }
-
+    // Caption the exhibit while standing in it.
     let best: Artifact | null = null;
-    let bestD = 7;
-    for (const a of artifacts) {
-      const t = artifactTransform(a);
-      // Signed window: favor what's ahead of the camera, allow a sliver behind.
-      const ahead = z - t.z; // > 0 → artifact lies ahead on the walk
-      if (ahead < -1.5 || ahead > 7) continue;
-      const d = Math.abs(ahead);
-      if (d < bestD) {
-        bestD = d;
-        best = a;
+    if (w > 0.45) {
+      let bestD = 9;
+      for (const a of artifacts) {
+        const pl = LAYOUT.get(a.id)!;
+        if (pl.eraIndex !== i) continue;
+        const d = pl.pos.distanceTo(camera.position);
+        if (d < bestD) {
+          bestD = d;
+          best = a;
+        }
       }
     }
     const id = best?.id ?? null;
@@ -388,32 +541,26 @@ function Rig({ refs }: { refs: SceneRefs }) {
       refs.onArtifact(best);
     }
 
-    // Dev-only scene probe for QA tooling.
     if (process.env.NODE_ENV !== "production") {
-      let meshes = 0;
-      scene.traverse((o) => {
-        if ((o as THREE.Mesh).isMesh) meshes++;
-      });
       (window as unknown as Record<string, unknown>).__archiveDebug = {
         p,
-        cam: camera.position.toArray().map((n) => +n.toFixed(2)),
-        meshes,
-        bg: "#" + bg.getHexString(),
-        era: eraIdx,
+        e: +e.toFixed(2),
+        era: i,
+        presence: +w.toFixed(2),
+        cam: camera.position.toArray().map((n) => +n.toFixed(1)),
       };
     }
+    void delta;
   });
 
   return (
     <>
-      <ambientLight ref={ambient} intensity={1.1} color="#fff6e8" />
-      <directionalLight ref={key} intensity={1.4} color="#fff2dc" />
-      {/* The safelight lantern that travels with you into the dark */}
-      <pointLight ref={lantern} intensity={0} color={accent} distance={16} decay={1.6} />
-      {/* Museum floor, tinted by the ramp */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, Z_END / 2]}>
-        <planeGeometry args={[70, Math.abs(Z_END) + 90]} />
-        <meshStandardMaterial ref={floorMat} color="#e9e2d2" roughness={0.96} />
+      <ambientLight ref={ambient} intensity={0.6} color="#fff2dd" />
+      {/* the gold safelight that joins the walk as the rooms go dark */}
+      <pointLight ref={lantern} intensity={0} color={accent} distance={15} decay={1.6} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, (-(ERAS - 1) * CH) / 2]}>
+        <planeGeometry args={[80, ERAS * CH + 100]} />
+        <meshStandardMaterial ref={floorMat} color="#e9e0cb" roughness={0.97} />
       </mesh>
     </>
   );
@@ -425,21 +572,21 @@ export function ArchiveScene({ refs }: { refs: SceneRefs }) {
   return (
     <Canvas
       dpr={[1, 1.75]}
-      camera={{ fov: 52, near: 0.1, far: 90, position: [0, 1.7, Z_START] }}
+      camera={{ fov: 50, near: 0.1, far: 90, position: [0, 1.62, 2] }}
       gl={{ antialias: true, powerPreference: "high-performance" }}
       style={{ position: "fixed", inset: 0 }}
       aria-hidden
     >
       <Rig refs={refs} />
+      <SceneLights />
       {artifacts.map((a) => (
-        <ArtifactBoard key={a.id} a={a} refs={refs} />
+        <ArtifactPiece key={a.id} a={a} refs={refs} />
       ))}
-      <Thresholds />
       <Dust />
       <Finale refs={refs} />
       <EffectComposer>
-        <Noise opacity={0.055} />
-        <Vignette darkness={0.62} offset={0.28} />
+        <Noise opacity={0.04} />
+        <Vignette darkness={0.46} offset={0.3} />
       </EffectComposer>
     </Canvas>
   );

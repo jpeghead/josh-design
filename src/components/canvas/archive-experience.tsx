@@ -99,31 +99,28 @@ export function ArchiveExperience() {
 
       {/* ------------- HUD ------------- */}
       <div className="pointer-events-none fixed inset-0 z-10" aria-hidden>
-        {/* Drawn-in hero — resolves from sketch to crisp as the walk begins */}
+        {/* Hero — crisp from the first frame; it simply steps aside as the
+            walk begins. The room behind it is the effect. */}
         <div
-          className="absolute inset-0 flex flex-col items-start justify-center px-6 sm:px-14 transition-opacity duration-500"
-          style={{ opacity: phase === "hero" ? 1 : 0 }}
+          className="absolute inset-0 flex flex-col items-start justify-center px-6 sm:px-14"
+          style={{
+            opacity: 1 - heroK,
+            transform: `translateY(${heroK * -28}px)`,
+            transition: "opacity 200ms linear",
+          }}
         >
-          <p className="eyebrow mb-5" style={{ color: "#8a8172" }}>
+          <p className="eyebrow mb-5" style={{ color: "#97876C" }}>
             The Archive — a working record of a life&rsquo;s making
           </p>
-          <h1
-            className="font-display leading-[0.92] tracking-tight text-[14vw] sm:text-[10vw]"
-            style={{
-              color: `rgba(38,34,27,${0.25 + heroK * 0.75})`,
-              WebkitTextStroke: `${1.2 * (1 - heroK)}px rgba(38,34,27,0.9)`,
-              filter: `blur(${(1 - heroK) * 1.6}px)`,
-              transform: `translateY(${(1 - heroK) * 8}px)`,
-            }}
-          >
+          <h1 className="font-display leading-[0.92] tracking-tight text-[14vw] text-[#241F17] sm:text-[10vw]">
             Josh
             <br />
             <span className="italic">Whitehead</span>
           </h1>
-          <p className="mt-7 max-w-md text-lg" style={{ color: "#5c554a" }}>
+          <p className="mt-7 max-w-md text-lg" style={{ color: "#5A4F3E" }}>
             {identityLine}
           </p>
-          <p className="mt-10 font-mono text-[11px] uppercase tracking-[0.25em]" style={{ color: "#8a8172" }}>
+          <p className="mt-10 font-mono text-[11px] uppercase tracking-[0.25em]" style={{ color: "#97876C" }}>
             Scroll to walk ↓
           </p>
         </div>

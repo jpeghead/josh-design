@@ -31,6 +31,8 @@ export type Era = {
   bg: string;
   fg: string;
   muted: string;
+  /** Key-light tint — each era has its own light, not just a background. */
+  light: string;
   dark: boolean;
 };
 
@@ -72,9 +74,10 @@ export const eras: Era[] = [
     title: "Before it was a job",
     years: "The beginning",
     blurb: "A kid who drew and wrote and built all day, every day.",
-    bg: "#F4EEE2",
-    fg: "#26221B",
-    muted: "#8a8172",
+    bg: "#F3E9D7",
+    fg: "#241F17",
+    muted: "#97876C",
+    light: "#FFD9A0",
     dark: false,
   },
   {
@@ -83,9 +86,10 @@ export const eras: Era[] = [
     title: "Printed & cut by hand",
     years: "Learning to make",
     blurb: "Posters designed, printed large-format, glued to board, cut by hand. Still got the scar.",
-    bg: "#E7DCC8",
-    fg: "#2A251D",
-    muted: "#8f8474",
+    bg: "#EAD9BE",
+    fg: "#2A2318",
+    muted: "#8F7E5F",
+    light: "#FFE0AC",
     dark: false,
   },
   {
@@ -94,9 +98,10 @@ export const eras: Era[] = [
     title: "The Corps",
     years: "2008 – 2013",
     blurb: "Five years behind a camera in places that didn't ask for one. Where it clicked.",
-    bg: "#A79E90",
-    fg: "#1c1a16",
-    muted: "#4b463d",
+    bg: "#8E8A7A",
+    fg: "#14120D",
+    muted: "#3E3B30",
+    light: "#E8DDBA",
     dark: false,
   },
   {
@@ -105,9 +110,10 @@ export const eras: Era[] = [
     title: "Marks & illustration",
     years: "The self-taught years",
     blurb: "Rebuilding other people's sites and covers just to understand how they were made.",
-    bg: "#6C6860",
+    bg: "#4E4A44",
     fg: "#F1ECE2",
-    muted: "#b7b0a4",
+    muted: "#B3AB9C",
+    light: "#CBB98D",
     dark: true,
   },
   {
@@ -116,9 +122,10 @@ export const eras: Era[] = [
     title: "The web era",
     years: "2013 – 2015",
     blurb: "First design job out of the Marines. Designed in the morning, built the front-end by night.",
-    bg: "#43423E",
+    bg: "#35363A",
     fg: "#F1ECE2",
-    muted: "#a49f96",
+    muted: "#9BA3AD",
+    light: "#A9BCCE",
     dark: true,
   },
   {
@@ -127,9 +134,10 @@ export const eras: Era[] = [
     title: "Things people carry",
     years: "2015 – 2023",
     blurb: "The App Store epiphany, made literal. Products that ride in a pocket, everywhere.",
-    bg: "#232322",
+    bg: "#17181B",
     fg: "#F1ECE2",
-    muted: "#8f8b83",
+    muted: "#7E8794",
+    light: "#7FA0C9",
     dark: true,
   },
   {
@@ -140,7 +148,8 @@ export const eras: Era[] = [
     blurb: "My own studio, my own products. Still just the kid who won't stop making things.",
     bg: "#0A0A0A",
     fg: "#F1ECE2",
-    muted: "#7d7a74",
+    muted: "#7D7A74",
+    light: "#C8A24B",
     dark: true,
   },
 ];
