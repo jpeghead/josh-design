@@ -184,3 +184,19 @@ html.canvas-mode header {
   border-color: transparent;
   backdrop-filter: none;
 }
+
+/* Darkroom mode — chrome adapts to the near-black world. */
+html.darkroom-mode header a,
+html.darkroom-mode header button,
+html.darkroom-mode header nav a {
+  color: var(--color-bone);
+}
+html.darkroom-mode header nav a:not([aria-current]) {
+  color: color-mix(in srgb, var(--color-bone) 55%, transparent);
+}
+html.darkroom-mode header nav a:hover {
+  color: var(--color-bone);
+}
+html.darkroom-mode header button {
+  border-color: color-mix(in srgb, var(--color-bone) 25%, transparent);
+}
