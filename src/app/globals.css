@@ -1,219 +1,186 @@
 @import "tailwindcss";
 
 @theme {
-  /* === Color system: Rolex boutique emerald + cream + applied gold === */
-  /* Preserved aliases (ink/bone/safelight/etc.) keep existing components
-     compiling while the eye registers the new boutique palette. */
+  /* ============================================================
+     The Archive — a light → dark arc, one warm gold throughout.
+     Paper at the start of the story, near-black at the end.
+     ============================================================ */
 
-  /* Emerald — the Rolex boutique wall, the velvet under a Daytona */
-  --color-ink: #0a3024;           /* deep boutique emerald */
-  --color-ink-50: #103a2c;        /* mid emerald */
-  --color-ink-100: #155040;       /* lifted emerald */
+  /* Paper end of the ramp (early eras, light surfaces) */
+  --color-paper: #f4eee2;        /* lightest — the opening */
+  --color-paper-2: #e7dcc8;      /* printed cream */
+  --color-paper-3: #d8cdb8;      /* aged board */
+  --color-paper-line: #d9cdb6;   /* hairline on paper */
 
-  /* Cream / warm bone — the Daytona dial backdrop */
-  --color-bone: #f5ede0;          /* Daytona cream */
-  --color-bone-dim: #cdbfa8;      /* warm muted */
-  --color-bone-muted: #8e8270;    /* engraved */
-  --color-bone-line: #1d4636;     /* hairline against emerald */
+  /* Ink end of the ramp (late eras, dark surfaces) */
+  --color-ink: #0a0a0a;          /* darkest — the finale */
+  --color-ink-2: #171716;        /* lifted black */
+  --color-ink-3: #232322;        /* app-era graphite */
+  --color-ink-line: #2c2b28;     /* hairline on ink */
 
-  /* Applied gold — the Rolex crown, applied indices */
-  --color-safelight: #c8a76a;     /* applied gold — primary accent */
-  --color-sodium: #e8c87a;        /* highlight gold */
-  --color-emulsion: #a8c4a2;      /* super-luminova / sage */
+  /* Text on light */
+  --color-graphite: #26221b;     /* primary on paper */
+  --color-graphite-dim: #5c554a; /* secondary on paper */
+  --color-graphite-muted: #8a8172;
 
-  /* New retail tones */
-  --color-emerald: #0a3024;       /* canonical emerald */
-  --color-emerald-bright: #1a5240;
-  --color-cream: #f5ede0;
-  --color-cream-warm: #ebdfc9;
-  --color-gold: #c8a76a;
-  --color-gold-bright: #e8c87a;
-  --color-rose-gold: #b97a5c;
-  --color-velvet: #0d0d0e;
-  --color-crown-red: #c43a3a;
+  /* Text on dark */
+  --color-bone: #f1ece2;         /* primary on ink */
+  --color-bone-dim: #b7b0a4;     /* secondary on ink */
+  --color-bone-muted: #7d7a74;   /* tertiary on ink */
 
-  /* === Typography === */
+  /* The single accent — warm gold (tunable) */
+  --color-gold: #c8a24b;
+  --color-gold-bright: #e2c078;
+  --color-gold-dim: #a3823a;
+
+  /* === Typography (bound by next/font in layout) === */
   --font-display: var(--font-display);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
 
   /* === Motion === */
-  --ease-emulsion: cubic-bezier(0.22, 1, 0.36, 1);
-
-  /* === Animations === */
-  --animate-flicker: flicker 4s linear infinite;
-  --animate-scan: scan 8s linear infinite;
-  --animate-blink: blink 1.1s steps(2) infinite;
+  --ease-cinematic: cubic-bezier(0.22, 1, 0.36, 1);
   --animate-marquee: marquee 60s linear infinite;
-  --animate-marquee-slow: marquee 120s linear infinite;
-  --animate-shimmer: shimmer 9s ease-in-out infinite;
+  --animate-rise: rise 0.9s var(--ease-cinematic) both;
 }
 
-@keyframes flicker {
-  0%, 96%, 100% { opacity: 1; }
-  97% { opacity: 0.78; }
-  98% { opacity: 1; }
-  99% { opacity: 0.86; }
-}
-@keyframes scan {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100vh); }
-}
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
 @keyframes marquee {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
-@keyframes shimmer {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+@keyframes rise {
+  0% { opacity: 0; transform: translateY(14px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    background: var(--color-ink);
-    color: var(--color-bone);
-    position: relative;
-  }
-
-  body {
-    background: var(--color-ink);
-    color: var(--color-bone);
-    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-    overflow-x: hidden;
-    position: relative;
-  }
-
-  html.lenis,
-  html.lenis body {
-    height: auto;
-  }
-  .lenis.lenis-smooth {
-    scroll-behavior: auto !important;
-  }
-  .lenis.lenis-smooth [data-lenis-prevent] {
-    overscroll-behavior: contain;
-  }
-  .lenis.lenis-stopped {
-    overflow: hidden;
-  }
-
-  ::selection {
-    background: var(--color-gold);
-    color: var(--color-emerald);
-  }
-
-  /* Very subtle film grain — barely perceptible */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 60;
-    opacity: 0.04;
-    mix-blend-mode: overlay;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  }
-
-  html {
+    background: var(--color-paper);
+    color: var(--color-graphite);
     scroll-behavior: smooth;
   }
 
-  ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track { background: var(--color-ink); }
-  ::-webkit-scrollbar-thumb {
-    background: var(--color-bone-line);
-    border-radius: 0;
+  body {
+    background: var(--color-paper);
+    color: var(--color-graphite);
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    overflow-x: hidden;
+    min-height: 100dvh;
   }
-  ::-webkit-scrollbar-thumb:hover { background: var(--color-bone-muted); }
+
+  /* Lenis smooth-scroll hooks (used only when JS + motion are on) */
+  html.lenis, html.lenis body { height: auto; }
+  .lenis.lenis-smooth { scroll-behavior: auto !important; }
+  .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+  .lenis.lenis-stopped { overflow: hidden; }
+
+  ::selection {
+    background: var(--color-gold);
+    color: var(--color-ink);
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--color-graphite-muted); border-radius: 0; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-graphite-dim); }
 
   a:focus-visible,
   button:focus-visible,
-  input:focus-visible {
-    outline: 1px solid var(--color-gold);
+  input:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--color-gold);
     outline-offset: 2px;
+    border-radius: 1px;
+  }
+
+  /* Respect reduced motion everywhere. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
 @layer utilities {
-  .hairline { border-color: var(--color-bone-line); }
-  .hairline-b { border-bottom: 1px solid var(--color-bone-line); }
-  .hairline-t { border-top: 1px solid var(--color-bone-line); }
+  /* Era surfaces — sections carry their own place on the ramp via inline
+     bg/fg from the manifest, but these help dark/light contexts. */
+  .on-ink { background: var(--color-ink); color: var(--color-bone); }
+  .on-paper { background: var(--color-paper); color: var(--color-graphite); }
 
-  .tight {
-    letter-spacing: -0.04em;
-  }
+  .hairline-b { border-bottom: 1px solid currentColor; border-color: color-mix(in srgb, currentColor 14%, transparent); }
+  .hairline-t { border-top: 1px solid currentColor; border-color: color-mix(in srgb, currentColor 14%, transparent); }
 
-  /* Engraved case-back caption */
-  .overline {
+  .tight { letter-spacing: -0.03em; }
+  .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
+
+  /* Mono eyebrow / caption — the quiet engraved label */
+  .eyebrow {
     font-family: var(--font-mono);
     text-transform: uppercase;
     font-size: 0.6875rem;
-    letter-spacing: 0.18em;
-    color: var(--color-bone-muted);
+    letter-spacing: 0.2em;
+    color: color-mix(in srgb, currentColor 55%, transparent);
   }
-
-  /* Small caps */
   .smcaps {
     font-family: var(--font-mono);
     text-transform: uppercase;
     font-size: 0.625rem;
-    letter-spacing: 0.32em;
-    color: var(--color-bone-muted);
+    letter-spacing: 0.28em;
   }
 
-  /* Gold leaf — for the wordmark */
-  .gold-leaf {
-    background: linear-gradient(
-      180deg,
-      #f5e6b5 0%,
-      #e8c87a 30%,
-      #c8a76a 55%,
-      #a88347 85%,
-      #c8a76a 100%
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-    filter: drop-shadow(0 1px 0 rgba(0,0,0,0.35));
+  /* Placeholder tile for artifacts awaiting a real scan. Clearly labeled,
+     era-styled, correct aspect ratio — never a fake image. */
+  .awaiting-scan {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border: 1px dashed color-mix(in srgb, currentColor 28%, transparent);
+    background:
+      repeating-linear-gradient(
+        45deg,
+        color-mix(in srgb, currentColor 5%, transparent) 0 10px,
+        transparent 10px 20px
+      );
   }
 
-  /* Shimmer overlay — slow band drift, used very subtly on the wordmark */
-  .gold-shimmer {
-    background: linear-gradient(
-      100deg,
-      transparent 0%,
-      transparent 30%,
-      rgba(255, 240, 200, 0.5) 50%,
-      transparent 70%,
-      transparent 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 9s ease-in-out infinite;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
+  .develop-flash { animation: develop-flash 1200ms var(--ease-cinematic); }
+  @keyframes develop-flash {
+    0% { background-color: var(--color-gold); }
+    100% { background-color: transparent; }
   }
+}
 
-  .develop-flash {
-    animation: flash 1.2s ease-out;
-  }
-  @keyframes flash {
-    0% { background: var(--color-safelight); }
-    100% { background: var(--color-ink); }
-  }
-
-  .text-balance { text-wrap: balance; }
+/* ============================================================
+   Canvas mode — the cinematic walk is active. The DOM walk stays
+   in the document (screen readers, search, find-in-page) but is
+   visually replaced by the canvas. The header floats above it.
+   ============================================================ */
+html.canvas-mode [data-dom-walk] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+html.canvas-mode header {
+  background: transparent;
+  border-color: transparent;
+  backdrop-filter: none;
 }

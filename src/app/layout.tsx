@@ -1,89 +1,69 @@
 import type { Metadata, Viewport } from "next";
-import { Italiana, Inter_Tight, Geist_Mono } from "next/font/google";
-import { SpotlightCursor } from "@/components/spotlight-cursor";
+import { Playfair_Display, Geist, Geist_Mono } from "next/font/google";
+import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { CommandPalette } from "@/components/command-palette";
-import { MenuBar } from "@/components/menu-bar";
 import { DevelopEasterEgg } from "@/components/develop-easter-egg";
-import { BootSequence } from "@/components/boot-sequence";
-import { Notification } from "@/components/notification";
-import { WindowProvider } from "@/lib/window-store";
-import { SettingsProvider } from "@/lib/settings-store";
-import { AiProvider } from "@/lib/ai-bus";
-import { SoundBridge } from "@/components/os/sound-bridge";
-import { LockScreen } from "@/components/os/lock-screen";
-import { DarkroomOS } from "@/components/os/darkroom-os";
-import { CoPilot } from "@/components/os/co-pilot";
 import "./globals.css";
 
-const sans = Inter_Tight({ variable: "--font-sans", subsets: ["latin"] });
-const mono = Geist_Mono({ variable: "--font-mono", subsets: ["latin"] });
-const display = Italiana({
+// High-contrast serif display + clean grotesque sans, self-hosted by next/font.
+const display = Playfair_Display({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: "400",
+  style: ["normal", "italic"],
+  display: "swap",
 });
+const sans = Geist({ variable: "--font-sans", subsets: ["latin"], display: "swap" });
+const mono = Geist_Mono({ variable: "--font-mono", subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://josh.design"),
   title: {
-    default: "Josh Whitehead — Atelier",
+    default: "Josh Whitehead — The Archive",
     template: "%s · Josh Whitehead",
   },
   description:
-    "Josh Whitehead — designer, maker, tinkerer. Fifteen years of product design rendered as a working desktop. From Spin, Hush, and Boneyard Collective.",
+    "Josh Whitehead — designer and builder. A continuous walk through a life's work, from a kid who drew all day to a Marine combat photographer to leading design and building his own studio, Boneyard.",
   authors: [{ name: "Josh Whitehead" }],
   creator: "Josh Whitehead",
   openGraph: {
     type: "website",
     siteName: "Josh Whitehead",
-    title: "Josh Whitehead — Atelier",
+    title: "Josh Whitehead — The Archive",
     description:
-      "Fifteen years of product design. Ten million users. Six times a founder.",
+      "Designer and builder. I make the interface, the system, and the thing that ships.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Josh Whitehead — Atelier",
+    title: "Josh Whitehead — The Archive",
     description:
-      "Fifteen years of product design. Ten million users. Six times a founder.",
+      "Designer and builder. I make the interface, the system, and the thing that ships.",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0908",
+  themeColor: "#f4eee2",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      className={`${sans.variable} ${mono.variable} ${display.variable}`}
-    >
-      <body className="h-[100dvh] overflow-hidden antialiased">
-        <SettingsProvider>
-          <WindowProvider>
-            <AiProvider>
-              <SoundBridge />
-              <BootSequence />
-              <SpotlightCursor />
-              <MenuBar />
-              <Notification />
-              {/* The OS shell — desktop + windows + dock */}
-              <DarkroomOS />
-              {/* Pages render thin shells that signal the WM to open windows. */}
-              <div className="hidden">{children}</div>
-              <CommandPalette />
-              <CoPilot />
-              <DevelopEasterEgg />
-              <LockScreen />
-            </AiProvider>
-          </WindowProvider>
-        </SettingsProvider>
+    <html lang="en" className={`${sans.variable} ${mono.variable} ${display.variable}`}>
+      <body className="antialiased">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:bg-ink focus:px-4 focus:py-2 focus:font-mono focus:text-xs focus:text-bone"
+        >
+          Skip to content
+        </a>
+        <SiteHeader />
+        <main id="main">{children}</main>
+        <SiteFooter />
+        <CommandPalette />
+        <DevelopEasterEgg />
       </body>
     </html>
   );

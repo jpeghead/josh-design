@@ -1,11 +1,12 @@
 import type { MetadataRoute } from "next";
-import { projects, journal } from "@/lib/data";
+import { projects } from "@/lib/data";
+import { portedEssays } from "@/content/writing";
 
 const base = "https://josh.design";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
-  const staticRoutes = ["/", "/work", "/about", "/journal", "/contact"].map(
+  const staticRoutes = ["/", "/work", "/products", "/writing", "/uses", "/about", "/contact"].map(
     (route) => ({
       url: `${base}${route}`,
       lastModified: now,
@@ -14,19 +15,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })
   );
 
-  const workRoutes = projects.map((p) => ({
-    url: `${base}/work/${p.slug}`,
-    lastModified: now,
-    changeFrequency: "yearly" as const,
-    priority: 0.7,
-  }));
+  const workRoutes = projects
+    .filter((p) => p.tier === "case-study")
+    .map((p) => ({
+      url: `${base}/work/${p.slug}`,
+      lastModified: now,
+      changeFrequency: "yearly" as const,
+      priority: 0.7,
+    }));
 
-  const journalRoutes = journal.map((j) => ({
-    url: `${base}/journal/${j.slug}`,
-    lastModified: new Date(j.date),
+  const writingRoutes = portedEssays.map((e) => ({
+    url: `${base}/writing/${e.slug}`,
+    lastModified: e.date ? new Date(e.date) : now,
     changeFrequency: "yearly" as const,
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...workRoutes, ...journalRoutes];
+  return [...staticRoutes, ...workRoutes, ...writingRoutes];
 }
