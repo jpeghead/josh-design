@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { detectTier, type CanvasTier } from "../canvas/capability";
 import { ERAS } from "./eras";
+import { drawRoom, DW, DH } from "./room-art";
 
 const N = ERAS.length;
 const VH = 130 * N; // scroll length
@@ -33,6 +34,8 @@ export function StaticRoomExperience() {
 
   const spacer = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
+  const art = useRef<HTMLCanvasElement>(null);
+  const loadedRef = useRef<Record<string, boolean>>({});
   const darkEl = useRef<HTMLDivElement>(null);
   const yearEl = useRef<HTMLSpanElement>(null);
   const layers = useRef<(HTMLDivElement | null)[]>([]);
@@ -113,6 +116,31 @@ export function StaticRoomExperience() {
         if (el) el.style.opacity = i === idx ? "1" : "0";
       }
 
+      // the in-engine room art (until a real render covers it)
+      const c = art.current;
+      if (c) {
+        const dpr = Math.min(devicePixelRatio, 1.75);
+        if (c.width !== c.offsetWidth * dpr) {
+          c.width = c.offsetWidth * dpr;
+          c.height = c.offsetHeight * dpr;
+        }
+        if (c.offsetWidth > 50) {
+          const g = c.getContext("2d")!;
+          const vw = c.offsetWidth,
+            vh = c.offsetHeight;
+          g.setTransform(dpr, 0, 0, dpr, 0, 0);
+          g.fillStyle = "#07090b";
+          g.fillRect(0, 0, vw, vh);
+          if (!loadedRef.current[ERAS[idx].id]) {
+            const s2 = Math.max(vw / DW, vh / DH);
+            g.setTransform(dpr * s2, 0, 0, dpr * s2, dpr * ((vw - DW * s2) / 2), dpr * ((vh - DH * s2) / 2));
+            // props settle in as you arrive; era 0 opens fully dressed
+            const settle = idx === 0 ? 1 : e >= idx ? 1 : clamp01(1 - (idx - e) / 0.36);
+            drawRoom(g, ERAS[idx].id, performance.now() / 1000, settle);
+          }
+        }
+      }
+
       // the blink — darkness peaking at each era boundary
       const frac = e - Math.floor(e);
       const dBoundary = Math.abs(frac - 0.5); // 0 at boundary
@@ -146,6 +174,7 @@ export function StaticRoomExperience() {
       {/* ---------------- the shot ---------------- */}
       <div className="fixed inset-0 z-0 overflow-hidden bg-[#07090b]">
         <div ref={stage} className="absolute inset-0 will-change-transform">
+          <canvas ref={art} className="absolute inset-0 h-full w-full" />
           {ERAS.map((er, i) => (
             <div
               key={er.id}
@@ -162,57 +191,14 @@ export function StaticRoomExperience() {
                 alt=""
                 className="h-full w-full object-cover"
                 style={{ display: loaded[er.id] ? "block" : "none" }}
-                onLoad={() => setLoaded((m) => (m[er.id] ? m : { ...m, [er.id]: true }))}
+                onLoad={() => {
+                  loadedRef.current[er.id] = true;
+                  setLoaded((m) => (m[er.id] ? m : { ...m, [er.id]: true }));
+                }}
                 onError={(ev) => {
                   (ev.target as HTMLImageElement).style.display = "none";
                 }}
               />
-              {/* intentional placeholder until the render lands */}
-              {!loaded[er.id] && (
-                <div className="absolute inset-0">
-                  {/* the empty set: wall, floor, window shaft — a stage awaiting its dressing */}
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background:
-                        "linear-gradient(180deg, #07090b 0%, #10161b 42%, #131a20 72%, #0b0f13 73%, #090c0f 100%)",
-                    }}
-                  />
-                  <div
-                    className="absolute"
-                    style={{
-                      left: "12%",
-                      top: "22%",
-                      width: "13%",
-                      height: "34%",
-                      background: "linear-gradient(180deg, rgba(168,190,196,0.30), rgba(168,190,196,0.12))",
-                      boxShadow: "0 0 120px 30px rgba(168,190,196,0.08)",
-                    }}
-                  />
-                  <div
-                    className="absolute"
-                    style={{
-                      left: "9%",
-                      top: "24%",
-                      width: "30%",
-                      height: "62%",
-                      background:
-                        "linear-gradient(115deg, rgba(168,190,196,0.10) 0%, rgba(168,190,196,0.03) 55%, transparent 70%)",
-                      filter: "blur(6px)",
-                    }}
-                  />
-                  <div className="absolute inset-x-0 bottom-[16%] flex justify-center px-8">
-                    <div className="max-w-xl border border-white/10 bg-black/40 px-6 py-4 text-center backdrop-blur-sm">
-                      <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-[#5d6b72]">
-                        render pending — {er.file}
-                      </p>
-                      <p className="mt-2 font-mono text-[11px] leading-relaxed tracking-wide text-[#8fa0a8]">
-                        {er.holds}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           ))}
         </div>
