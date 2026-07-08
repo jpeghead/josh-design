@@ -7,11 +7,11 @@ import dynamic from "next/dynamic";
  * blocks first paint; the server-rendered content layer renders first and
  * remains the fallback tier.
  */
-const RoomExperience = dynamic(
-  () => import("../room/room-experience").then((m) => m.RoomExperience),
+const StaticRoomExperience = dynamic(
+  () => import("../room/static-room-experience").then((m) => m.StaticRoomExperience),
   { ssr: false }
 );
 
 export function ArchiveMount() {
-  return <RoomExperience />;
+  return <StaticRoomExperience />;
 }
