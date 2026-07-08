@@ -607,7 +607,6 @@ const SCENES: Record<string, { grade: [string, string]; shaft: number; lamp?: [n
     steps: [
       (g) => kidDesk(g, 560),
       (g) => tapedDrawings(g, 600, 250, 4),
-      (g) => figKid(g, 620),
       (g) => {
         contact(g, 1120, 80);
         box3d(g, 1050, FLOOR - 64, 140, 64, 12, "#0d1318");
@@ -624,7 +623,6 @@ const SCENES: Record<string, { grade: [string, string]; shaft: number; lamp?: [n
       (g) => bigDesk(g, 560, 260),
       (g) => crtSetup(g, 620, 1),
       (g) => chair(g, 560),
-      (g) => figSeated(g, 596, 0.92),
       (g) => {
         rr(g, 980, 210, 84, 110, "#161d24");
         rr(g, 1090, 240, 64, 86, "#161d24");
@@ -642,7 +640,6 @@ const SCENES: Record<string, { grade: [string, string]; shaft: number; lamp?: [n
       (g) => bigDesk(g, 560, 280),
       (g) => crtSetup(g, 640, 1),
       (g) => chair(g, 560),
-      (g) => figSeated(g, 600, 1),
       (g) => {
         rr(g, 950, 200, 90, 120, "#161d24");
         rr(g, 1064, 236, 70, 96, "#161d24");
@@ -684,7 +681,6 @@ const SCENES: Record<string, { grade: [string, string]; shaft: number; lamp?: [n
     steps: [
       (g) => easelProp(g, 600),
       (g) => bigDesk(g, 800, 240),
-      (g) => figSeated(g, 856, 1),
       (g) => {
         g.strokeStyle = SIL;
         g.lineWidth = 9;
@@ -711,7 +707,6 @@ const SCENES: Record<string, { grade: [string, string]; shaft: number; lamp?: [n
       (g) => flagFolded(g, 600, 226),
       (g) => bigDesk(g, 1060, 220),
       (g) => nikon(g, 1120, FLOOR - 92),
-      (g) => figMarineP(g, 1010),
       // the wedding photo, small on the desk — June 2008
       (g) => {
         rr(g, 1220, FLOOR - 118, 22, 26, "#1a222a");
@@ -736,7 +731,6 @@ const SCENES: Record<string, { grade: [string, string]; shaft: number; lamp?: [n
       (g, t) => mobile(g, 1150, t),
       (g) => rocker(g, 700),
       (g) => figWomanBaby(g, 900),
-      (g) => figMarineP(g, 950),
     ],
   },
   la: {
@@ -747,7 +741,6 @@ const SCENES: Record<string, { grade: [string, string]; shaft: number; lamp?: [n
       (g) => bigDesk(g, 560, 300),
       (g) => imac(g, 650, 1),
       (g) => chair(g, 560, true),
-      (g) => figSeated(g, 610, 1),
       (g) => wireframeGrid(g, 900, 230),
       // toddler bed in the crib corner now
       (g) => {
@@ -767,7 +760,6 @@ const SCENES: Record<string, { grade: [string, string]; shaft: number; lamp?: [n
       (g) => bigDesk(g, 540, 320),
       (g) => dualMonitors(g, 590, 1),
       (g) => chair(g, 520, true),
-      (g) => figSeated(g, 570, 1),
       (g) => wwdcBadge(g, 960, 232),
       (g) => scooterProp(g, 1060),
       (g) => toys(g, 900),
@@ -786,7 +778,6 @@ const SCENES: Record<string, { grade: [string, string]; shaft: number; lamp?: [n
       (g) => crib(g, 1080),
       (g, t) => mobile(g, 1150, t),
       (g) => figWomanBaby(g, 990),
-      (g) => figSeated(g, 750, 1),
       (g) => toys(g, 900),
       (g) => toys(g, 990),
       (g) => figToddlerP(g, 940),
@@ -807,7 +798,6 @@ const SCENES: Record<string, { grade: [string, string]; shaft: number; lamp?: [n
         g.strokeRect(1080, FLOOR - 8, 150, 6);
       },
       (g) => figWomanP(g, 760),
-      (g) => figMarineP(g, 660), // him, carrying himself like he still does
       (g) => figToddlerP(g, 860),
     ],
   },
@@ -820,7 +810,6 @@ const SCENES: Record<string, { grade: [string, string]; shaft: number; lamp?: [n
       (g) => workbench(g, 520),
       (g) => imac(g, 640, 1, true),
       (g) => manuscripts(g, 900),
-      (g) => figSeated(g, 590, 1.02),
       (g) => {
         // porch light through the window — warm now, for the first time
         const grad = g.createLinearGradient(220, 200, 620, FLOOR);
@@ -864,4 +853,122 @@ export function drawRoom(g: Ctx, eraId: string, time: number, settle: number) {
   }
 
   if (scene.lamp) lampGlow(g, scene.lamp[0], scene.lamp[1], 190, 0.4);
+}
+
+/* ------------------------------------------------------------ the player */
+
+export const FLOOR_Y = FLOOR;
+
+export type Archetype = "kid" | "teen" | "marine" | "adult";
+
+const ARCH: Record<Archetype, { h: number; head: number; shoulder: number }> = {
+  kid: { h: 74, head: 11, shoulder: 14 },
+  teen: { h: 118, head: 12, shoulder: 17 },
+  marine: { h: 132, head: 12, shoulder: 22 },
+  adult: { h: 128, head: 13, shoulder: 19 },
+};
+
+/**
+ * The playable silhouette. walk = phase (advance while moving), facing ±1.
+ * Pure black against the light — posture over face, INSIDE-style.
+ */
+export function drawPlayer(
+  g: Ctx,
+  x: number,
+  arch: Archetype,
+  facing: number,
+  walk: number,
+  moving: boolean
+) {
+  const a = ARCH[arch];
+  const bob = moving ? Math.abs(Math.sin(walk * 2)) * 3 : 0;
+  const hipY = FLOOR - a.h * 0.48 - bob;
+  const shY = FLOOR - a.h * 0.88 - bob;
+
+  contact(g, x, a.shoulder * 2.2, 0.5);
+  g.save();
+  g.translate(x, 0);
+  g.scale(facing, 1);
+
+  // legs
+  const swing = moving ? Math.sin(walk) * a.h * 0.16 : 0;
+  g.strokeStyle = SIL;
+  g.lineWidth = Math.max(6, a.shoulder * 0.5);
+  g.lineCap = "round";
+  g.beginPath();
+  g.moveTo(0, hipY);
+  g.lineTo(swing, FLOOR - 2);
+  g.moveTo(0, hipY);
+  g.lineTo(-swing * 0.9, FLOOR - 2);
+  g.stroke();
+
+  // torso — slight taper, slight lean when moving
+  const lean = moving ? 3 : 0;
+  g.fillStyle = SIL;
+  g.beginPath();
+  g.moveTo(-a.shoulder * 0.62, hipY);
+  g.quadraticCurveTo(-a.shoulder * 0.8, (hipY + shY) / 2, -a.shoulder * 0.72 + lean, shY);
+  g.lineTo(a.shoulder * 0.72 + lean, shY);
+  g.quadraticCurveTo(a.shoulder * 0.8, (hipY + shY) / 2, a.shoulder * 0.62, hipY);
+  g.closePath();
+  g.fill();
+
+  // arms — subtle counterswing
+  const armSwing = moving ? Math.sin(walk + Math.PI) * a.h * 0.1 : 2;
+  g.lineWidth = Math.max(5, a.shoulder * 0.34);
+  g.beginPath();
+  g.moveTo(-a.shoulder * 0.5 + lean, shY + 6);
+  g.lineTo(-a.shoulder * 0.42 + armSwing, hipY + 4);
+  g.moveTo(a.shoulder * 0.5 + lean, shY + 6);
+  g.lineTo(a.shoulder * 0.42 - armSwing, hipY + 4);
+  g.stroke();
+
+  // head
+  g.beginPath();
+  g.arc(lean, shY - a.head - 3 , a.head, 0, Math.PI * 2);
+  g.fill();
+  if (arch === "teen" || arch === "adult") {
+    // a little hair sweep
+    g.beginPath();
+    g.arc(lean - a.head * 0.3, shY - a.head * 1.45, a.head * 0.62, Math.PI, Math.PI * 2);
+    g.fill();
+  }
+  g.restore();
+}
+
+/** pulsing interaction marker above a world point */
+export function drawMarker(g: Ctx, x: number, y: number, time: number, near: boolean) {
+  const pulse = 0.5 + Math.sin(time * 3) * 0.25;
+  const a = near ? 0.95 : 0.45 * pulse + 0.2;
+  g.fillStyle = `rgba(200,162,75,${a})`;
+  g.beginPath();
+  g.moveTo(x, y + 7);
+  g.lineTo(x - 6, y - 4);
+  g.lineTo(x + 6, y - 4);
+  g.closePath();
+  g.fill();
+  if (near) {
+    const grad = g.createRadialGradient(x, y, 2, x, y, 46);
+    grad.addColorStop(0, "rgba(200,162,75,0.25)");
+    grad.addColorStop(1, "rgba(200,162,75,0)");
+    g.fillStyle = grad;
+    g.fillRect(x - 46, y - 46, 92, 92);
+  }
+}
+
+/** in-canvas interaction prompt: key cap + label */
+export function drawPrompt(g: Ctx, x: number, y: number, label: string) {
+  g.font = "600 15px ui-monospace, monospace";
+  const w = g.measureText(label).width;
+  const total = w + 46;
+  const bx = x - total / 2;
+  g.fillStyle = "rgba(4,6,8,0.82)";
+  g.fillRect(bx, y - 34, total, 26);
+  g.strokeStyle = "rgba(200,162,75,0.9)";
+  g.lineWidth = 1.5;
+  g.strokeRect(bx + 6, y - 30, 18, 18);
+  g.fillStyle = "#e2c078";
+  g.fillText("E", bx + 11, y - 16);
+  g.fillStyle = "#cfd8db";
+  g.fillText(label, bx + 34, y - 15);
 }
