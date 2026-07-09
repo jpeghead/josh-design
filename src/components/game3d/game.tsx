@@ -64,8 +64,8 @@ function nearestRelic(x: number, z: number) {
   }
   return best;
 }
-const CAR_START = { x: 736, z: 396 }; // the driveway, past the porch
-const EYE = 5.0;
+const CAR_START = { x: 717.5, z: 363 }; // the driveway, past the porch
+const EYE = 5.2; // 6'1" player, 3 units = 1 m
 
 /** first-person look state — written by pointer-lock mouse, read by Sim */
 const LOOK = { yaw: 0, pitch: -0.04, locked: false };
@@ -264,13 +264,13 @@ function ShadowSun() {
         intensity={1.1}
         color="#ffb37a"
         target={target}
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
-        shadow-camera-left={-160}
-        shadow-camera-right={160}
-        shadow-camera-top={160}
-        shadow-camera-bottom={-160}
-        shadow-camera-far={600}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-left={-90}
+        shadow-camera-right={90}
+        shadow-camera-top={90}
+        shadow-camera-bottom={-90}
+        shadow-camera-far={400}
         shadow-bias={-0.0004}
       />
     </>
@@ -989,7 +989,7 @@ function PlayerBody() {
     const dt = Math.min(rawDt, 0.05);
 
     if (PHYS.playerTeleport) {
-      rb.setNextKinematicTranslation({ x: PHYS.playerTeleport[0], y: 2.6, z: PHYS.playerTeleport[1] });
+      rb.setNextKinematicTranslation({ x: PHYS.playerTeleport[0], y: 2.75, z: PHYS.playerTeleport[1] });
       G.px = PHYS.playerTeleport[0];
       G.pz = PHYS.playerTeleport[1];
       PHYS.playerTeleport = null;
@@ -998,7 +998,7 @@ function PlayerBody() {
     if (G.mode !== "foot" || G.deskMode !== "world") {
       PHYS.footSpeed = 0;
       // keep the body parked at the player's logical spot
-      rb.setNextKinematicTranslation({ x: G.px, y: 2.6, z: G.pz });
+      rb.setNextKinematicTranslation({ x: G.px, y: 2.75, z: G.pz });
       return;
     }
 
@@ -1053,7 +1053,7 @@ function PlayerBody() {
       ox = out.x;
       oz = out.z;
     }
-    rb.setNextKinematicTranslation({ x: t.x + ox, y: 2.6, z: t.z + oz });
+    rb.setNextKinematicTranslation({ x: t.x + ox, y: 2.75, z: t.z + oz });
     G.px = t.x + ox;
     G.pz = t.z + oz;
     G.pHeading = LOOK.yaw;
@@ -1064,9 +1064,9 @@ function PlayerBody() {
       ref={body}
       type="kinematicPosition"
       colliders={false}
-      position={[STAND.x, 2.6, STAND.z]}
+      position={[STAND.x, 2.75, STAND.z]}
     >
-      <CuboidCollider args={[0.9, 2.4, 0.9]} />
+      <CuboidCollider args={[0.55, 2.7, 0.55]} />
     </RigidBody>
   );
 }
@@ -1502,14 +1502,14 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
       deskT: G.deskT,
       deskRect,
       nearDesk:
-        G.deskMode === "world" && G.mode === "foot" && Math.hypot(G.px - DESK_SPOT.x, G.pz - DESK_SPOT.z) < 6.5,
+        G.deskMode === "world" && G.mode === "foot" && Math.hypot(G.px - DESK_SPOT.x, G.pz - DESK_SPOT.z) < 3.6,
       locked: LOOK.locked,
       inHouse: insideHouse(G.px, G.pz),
       doorPrompt: (() => {
         if (G.deskMode !== "world" || G.mode !== "foot") return null;
         for (const d of DOORS) {
           const cx = d.hx + d.len / 2;
-          if (Math.hypot(G.px - cx, G.pz - d.hz) < 6.5)
+          if (Math.hypot(G.px - cx, G.pz - d.hz) < 4.2)
             return d.open > 0.5 ? "E — close the door" : d.id === "front" ? "E — open the front door" : "E — open the door";
         }
         return null;
@@ -1689,7 +1689,7 @@ export function CityGame() {
         // doors first — the surprises
         for (const d of DOORS) {
           const cx = d.hx + d.len / 2;
-          if (Math.hypot(G.px - cx, G.pz - d.hz) < 6.5) {
+          if (Math.hypot(G.px - cx, G.pz - d.hz) < 4.2) {
             d.target = d.target > 0.5 ? 0 : 1;
             return;
           }
@@ -1703,7 +1703,7 @@ export function CityGame() {
           return;
         }
         // sit back down
-        if (Math.hypot(G.px - DESK_SPOT.x, G.pz - DESK_SPOT.z) < 6.5) {
+        if (Math.hypot(G.px - DESK_SPOT.x, G.pz - DESK_SPOT.z) < 3.6) {
           G.deskMode = "toDesk";
           G.px = STAND.x;
           G.pz = STAND.z;
@@ -1771,10 +1771,10 @@ export function CityGame() {
     if (new URLSearchParams(window.location.search).get("room") === "1") {
       G.deskMode = "world";
       G.deskT = 1;
-      G.px = 690;
-      G.pz = 330;
-      PHYS.playerTeleport = [690, 330];
-      LOOK.yaw = 0.45; // facing the desk + the framed years
+      G.px = 696.5;
+      G.pz = 334.5;
+      PHYS.playerTeleport = [696.5, 334.5];
+      LOOK.yaw = Math.PI - 0.35; // facing the desk
       LOOK.pitch = 0;
     }
   }, [tier]);
@@ -1817,13 +1817,12 @@ export function CityGame() {
   if (tier !== "full") return null;
 
   const m = hud.mission >= 0 ? MISSIONS[hud.mission] : null;
-  const year = m ? m.year : "1993";
 
   return (
     <section aria-label="Whitehead City — the game" data-canvas-walk className="fixed inset-0 z-0 bg-black">
       <Canvas
         data-game-canvas
-        dpr={[1, 1.5]}
+        dpr={[1, 1.25]}
         camera={{ fov: 60, near: 0.5, far: 4200, position: [G.px - 10, 8, G.pz + 14] }}
         gl={{ antialias: true, powerPreference: "high-performance" }}
         shadows
@@ -1855,7 +1854,7 @@ export function CityGame() {
           <MissionMarkers tick={hud.mission * 100 + hud.step * 10 + (hud.phase === "active" ? 1 : 0)} />
           <Sim onHud={setHud} />
           </Physics>
-          <EffectComposer>
+          <EffectComposer multisampling={2}>
             <Bloom intensity={0.6} luminanceThreshold={0.62} mipmapBlur />
             <Noise opacity={0.035} />
             <Vignette darkness={0.5} offset={0.25} />
@@ -1883,8 +1882,9 @@ export function CityGame() {
         {/* click to look */}
         {hud.deskMode === "world" && hud.mode === "foot" && !hud.locked && (
           <div className="absolute inset-x-0 top-[12%] flex justify-center">
-            <p className="border border-white/20 bg-black/60 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.25em] text-white/85">
-              Click — look around
+            <p className="flex items-center gap-3 rounded-md border border-[#e2c078]/60 bg-black/70 px-6 py-3 font-mono text-[13px] uppercase tracking-[0.25em] text-white shadow-[0_8px_40px_rgba(0,0,0,0.6)]">
+              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[#e2c078]" />
+              Click to look around
             </p>
           </div>
         )}
@@ -1916,9 +1916,20 @@ export function CityGame() {
               <p className="mt-2 text-white/85" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>
                 Look around. It&rsquo;s all here.
               </p>
-              <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.25em] text-white/45">
-                Mouse look · WASD walk · E opens things
-              </p>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+                {[
+                  ["WASD", "move"],
+                  ["Mouse", "look"],
+                  ["E", "interact"],
+                ].map(([key, act]) => (
+                  <span key={key} className="flex items-center gap-2">
+                    <kbd className="rounded-md border border-white/30 bg-black/50 px-2.5 py-1 font-mono text-[12px] font-semibold text-white shadow-[0_2px_0_rgba(255,255,255,0.15)]">
+                      {key}
+                    </kbd>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60">{act}</span>
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -1929,24 +1940,25 @@ export function CityGame() {
               <p className="mt-2 text-white/85" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>
                 The house was sitting in a whole world. Your life is out here — follow the gold light.
               </p>
-              <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.25em] text-white/45">
-                E — the car is in the driveway
-              </p>
+              <div className="mt-5 flex items-center justify-center gap-2">
+                <kbd className="rounded-md border border-white/30 bg-black/50 px-2.5 py-1 font-mono text-[12px] font-semibold text-white shadow-[0_2px_0_rgba(255,255,255,0.15)]">
+                  E
+                </kbd>
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60">the car is in the driveway</span>
+              </div>
             </div>
           </div>
         )}
 
-        {/* year, top-right */}
-        <div className="absolute right-6 top-20 text-right sm:right-10">
-          <span className="font-display text-5xl italic text-white/90" style={{ textShadow: "0 2px 20px rgba(0,0,0,0.8)" }}>
-            {year}
-          </span>
-          {hud.mode === "car" && (
-            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.25em] text-white/50">
-              {Math.round(hud.speed * 1.6)} km/h
+        {/* speed readout — car only */}
+        {hud.mode === "car" && (
+          <div className="absolute bottom-8 right-6 text-right sm:right-10">
+            <p className="font-mono text-2xl text-white/90" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.8)" }}>
+              {Math.round(hud.speed * 1.6)}
+              <span className="ml-1 text-[10px] uppercase tracking-[0.2em] text-white/50">km/h</span>
             </p>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* mission brief card */}
         {hud.phase === "brief" && m && (
@@ -1989,7 +2001,7 @@ export function CityGame() {
         )}
 
         {/* district card */}
-        {hud.district && hud.phase !== "passed" && (
+        {hud.district && hud.mode === "car" && hud.phase !== "passed" && (
           <div className="absolute bottom-24 right-6 sm:right-10">
             <p className="font-display text-3xl italic text-white/90" style={{ textShadow: "0 2px 24px rgba(0,0,0,0.9)" }}>
               {hud.district}
@@ -1998,7 +2010,7 @@ export function CityGame() {
         )}
 
         {/* sit-back-down hint */}
-        {hud.nearDesk && hud.deskMode === "world" && (
+        {hud.nearDesk && hud.deskMode === "world" && !hud.doorPrompt && !hud.relicPrompt && !hud.caption && (
           <div className="absolute inset-x-0 bottom-[26%] flex justify-center">
             <p className="border border-white/20 bg-black/60 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.25em] text-white/85">
               E — sit back down at the desk

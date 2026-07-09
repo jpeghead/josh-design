@@ -91,8 +91,9 @@ function scatterDistrict(
     const x = d.x1 + 30 + rnd() * (d.x2 - d.x1 - 60);
     const z = d.z1 + 30 + rnd() * (d.z2 - d.z1 - 60);
     if (onRoad(x, z, ROAD * 0.5 + Math.max(w, dep) * 0.5 + 4)) continue;
-    // keep landmark clearings
-    if (LANDMARK_CLEAR.some((c) => Math.abs(x - c[0]) < c[2] && Math.abs(z - c[1]) < c[2])) continue;
+    // keep landmark clearings — inflate by the building's own footprint
+    const pad = Math.max(w, dep) / 2;
+    if (LANDMARK_CLEAR.some((c) => Math.abs(x - c[0]) < c[2] + pad && Math.abs(z - c[1]) < c[2] + pad)) continue;
     const h = hMin + rnd() * (hMax - hMin);
     const j = () => 1 - jitter / 2 + rnd() * jitter;
     BUILDINGS.push({
@@ -117,7 +118,7 @@ const LANDMARK_CLEAR: [number, number, number][] = [
   [-40, 640, 90], // terminal
   [-560, 240, 60], // strip offices
   [-560, 60, 55], // keynote hall
-  [704, 342, 80], // the REAL house footprint (x 664-744, z 300-384) + yard
+  [704, 341, 45], // the REAL house footprint (x 686-722, z 326-356) + yard
   [440, 120, 55], // hospital
   [640, 320, 55], // boneyard studio
 ];
@@ -151,7 +152,7 @@ export const LANDMARKS: Landmark[] = [
   { id: "keynote", x: -560, z: 60, label: "KEYNOTE HALL", kind: "hall" },
   { id: "hospital", x: 440, z: 120, label: "ST. SIGNAL", kind: "hospital" },
   // the REAL walkable house (house.tsx) — landmark points at the curb out front
-  { id: "house", x: 726, z: 398, label: "THE HOUSE", kind: "house" },
+  { id: "house", x: 713.4, z: 364, label: "THE HOUSE", kind: "house" },
   { id: "boneyard", x: 640, z: 320, label: "BONEYARD STUDIO", kind: "studio" },
 ];
 

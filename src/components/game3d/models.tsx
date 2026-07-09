@@ -19,11 +19,14 @@ export function Model({
   position,
   rotation = [0, 0, 0],
   scale = 3,
+  shadow = true,
 }: {
   slug: string;
   position: [number, number, number];
   rotation?: [number, number, number];
   scale?: number | [number, number, number];
+  /** heavy meshes (plants) skip shadow casting — big win per frame */
+  shadow?: boolean;
 }) {
   const { scene } = useGLTF(gltfPath(slug));
   return (
@@ -32,7 +35,7 @@ export function Model({
       position={position}
       rotation={rotation}
       scale={scale}
-      castShadow
+      castShadow={shadow}
       receiveShadow
     />
   );
@@ -42,15 +45,18 @@ export function Model({
 export function HangingLamp({
   x,
   z,
-  ceiling = 10.5,
-  scale = 2.6,
+  ceiling = 8.7,
+  scale = 1.3,
   intensity = 20,
+  lit = true,
 }: {
   x: number;
   z: number;
   ceiling?: number;
   scale?: number;
   intensity?: number;
+  /** unlit fixtures still glow at the bulb but cast no real light */
+  lit?: boolean;
 }) {
   // modern_ceiling_lamp_01 geometry spans y 0.22..1.17 in meters
   const y = ceiling - 1.17 * scale;
@@ -61,7 +67,9 @@ export function HangingLamp({
         <sphereGeometry args={[0.09 * scale, 8, 8]} />
         <meshBasicMaterial color="#ffe0ae" toneMapped={false} />
       </mesh>
-      <pointLight position={[0, 0.2 * scale, 0]} color="#ffd9a6" intensity={intensity} distance={22} decay={1.9} />
+      {lit && (
+        <pointLight position={[0, 0.2 * scale, 0]} color="#ffd9a6" intensity={intensity} distance={18} decay={1.9} />
+      )}
     </group>
   );
 }
