@@ -20,6 +20,7 @@
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
+import { Model, HangingLamp, usePBR } from "./models";
 
 /* ------------------------------------------------------------- geometry */
 
@@ -107,21 +108,25 @@ export const FURNITURE: [number, number, number, number][] = [
   [679, 307.7, 689, 312.3], // desk
   [664.6, 304.6, 666.6, 311.4], // bookshelf (west wall)
   [665.2, 332.2, 669.2, 336.2], // poster tubes corner
-  // kitchen
-  [705.5, 300.5, 743.5, 305.5], // counter along the north wall
+  // kitchen — counter split around the freestanding stove
+  [705.5, 300.5, 710.5, 305.5],
+  [713.5, 300.5, 743.5, 305.5],
+  [710.7, 301.5, 713.3, 305.4], // stove
   [739.0, 308.7, 743.8, 313.3], // fridge (east wall)
   [715, 318.5, 725, 323.5], // island
   // dining
-  [679, 359, 689, 365], // table
-  [678.9, 356.4, 681.1, 358.6], // chairs
-  [686.9, 356.4, 689.1, 358.6],
-  [678.9, 365.4, 681.1, 367.6],
-  [686.9, 365.4, 689.1, 367.6],
+  [680.9, 360.05, 687.1, 363.95], // table
+  [681.4, 358.1, 683.0, 359.7], // chairs
+  [685.0, 358.1, 686.6, 359.7],
+  [681.4, 364.3, 683.0, 365.9],
+  [685.0, 364.3, 686.6, 365.9],
   [664.6, 368, 666.9, 376], // sideboard (west wall)
   // living
   [741.2, 356, 743.8, 368], // TV console (east wall)
-  [729.2, 357.5, 732.8, 366.5], // couch (faces the TV)
-  [734.7, 360.6, 739.3, 363.4], // coffee table
+  [729.2, 357.5, 732.8, 366.5], // sofa (faces the TV)
+  [734.4, 360.4, 739.6, 363.6], // coffee table
+  [733.8, 354.3, 737.2, 357.5], // armchair
+  [712.2, 382.4, 719.4, 384.0], // shelves (living, south wall)
 ];
 
 /** things you can look at — E near one shows its story */
@@ -182,49 +187,6 @@ export function insideHouse(x: number, z: number): boolean {
 }
 
 /* ----------------------------------------------------- procedural looks */
-
-function woodTexture(): THREE.CanvasTexture {
-  const c = document.createElement("canvas");
-  c.width = 256;
-  c.height = 256;
-  const g = c.getContext("2d")!;
-  g.fillStyle = "#6a4f38";
-  g.fillRect(0, 0, 256, 256);
-  for (let i = 0; i < 8; i++) {
-    const y = i * 32;
-    const shade = 0.85 + ((i * 37) % 10) / 32;
-    g.fillStyle = `rgb(${Math.round(106 * shade)},${Math.round(79 * shade)},${Math.round(56 * shade)})`;
-    g.fillRect(0, y, 256, 30);
-    g.fillStyle = "rgba(30,20,12,0.5)";
-    g.fillRect(0, y + 30, 256, 2);
-    g.fillStyle = "rgba(40,26,16,0.25)";
-    for (let k = 0; k < 22; k++) g.fillRect(((i * 53 + k * 41) % 250), y + ((k * 13) % 28), 8 + (k % 12), 1);
-  }
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(4, 4);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
-}
-
-function plasterTexture(): THREE.CanvasTexture {
-  const c = document.createElement("canvas");
-  c.width = 128;
-  c.height = 128;
-  const g = c.getContext("2d")!;
-  g.fillStyle = "#d8cfbb";
-  g.fillRect(0, 0, 128, 128);
-  for (let i = 0; i < 900; i++) {
-    const v = 200 + ((i * 97) % 34);
-    g.fillStyle = `rgba(${v},${v - 8},${v - 22},0.06)`;
-    g.fillRect((i * 37) % 128, (i * 61) % 128, 2, 2);
-  }
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(6, 3);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
-}
 
 const TRIM = "#3d2c1e";
 
@@ -416,131 +378,7 @@ function CeilingLight({ x, z, intensity = 36, color = "#ffd9a6" }: { x: number; 
   );
 }
 
-/** hanging pendant — dining table + kitchen island */
-function Pendant({ x, z, y = 7.4, intensity = 22 }: { x: number; z: number; y?: number; intensity?: number }) {
-  return (
-    <group position={[x, 0, z]}>
-      <mesh position={[0, (HOUSE.wallH + y) / 2, 0]}>
-        <cylinderGeometry args={[0.04, 0.04, HOUSE.wallH - y, 6]} />
-        <meshStandardMaterial color="#1a140e" />
-      </mesh>
-      <mesh position={[0, y, 0]}>
-        <cylinderGeometry args={[0.22, 0.85, 0.8, 14, 1, true]} />
-        <meshStandardMaterial color="#2c2118" roughness={0.6} side={THREE.DoubleSide} />
-      </mesh>
-      <mesh position={[0, y - 0.28, 0]}>
-        <sphereGeometry args={[0.24, 10, 10]} />
-        <meshBasicMaterial color="#ffe0ae" toneMapped={false} />
-      </mesh>
-      <pointLight position={[0, y - 0.6, 0]} color="#ffd9a6" intensity={intensity} distance={20} decay={1.9} />
-    </group>
-  );
-}
-
 /* ------------------------------------------------------------ furniture */
-
-function Couch({ x, z, ry = 0 }: { x: number; z: number; ry?: number }) {
-  return (
-    <group position={[x, 0, z]} rotation={[0, ry, 0]}>
-      <mesh position={[0, 1.2, 0]} castShadow>
-        <boxGeometry args={[9, 1.6, 3.6]} />
-        <meshStandardMaterial color="#5a4f42" roughness={0.95} />
-      </mesh>
-      <mesh position={[0, 2.6, -1.4]}>
-        <boxGeometry args={[9, 2.2, 0.9]} />
-        <meshStandardMaterial color="#655947" roughness={0.95} />
-      </mesh>
-      {[-3.2, 0, 3.2].map((dx) => (
-        <mesh key={dx} position={[dx, 2.15, 0.2]}>
-          <boxGeometry args={[2.6, 0.5, 2.6]} />
-          <meshStandardMaterial color="#6b5e4b" roughness={1} />
-        </mesh>
-      ))}
-      {[-4.2, 4.2].map((dx) => (
-        <mesh key={dx} position={[dx, 1.9, 0]}>
-          <boxGeometry args={[0.7, 1.4, 3.6]} />
-          <meshStandardMaterial color="#655947" roughness={0.95} />
-        </mesh>
-      ))}
-      {/* pillows + a thrown blanket — someone lives here */}
-      <mesh position={[-3.1, 2.85, -0.85]} rotation={[0.2, 0.25, 0.1]}>
-        <boxGeometry args={[1.7, 1.5, 0.55]} />
-        <meshStandardMaterial color="#8f6c58" roughness={1} />
-      </mesh>
-      <mesh position={[3.1, 2.85, -0.85]} rotation={[0.15, -0.3, -0.08]}>
-        <boxGeometry args={[1.7, 1.5, 0.55]} />
-        <meshStandardMaterial color="#3a4a5a" roughness={1} />
-      </mesh>
-      <mesh position={[1.2, 2.5, 0.6]} rotation={[0, 0.2, 0.06]}>
-        <boxGeometry args={[2.6, 0.22, 2.2]} />
-        <meshStandardMaterial color="#7a5a4a" roughness={1} />
-      </mesh>
-    </group>
-  );
-}
-
-function Table({ x, z, w, d }: { x: number; z: number; w: number; d: number }) {
-  return (
-    <group position={[x, 0, z]}>
-      <mesh position={[0, 3.1, 0]} castShadow>
-        <boxGeometry args={[w, 0.28, d]} />
-        <meshStandardMaterial color="#5a4130" roughness={0.5} />
-      </mesh>
-      {[
-        [-w / 2 + 0.5, -d / 2 + 0.5],
-        [w / 2 - 0.5, -d / 2 + 0.5],
-        [-w / 2 + 0.5, d / 2 - 0.5],
-        [w / 2 - 0.5, d / 2 - 0.5],
-      ].map(([dx, dz], i) => (
-        <mesh key={i} position={[dx, 1.5, dz]}>
-          <boxGeometry args={[0.35, 3.0, 0.35]} />
-          <meshStandardMaterial color="#3e2d20" />
-        </mesh>
-      ))}
-      {/* runner + fruit bowl */}
-      <mesh position={[0, 3.26, 0]}>
-        <boxGeometry args={[w - 3, 0.04, 1.8]} />
-        <meshStandardMaterial color="#8f6c58" roughness={1} />
-      </mesh>
-      <mesh position={[0, 3.5, 0]}>
-        <cylinderGeometry args={[0.9, 0.55, 0.45, 12]} />
-        <meshStandardMaterial color="#2c2118" roughness={0.5} />
-      </mesh>
-      {[[-0.25, 0.1], [0.3, -0.12], [0, 0.28]].map(([dx, dz], i) => (
-        <mesh key={i} position={[dx, 3.78, dz]}>
-          <sphereGeometry args={[0.26, 8, 8]} />
-          <meshStandardMaterial color={["#c8873a", "#a8b04a", "#c8873a"][i]} roughness={0.7} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-function ChairS({ x, z, ry = 0 }: { x: number; z: number; ry?: number }) {
-  return (
-    <group position={[x, 0, z]} rotation={[0, ry, 0]}>
-      <mesh position={[0, 1.9, 0]}>
-        <boxGeometry args={[1.6, 0.2, 1.6]} />
-        <meshStandardMaterial color="#4a3626" />
-      </mesh>
-      <mesh position={[0, 3.3, -0.7]}>
-        <boxGeometry args={[1.6, 2.6, 0.18]} />
-        <meshStandardMaterial color="#4a3626" />
-      </mesh>
-      {[
-        [-0.6, -0.6],
-        [0.6, -0.6],
-        [-0.6, 0.6],
-        [0.6, 0.6],
-      ].map(([dx, dz], i) => (
-        <mesh key={i} position={[dx, 0.95, dz]}>
-          <boxGeometry args={[0.16, 1.9, 0.16]} />
-          <meshStandardMaterial color="#32251a" />
-        </mesh>
-      ))}
-    </group>
-  );
-}
 
 /** office bookshelf — flag + Nikon live here; local -z is its back */
 function Shelf({ x, z, ry = 0 }: { x: number; z: number; ry?: number }) {
@@ -616,23 +454,6 @@ function Sideboard({ x, z }: { x: number; z: number }) {
   );
 }
 
-function Plant({ x, z, s = 1 }: { x: number; z: number; s?: number }) {
-  return (
-    <group position={[x, 0, z]} scale={s}>
-      <mesh position={[0, 0.8, 0]}>
-        <cylinderGeometry args={[0.75, 0.55, 1.6, 10]} />
-        <meshStandardMaterial color="#7a4a34" roughness={0.9} />
-      </mesh>
-      {[0, 1.1, 2.2, 3.4, 4.5].map((a, i) => (
-        <mesh key={i} position={[Math.sin(a) * 0.45, 2.4 + (i % 3) * 0.5, Math.cos(a) * 0.45]} rotation={[0.5, a, 0]}>
-          <coneGeometry args={[0.5, 2.4, 5]} />
-          <meshStandardMaterial color={i % 2 ? "#3d5a34" : "#4a6a3e"} roughness={1} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
 function FloorLamp({ x, z }: { x: number; z: number }) {
   return (
     <group position={[x, 0, z]}>
@@ -689,33 +510,28 @@ function CoatRack({ x, z }: { x: number; z: number }) {
 function Kitchen() {
   return (
     <group>
-      {/* counter run along the north wall */}
-      <mesh position={[724.5, 1.8, 303]} castShadow>
-        <boxGeometry args={[38, 3.6, 5]} />
-        <meshStandardMaterial color="#4c443a" roughness={0.6} />
-      </mesh>
-      <mesh position={[724.5, 3.65, 303]}>
-        <boxGeometry args={[38, 0.25, 5.3]} />
-        <meshStandardMaterial color="#d8d2c4" roughness={0.25} />
-      </mesh>
+      {/* counter run along the north wall — split around the range */}
+      {[[708, 5], [728.5, 30]].map(([cx, w]) => (
+        <group key={cx}>
+          <mesh position={[cx, 1.8, 303]} castShadow>
+            <boxGeometry args={[w, 3.6, 5]} />
+            <meshStandardMaterial color="#4c443a" roughness={0.6} />
+          </mesh>
+          <mesh position={[cx, 3.65, 303]}>
+            <boxGeometry args={[w, 0.25, 5.3]} />
+            <meshStandardMaterial color="#d8d2c4" roughness={0.25} />
+          </mesh>
+        </group>
+      ))}
       {/* cabinet seams */}
-      {[710, 715, 720, 729, 734, 739].map((cx) => (
+      {[707.5, 716, 720.5, 725, 729.5, 734, 738.5].map((cx) => (
         <mesh key={cx} position={[cx, 1.8, 305.53]}>
           <boxGeometry args={[0.06, 3.2, 0.04]} />
           <meshStandardMaterial color="#2c2620" />
         </mesh>
       ))}
-      {/* stove inset + burners + hood */}
-      <mesh position={[712, 3.79, 303]}>
-        <boxGeometry args={[4.6, 0.06, 4.6]} />
-        <meshStandardMaterial color="#15181d" roughness={0.4} />
-      </mesh>
-      {[[-1.1, -1.1], [1.1, -1.1], [-1.1, 1.1], [1.1, 1.1]].map(([dx, dz], i) => (
-        <mesh key={i} position={[712 + dx, 3.84, 303 + dz]} rotation={[0, 0, 0]}>
-          <cylinderGeometry args={[0.55, 0.55, 0.05, 12]} />
-          <meshStandardMaterial color="#0c0e12" roughness={0.5} />
-        </mesh>
-      ))}
+      {/* the range — a real one — under the hood */}
+      <Model slug="electric_stove" position={[712, 0.1, 304]} scale={4.1} />
       <mesh position={[712, 7.2, 302.2]} castShadow>
         <boxGeometry args={[4.8, 1.9, 3]} />
         <meshStandardMaterial color="#b9bdc2" roughness={0.35} metalness={0.5} />
@@ -791,8 +607,8 @@ function Kitchen() {
         </mesh>
       </group>
       {/* island pendants */}
-      <Pendant x={717.5} z={321} y={7.2} intensity={14} />
-      <Pendant x={722.5} z={321} y={7.2} intensity={14} />
+      <HangingLamp x={717.5} z={321} scale={2.0} intensity={14} />
+      <HangingLamp x={722.5} z={321} scale={2.0} intensity={14} />
     </group>
   );
 }
@@ -800,16 +616,23 @@ function Kitchen() {
 /* ------------------------------------------------------------ the house */
 
 export function House() {
-  const wood = useMemo(woodTexture, []);
-  const plaster = useMemo(plasterTexture, []);
-  const wallMat = useMemo(() => new THREE.MeshStandardMaterial({ map: plaster, roughness: 0.95 }), [plaster]);
+  const floorTex = usePBR("diagonal_parquet", 16, 17);
+  const wallTex = usePBR("beige_wall_001", 4, 1.4);
+  const rugLiving = usePBR("fabric_pattern_07", 3, 2.4);
+  const rugDining = usePBR("fabric_pattern_07", 2.6, 2);
+  const rugOffice = usePBR("fabric_pattern_07", 2.4, 1.8);
+  const porchTex = usePBR("concrete_floor_01", 2, 1.2);
+  const wallMat = useMemo(
+    () => new THREE.MeshStandardMaterial({ ...wallTex, normalScale: new THREE.Vector2(0.5, 0.5) }),
+    [wallTex]
+  );
 
   return (
     <group>
       {/* floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[(HOUSE.x1 + HOUSE.x2) / 2, 0.06, (HOUSE.z1 + HOUSE.z2) / 2]} receiveShadow>
         <planeGeometry args={[HOUSE.x2 - HOUSE.x1, HOUSE.z2 - HOUSE.z1]} />
-        <meshStandardMaterial map={wood} roughness={0.55} />
+        <meshStandardMaterial {...floorTex} />
       </mesh>
       {/* ceiling */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[(HOUSE.x1 + HOUSE.x2) / 2, HOUSE.wallH, (HOUSE.z1 + HOUSE.z2) / 2]}>
@@ -856,7 +679,7 @@ export function House() {
       {/* rug under the desk */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[684, 0.1, 313]}>
         <planeGeometry args={[14, 10]} />
-        <meshStandardMaterial color="#4a4238" roughness={1} />
+        <meshStandardMaterial {...rugOffice} color="#8a8078" />
       </mesh>
       {/* the desk (monitor faces the seat to the south) */}
       <group>
@@ -901,6 +724,8 @@ export function House() {
           <cylinderGeometry args={[0.18, 0.18, 1.8, 6]} />
           <meshStandardMaterial color="#0e1014" />
         </mesh>
+        {/* desk lamp — a real one */}
+        <Model slug="desk_lamp_arm_01" position={[687.9, 3.2, 308.7]} rotation={[0, -0.7, 0]} scale={2.4} />
         {/* bin */}
         <mesh position={[689.6, 0.8, 308]}>
           <cylinderGeometry args={[0.55, 0.45, 1.6, 10]} />
@@ -927,17 +752,17 @@ export function House() {
       {/* -------- DINING -------- */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[684, 0.09, 362]}>
         <planeGeometry args={[15, 11]} />
-        <meshStandardMaterial color="#5a4a44" roughness={1} />
+        <meshStandardMaterial {...rugDining} color="#a89486" />
       </mesh>
-      <Table x={684} z={362} w={10} d={6} />
-      <ChairS x={680} z={357.5} ry={0} />
-      <ChairS x={688} z={357.5} ry={0} />
-      <ChairS x={680} z={366.5} ry={Math.PI} />
-      <ChairS x={688} z={366.5} ry={Math.PI} />
-      <Pendant x={684} z={362} y={7.6} intensity={26} />
+      <Model slug="wooden_table_02" position={[684, 0.12, 362]} scale={[5.5, 4.0, 5.5]} />
+      <Model slug="dining_chair_02" position={[682.2, 0.1, 358.9]} rotation={[0, 0.12, 0]} scale={3.3} />
+      <Model slug="dining_chair_02" position={[685.8, 0.1, 358.9]} rotation={[0, -0.08, 0]} scale={3.3} />
+      <Model slug="dining_chair_02" position={[682.2, 0.1, 365.1]} rotation={[0, Math.PI + 0.06, 0]} scale={3.3} />
+      <Model slug="dining_chair_02" position={[685.8, 0.1, 365.1]} rotation={[0, Math.PI - 0.14, 0]} scale={3.3} />
+      <HangingLamp x={684} z={362} scale={2.8} intensity={26} />
       <Sideboard x={665.75} z={372} />
       <Framed src="/archive/web/lUfbKLTE61YByqT1TJBRTeMjA.jpg" x={664.1} y={7} z={372} w={4} h={2.6} ry={Math.PI / 2} />
-      <Plant x={667} z={342.8} s={1.1} />
+      <Model slug="potted_plant_01" position={[667, 0.1, 342.8]} scale={3.2} />
 
       {/* -------- LIVING -------- */}
       {/* rug */}
@@ -947,7 +772,7 @@ export function House() {
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[734, 0.12, 362]}>
         <planeGeometry args={[13.6, 10.6]} />
-        <meshStandardMaterial color="#8f6c58" roughness={1} />
+        <meshStandardMaterial {...rugLiving} />
       </mesh>
       {/* TV on a console against the east wall */}
       <mesh position={[742.5, 1.4, 362]} castShadow>
@@ -967,34 +792,41 @@ export function House() {
         <boxGeometry args={[0.6, 0.35, 7]} />
         <meshStandardMaterial color="#15181d" roughness={0.6} />
       </mesh>
-      {/* couch faces the TV; coffee table between */}
-      <Couch x={731} z={362} ry={-Math.PI / 2} />
-      <group position={[737, 0, 362]}>
-        <mesh position={[0, 1.35, 0]} castShadow>
-          <boxGeometry args={[4.4, 0.22, 2.6]} />
-          <meshStandardMaterial color="#5a4130" roughness={0.5} />
-        </mesh>
-        {[[-1.9, -1], [1.9, -1], [-1.9, 1], [1.9, 1]].map(([dx, dz], i) => (
-          <mesh key={i} position={[dx, 0.65, dz]}>
-            <boxGeometry args={[0.24, 1.3, 0.24]} />
-            <meshStandardMaterial color="#3e2d20" />
-          </mesh>
-        ))}
-        {/* remote + book on the table */}
-        <mesh position={[-0.8, 1.52, 0.4]} rotation={[0, 0.4, 0]}>
-          <boxGeometry args={[0.9, 0.1, 0.34]} />
-          <meshStandardMaterial color="#15181d" />
-        </mesh>
-        <mesh position={[0.9, 1.55, -0.3]} rotation={[0, -0.2, 0]}>
-          <boxGeometry args={[1.4, 0.18, 1.9]} />
-          <meshStandardMaterial color="#5a3a34" roughness={0.8} />
-        </mesh>
-      </group>
+      {/* sofa faces the TV; coffee table between */}
+      <Model slug="sofa_02" position={[731, 0.1, 362]} rotation={[0, Math.PI / 2, 0]} scale={4.4} />
+      {/* thrown pillows — someone lives here */}
+      <mesh position={[730.5, 2.3, 359.4]} rotation={[0.15, 0.9, 0.1]} castShadow>
+        <boxGeometry args={[1.5, 1.3, 0.5]} />
+        <meshStandardMaterial color="#8f6c58" roughness={1} />
+      </mesh>
+      <mesh position={[730.5, 2.3, 364.8]} rotation={[0.12, -1.2, -0.08]} castShadow>
+        <boxGeometry args={[1.5, 1.3, 0.5]} />
+        <meshStandardMaterial color="#3a4a5a" roughness={1} />
+      </mesh>
+      <Model slug="CoffeeTable_01" position={[737, 0.1, 362]} scale={3.4} />
+      {/* remote + book on the table */}
+      <mesh position={[736.2, 1.9, 362.5]} rotation={[0, 0.4, 0]}>
+        <boxGeometry args={[0.9, 0.1, 0.34]} />
+        <meshStandardMaterial color="#15181d" />
+      </mesh>
+      <mesh position={[737.9, 1.93, 361.6]} rotation={[0, -0.2, 0]}>
+        <boxGeometry args={[1.4, 0.18, 1.9]} />
+        <meshStandardMaterial color="#5a3a34" roughness={0.8} />
+      </mesh>
+      {/* armchair + ottoman complete the corner */}
+      <Model slug="ArmChair_01" position={[735.5, 0.1, 355.9]} rotation={[0, 0.8, 0]} scale={3.6} />
+      <Model slug="Ottoman_01" position={[736.6, 0.1, 358.7]} rotation={[0, 0.8, 0]} scale={3.2} />
+      {/* side table + a small plant beside the sofa */}
+      <Model slug="side_table_01" position={[731, 0.1, 355.6]} scale={3.2} />
+      <Model slug="potted_plant_02" position={[731, 1.87, 355.6]} scale={1.7} />
+      {/* display shelves on the south wall */}
+      <Model slug="Shelf_01" position={[714, 0.1, 383.4]} rotation={[0, Math.PI, 0]} scale={3.4} />
+      <Model slug="Shelf_01" position={[717.5, 0.1, 383.4]} rotation={[0, Math.PI, 0]} scale={3.4} />
       {/* the photo wall — on the arch wall, facing the living room */}
       <Framed src="/archive/web/RAOF0jiw87qsIU7GR1OeKHsHEs.jpg" x={704.65} y={6.4} z={346} w={4.4} h={3} ry={Math.PI / 2} />
       <Framed src="/framer/cms/downloads/xenomorph-typeface__image.png" x={704.65} y={6.4} z={374} w={3.4} h={3} ry={Math.PI / 2} />
       <FloorLamp x={706.8} z={381} />
-      <Plant x={742} z={382} s={1.2} />
+      <Model slug="potted_plant_01" position={[742, 0.1, 381.5]} scale={3.0} />
 
       {/* -------- ENTRY (inside the front door) -------- */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[726, 0.09, 380.5]}>
@@ -1017,7 +849,7 @@ export function House() {
       {/* -------- porch -------- */}
       <mesh position={[726, 0.25, 387]} receiveShadow>
         <boxGeometry args={[10, 0.5, 6]} />
-        <meshStandardMaterial color="#5a544a" roughness={0.9} />
+        <meshStandardMaterial {...porchTex} />
       </mesh>
       <mesh position={[726, 0.08, 391]}>
         <boxGeometry args={[8, 0.16, 2]} />
