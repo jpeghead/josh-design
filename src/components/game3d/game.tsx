@@ -15,6 +15,8 @@ import * as THREE from "three";
 import Link from "next/link";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { EffectComposer, Bloom, Vignette, Noise } from "@react-three/postprocessing";
+import { Environment } from "@react-three/drei";
+import { Physics, RigidBody, CuboidCollider, useRapier, type RapierRigidBody } from "@react-three/rapier";
 import { detectTier, type CanvasTier } from "../canvas/capability";
 import { DesktopOverlay, type DeskRect } from "./desktop";
 import {
@@ -88,6 +90,24 @@ const G: GameState = {
 };
 
 const keys: Record<string, boolean> = {};
+
+/** cross-component physics requests (input handlers live outside the Canvas) */
+const PHYS = {
+  playerTeleport: null as [number, number] | null,
+  carTeleport: null as [number, number] | null,
+  footSpeed: 0,
+};
+
+/** one place to tune the drive feel */
+const CAR_TUNE = {
+  engineForce: 2600,
+  brakeForce: 6,
+  maxSteer: 0.52,
+  suspensionRest: 0.9,
+  suspensionStiffness: 34,
+  wheelRadius: 0.78,
+  wheelFriction: 2.2,
+};
 
 /* ------------------------------------------------------- procedural tex */
 
@@ -204,6 +224,39 @@ function Sky() {
     <mesh material={mat}>
       <sphereGeometry args={[2600, 24, 16]} />
     </mesh>
+  );
+}
+
+/** shadow-casting sun that follows the player so shadows stay crisp */
+function ShadowSun() {
+  const ref = useRef<THREE.DirectionalLight>(null!);
+  const target = useMemo(() => new THREE.Object3D(), []);
+  useFrame(() => {
+    const L = ref.current;
+    if (!L) return;
+    L.position.set(G.px - 140, 190, G.pz + 90);
+    target.position.set(G.px, 0, G.pz);
+    target.updateMatrixWorld();
+  });
+  return (
+    <>
+      <primitive object={target} />
+      <directionalLight
+        ref={ref}
+        castShadow
+        intensity={1.1}
+        color="#ffb37a"
+        target={target}
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-left={-160}
+        shadow-camera-right={160}
+        shadow-camera-top={160}
+        shadow-camera-bottom={-160}
+        shadow-camera-far={600}
+        shadow-bias={-0.0004}
+      />
+    </>
   );
 }
 
@@ -822,6 +875,262 @@ function Pedestrians() {
   );
 }
 
+/* ------------------------------------------------------------- physics */
+
+/** ground, map borders, buildings, house walls — all fixed cuboids */
+function StaticColliders() {
+  return (
+    <group>
+      <RigidBody type="fixed" colliders={false}>
+        {/* ground slab */}
+        <CuboidCollider args={[820, 2, 820]} position={[0, -2, 0]} />
+        {/* map borders */}
+        <CuboidCollider args={[4, 30, 820]} position={[WORLD_HALF + 8, 15, 0]} />
+        <CuboidCollider args={[4, 30, 820]} position={[-WORLD_HALF - 8, 15, 0]} />
+        <CuboidCollider args={[820, 30, 4]} position={[0, 15, WORLD_HALF + 8]} />
+        <CuboidCollider args={[820, 30, 4]} position={[0, 15, -WORLD_HALF - 8]} />
+        {/* buildings */}
+        {BUILDINGS.map((b, i) => (
+          <CuboidCollider key={i} args={[b.w / 2, b.h / 2, b.d / 2]} position={[b.x, b.h / 2, b.z]} />
+        ))}
+        {/* house walls */}
+        {HOUSE_WALLS.map((w, i) => (
+          <CuboidCollider
+            key={"hw" + i}
+            args={[Math.max((w[2] - w[0]) / 2, 0.25), 6, Math.max((w[3] - w[1]) / 2, 0.25)]}
+            position={[(w[0] + w[2]) / 2, 6, (w[1] + w[3]) / 2]}
+          />
+        ))}
+      </RigidBody>
+      <DoorColliders />
+    </group>
+  );
+}
+
+/** door blockers that switch off as the door swings open */
+function DoorColliders() {
+  const refs = useRef<(RapierRigidBody | null)[]>([]);
+  useFrame(() => {
+    DOORS.forEach((d, i) => {
+      const rb = refs.current[i];
+      if (!rb) return;
+      const col = rb.collider(0);
+      if (col) col.setEnabled(d.open < 0.5);
+    });
+  });
+  return (
+    <>
+      {DOORS.map((d, i) => {
+        const cx = d.axis === "x" ? d.hx - d.len / 2 : d.hx;
+        const cz = d.axis === "x" ? d.hz : d.hz - d.len / 2;
+        return (
+          <RigidBody
+            key={d.id}
+            type="fixed"
+            colliders={false}
+            ref={(el: RapierRigidBody | null) => {
+              refs.current[i] = el;
+            }}
+          >
+            <CuboidCollider
+              args={d.axis === "x" ? [d.len / 2, 5, 0.4] : [0.4, 5, d.len / 2]}
+              position={[cx, 5, cz]}
+            />
+          </RigidBody>
+        );
+      })}
+    </>
+  );
+}
+
+/** the player: kinematic capsule + Rapier character controller */
+function PlayerBody() {
+  const body = useRef<RapierRigidBody>(null!);
+  const { world } = useRapier();
+  const ctrl = useMemo(() => {
+    const c = world.createCharacterController(0.08);
+    c.setSlideEnabled(true);
+    return c;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const vel = useRef(0);
+  const dir = useRef<[number, number]>([0, -1]);
+
+  useFrame((_, rawDt) => {
+    const rb = body.current;
+    if (!rb) return;
+    const dt = Math.min(rawDt, 0.05);
+
+    if (PHYS.playerTeleport) {
+      rb.setNextKinematicTranslation({ x: PHYS.playerTeleport[0], y: 2.6, z: PHYS.playerTeleport[1] });
+      G.px = PHYS.playerTeleport[0];
+      G.pz = PHYS.playerTeleport[1];
+      PHYS.playerTeleport = null;
+      return;
+    }
+    if (G.mode !== "foot" || G.deskMode !== "world") {
+      PHYS.footSpeed = 0;
+      // keep the body parked at the player's logical spot
+      rb.setNextKinematicTranslation({ x: G.px, y: 2.6, z: G.pz });
+      return;
+    }
+
+    const up = keys["w"] || keys["arrowup"];
+    const down = keys["s"] || keys["arrowdown"];
+    const left = keys["a"] || keys["arrowleft"];
+    const right = keys["d"] || keys["arrowright"];
+    const run = keys["shift"];
+
+    const fx = -Math.sin(LOOK.yaw);
+    const fz = -Math.cos(LOOK.yaw);
+    const rx = -fz;
+    const rz = fx;
+    let vx = 0,
+      vz = 0;
+    if (up) {
+      vx += fx;
+      vz += fz;
+    }
+    if (down) {
+      vx -= fx;
+      vz -= fz;
+    }
+    if (right) {
+      vx += rx;
+      vz += rz;
+    }
+    if (left) {
+      vx -= rx;
+      vz -= rz;
+    }
+    const len = Math.hypot(vx, vz);
+    const target = len > 0 ? (run ? 26 : 12.5) : 0;
+    vel.current += (target - vel.current) * Math.min(dt * (target > vel.current ? 9 : 12), 1);
+    if (len > 0) {
+      dir.current = [vx / len, vz / len];
+    }
+    PHYS.footSpeed = vel.current;
+
+    const move = {
+      x: dir.current[0] * vel.current * dt,
+      y: 0,
+      z: dir.current[1] * vel.current * dt,
+    };
+    const col = rb.collider(0);
+    ctrl.computeColliderMovement(col, move);
+    const out = ctrl.computedMovement();
+    const t = rb.translation();
+    rb.setNextKinematicTranslation({ x: t.x + out.x, y: 2.6, z: t.z + out.z });
+    G.px = t.x + out.x;
+    G.pz = t.z + out.z;
+    G.pHeading = LOOK.yaw;
+  });
+
+  return (
+    <RigidBody
+      ref={body}
+      type="kinematicPosition"
+      colliders={false}
+      position={[STAND.x, 2.6, STAND.z]}
+    >
+      <CuboidCollider args={[0.9, 2.4, 0.9]} />
+    </RigidBody>
+  );
+}
+
+/** the car: dynamic chassis on a raycast-vehicle controller — real suspension */
+function CarBody() {
+  const chassis = useRef<RapierRigidBody>(null!);
+  const { world } = useRapier();
+  const vehicle = useRef<ReturnType<typeof world.createVehicleController> | null>(null);
+
+  useFrame((_, rawDt) => {
+    const rb = chassis.current;
+    if (!rb) return;
+    const dt = Math.min(rawDt, 0.05);
+
+    if (!vehicle.current) {
+      const v = world.createVehicleController(rb);
+      const h = -0.6; // wheel mount height on chassis
+      const pts: [number, number, boolean][] = [
+        [-1.95, -3.3, true], // front left (steered)
+        [1.95, -3.3, true], // front right
+        [-1.95, 3.3, false],
+        [1.95, 3.3, false],
+      ];
+      pts.forEach(([wx, wz]) => {
+        v.addWheel(
+          { x: wx, y: h, z: wz },
+          { x: 0, y: -1, z: 0 },
+          { x: 1, y: 0, z: 0 },
+          CAR_TUNE.suspensionRest,
+          CAR_TUNE.wheelRadius
+        );
+      });
+      for (let i = 0; i < 4; i++) {
+        v.setWheelSuspensionStiffness(i, CAR_TUNE.suspensionStiffness);
+        v.setWheelFrictionSlip(i, CAR_TUNE.wheelFriction);
+        v.setWheelSuspensionCompression(i, 2.4);
+        v.setWheelSuspensionRelaxation(i, 3.6);
+        v.setWheelMaxSuspensionTravel(i, 1.4);
+      }
+      vehicle.current = v;
+    }
+    const v = vehicle.current;
+
+    if (PHYS.carTeleport) {
+      rb.setTranslation({ x: PHYS.carTeleport[0], y: 3, z: PHYS.carTeleport[1] }, true);
+      rb.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      rb.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      PHYS.carTeleport = null;
+    }
+
+    const driving = G.mode === "car" && G.deskMode === "world";
+    const up = keys["w"] || keys["arrowup"];
+    const down = keys["s"] || keys["arrowdown"];
+    const left = keys["a"] || keys["arrowleft"];
+    const right = keys["d"] || keys["arrowright"];
+
+    const force = driving ? (up ? -CAR_TUNE.engineForce : down ? CAR_TUNE.engineForce * 0.7 : 0) : 0;
+    const steer = driving ? ((left ? 1 : 0) - (right ? 1 : 0)) * CAR_TUNE.maxSteer : 0;
+    v.setWheelEngineForce(0, force);
+    v.setWheelEngineForce(1, force);
+    v.setWheelSteering(0, steer);
+    v.setWheelSteering(1, steer);
+    const brake = driving ? 0 : CAR_TUNE.brakeForce;
+    v.setWheelBrake(2, brake);
+    v.setWheelBrake(3, brake);
+
+    v.updateVehicle(dt);
+
+    // sync logical state from physics
+    const t = rb.translation();
+    const r = rb.rotation();
+    G.cx = t.x;
+    G.cz = t.z;
+    // yaw from quaternion
+    G.cHeading = Math.atan2(2 * (r.w * r.y + r.x * r.z), 1 - 2 * (r.y * r.y + r.x * r.x));
+    const lv = rb.linvel();
+    const fwdX = -Math.sin(G.cHeading);
+    const fwdZ = -Math.cos(G.cHeading);
+    G.cSpeed = lv.x * fwdX + lv.z * fwdZ;
+    (window as unknown as Record<string, unknown>).__carY = t.y;
+  });
+
+  return (
+    <RigidBody
+      ref={chassis}
+      type="dynamic"
+      colliders={false}
+      position={[CAR_START.x, 3, CAR_START.z]}
+      angularDamping={2}
+      linearDamping={0.05}
+    >
+      <CuboidCollider args={[2.3, 0.7, 4.9]} position={[0, 0.2, 0]} mass={26} />
+    </RigidBody>
+  );
+}
+
 /* ----------------------------------------------------- player + vehicle */
 
 function PlayerCar() {
@@ -1027,65 +1336,17 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
     const right = keys["d"] || keys["arrowright"];
     const run = keys["shift"];
 
-    if (G.mode === "foot" && !atDesk) {
-      // first person: WASD relative to where you're LOOKING
-      const fx = -Math.sin(LOOK.yaw);
-      const fz = -Math.cos(LOOK.yaw);
-      const rx = -fz;
-      const rz = fx;
-      let vx = 0,
-        vz = 0;
-      if (up) {
-        vx += fx;
-        vz += fz;
-      }
-      if (down) {
-        vx -= fx;
-        vz -= fz;
-      }
-      if (right) {
-        vx += rx;
-        vz += rz;
-      }
-      if (left) {
-        vx -= rx;
-        vz -= rz;
-      }
-      const len = Math.hypot(vx, vz);
-      const targetSp = len > 0 ? (run ? 26 : 12.5) : 0;
-      // velocity smoothing — no more Game Boy starts and stops
-      footVel.current += (targetSp - footVel.current) * Math.min(dt * (targetSp > footVel.current ? 9 : 12), 1);
-      if (len > 0) {
-        vx /= len;
-        vz /= len;
-        lastDir.current[0] = vx;
-        lastDir.current[1] = vz;
-      }
-      G.px += lastDir.current[0] * footVel.current * dt;
-      G.pz += lastDir.current[1] * footVel.current * dt;
-      G.pHeading = LOOK.yaw;
-      bobT.current += footVel.current * dt * 0.55;
-      collide(1.4, "p");
-    } else if (G.mode === "car" && !atDesk) {
-      // car — arcade
-      const accel = up ? 44 : 0;
-      const brake = down ? 60 : 0;
-      G.cSpeed += (accel - Math.sign(G.cSpeed) * (brake + 8)) * dt;
-      if (down && Math.abs(G.cSpeed) < 2) G.cSpeed = -16; // reverse
-      G.cSpeed = THREE.MathUtils.clamp(G.cSpeed, -24, 66);
-      if (!up && !down) G.cSpeed *= 1 - 1.2 * dt;
-      const steer = (left ? 1 : 0) - (right ? 1 : 0);
-      G.cHeading += steer * dt * 2.2 * THREE.MathUtils.clamp(Math.abs(G.cSpeed) / 26, 0.15, 1) * Math.sign(G.cSpeed || 1);
-      G.cx -= Math.sin(G.cHeading) * G.cSpeed * dt;
-      G.cz -= Math.cos(G.cHeading) * G.cSpeed * dt;
-      collide(3.2, "c");
+    // movement lives in PlayerBody / CarBody (Rapier). Riding along:
+    if (G.mode === "car" && !atDesk) {
       G.px = G.cx;
       G.pz = G.cz;
     }
-    G.px = THREE.MathUtils.clamp(G.px, -WORLD_HALF, WORLD_HALF);
-    G.pz = THREE.MathUtils.clamp(G.pz, -WORLD_HALF, WORLD_HALF);
-    G.cx = THREE.MathUtils.clamp(G.cx, -WORLD_HALF, WORLD_HALF);
-    G.cz = THREE.MathUtils.clamp(G.cz, -WORLD_HALF, WORLD_HALF);
+    bobT.current += PHYS.footSpeed * dt * 0.55;
+    void up;
+    void down;
+    void left;
+    void right;
+    void run;
 
     /* -------- camera: FP on foot, chase in car, seat blend at desk -------- */
     const tx = G.mode === "car" ? G.cx : G.px;
@@ -1093,7 +1354,7 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
     const th = G.mode === "car" ? G.cHeading : G.pHeading;
     if (G.deskMode === "world" && G.mode === "foot") {
       // first person
-      const bob = Math.sin(bobT.current * 2.1) * 0.09 * Math.min(footVel.current / 12, 1);
+      const bob = Math.sin(bobT.current * 2.1) * 0.09 * Math.min(PHYS.footSpeed / 12, 1);
       camera.position.set(G.px, EYE + bob, G.pz);
       camera.rotation.set(LOOK.pitch, LOOK.yaw, 0, "YXZ");
       camPos.current.copy(camera.position);
@@ -1446,6 +1707,7 @@ export function CityGame() {
           G.deskMode = "toDesk";
           G.px = STAND.x;
           G.pz = STAND.z;
+          PHYS.playerTeleport = [STAND.x, STAND.z];
           return;
         }
       }
@@ -1454,9 +1716,12 @@ export function CityGame() {
           G.mode = "car";
         } else if (G.mode === "car" && Math.abs(G.cSpeed) < 6) {
           G.mode = "foot";
-          G.px = G.cx + Math.cos(G.cHeading) * 6.5;
-          G.pz = G.cz - Math.sin(G.cHeading) * 6.5;
-          G.pHeading = G.cHeading;
+          const ex = G.cx + Math.cos(G.cHeading) * 7;
+          const ez = G.cz - Math.sin(G.cHeading) * 7;
+          G.px = ex;
+          G.pz = ez;
+          PHYS.playerTeleport = [ex, ez];
+          LOOK.yaw = G.cHeading;
           G.cSpeed = 0;
         }
       }
@@ -1508,6 +1773,7 @@ export function CityGame() {
       G.deskT = 1;
       G.px = 690;
       G.pz = 330;
+      PHYS.playerTeleport = [690, 330];
       LOOK.yaw = 0.45; // facing the desk + the framed years
       LOOK.pitch = 0;
     }
@@ -1525,6 +1791,8 @@ export function CityGame() {
       G.pz = m.startZ + 10;
       G.cx = m.startX + 18;
       G.cz = m.startZ + 18;
+      PHYS.playerTeleport = [G.px, G.pz];
+      PHYS.carTeleport = [G.cx, G.cz];
       G.deskMode = "world";
       G.deskT = 1;
     }
@@ -1542,14 +1810,19 @@ export function CityGame() {
         dpr={[1, 1.5]}
         camera={{ fov: 60, near: 0.5, far: 4200, position: [G.px - 10, 8, G.pz + 14] }}
         gl={{ antialias: true, powerPreference: "high-performance" }}
-        shadows={false}
+        shadows
       >
         <Suspense fallback={null}>
           <Sky />
           <Sun />
-          <hemisphereLight args={["#ff9a6a", "#2a1f3d", 0.85]} />
-          <directionalLight position={[-600, 300, 400]} intensity={1.1} color="#ffb37a" />
+          <Environment files="/hdri/sunset.hdr" background={false} />
+          <hemisphereLight args={["#ff9a6a", "#2a1f3d", 0.5]} />
+          <ShadowSun />
           <fog attach="fog" args={["#5a3a55", 220, 1500]} />
+          <Physics gravity={[0, -32, 0]}>
+          <StaticColliders />
+          <PlayerBody />
+          <CarBody />
           <Ground />
           <Sidewalks />
           <Skyline />
@@ -1565,6 +1838,7 @@ export function CityGame() {
           <PlayerCar />
           <MissionMarkers tick={hud.mission * 100 + hud.step * 10 + (hud.phase === "active" ? 1 : 0)} />
           <Sim onHud={setHud} />
+          </Physics>
           <EffectComposer>
             <Bloom intensity={0.6} luminanceThreshold={0.62} mipmapBlur />
             <Noise opacity={0.035} />
