@@ -21,6 +21,7 @@
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
+import { useTexture } from "@react-three/drei";
 import { Model, HangingLamp, usePBR } from "./models";
 
 /* ------------------------------------------------------------- geometry */
@@ -274,11 +275,8 @@ function Frosted({ x, z, w, axis, bright = 1 }: { x: number; z: number; w: numbe
  * Place the group AT the wall surface; local +z faces into the room.
  */
 function Framed({ src, x, y, z, w, h, ry = 0 }: { src: string; x: number; y: number; z: number; w: number; h: number; ry?: number }) {
-  const tex = useMemo(() => {
-    const t = new THREE.TextureLoader().load(src);
-    t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  }, [src]);
+  const tex = useTexture(src);
+  tex.colorSpace = THREE.SRGBColorSpace;
   return (
     <group position={[x, y, z]} rotation={[0, ry, 0]}>
       <mesh position={[0, 0, 0.08]} castShadow>
@@ -628,12 +626,12 @@ export function House() {
         <meshStandardMaterial {...floorTex} envMapIntensity={0.35} />
       </mesh>
       {/* ceiling */}
-      <mesh rotation={[Math.PI / 2, 0, 0]} position={[(HOUSE.x1 + HOUSE.x2) / 2, HOUSE.wallH, (HOUSE.z1 + HOUSE.z2) / 2]}>
+      <mesh rotation={[Math.PI / 2, 0, 0]} position={[(HOUSE.x1 + HOUSE.x2) / 2, HOUSE.wallH - 0.04, (HOUSE.z1 + HOUSE.z2) / 2]}>
         <planeGeometry args={[HOUSE.x2 - HOUSE.x1, HOUSE.z2 - HOUSE.z1]} />
         <meshStandardMaterial color="#cfc6b4" emissive="#8a7c66" emissiveIntensity={0.45} roughness={1} />
       </mesh>
       {/* roof cap (seen from the street) */}
-      <mesh position={[(HOUSE.x1 + HOUSE.x2) / 2, HOUSE.wallH + 0.8, (HOUSE.z1 + HOUSE.z2) / 2]}>
+      <mesh position={[(HOUSE.x1 + HOUSE.x2) / 2, HOUSE.wallH + 0.92, (HOUSE.z1 + HOUSE.z2) / 2]}>
         <boxGeometry args={[HOUSE.x2 - HOUSE.x1 + 2, 1.6, HOUSE.z2 - HOUSE.z1 + 2]} />
         <meshStandardMaterial color="#241d16" roughness={1} />
       </mesh>

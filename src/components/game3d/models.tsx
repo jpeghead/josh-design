@@ -106,6 +106,21 @@ export function usePBR(slug: string, repeatX: number, repeatY: number) {
   }, [tex, repeatX, repeatY]);
 }
 
-useGLTF.preload(gltfPath("sofa_02"));
-useGLTF.preload(gltfPath("wooden_table_02"));
-useGLTF.preload(gltfPath("dining_chair_02"));
+// preload EVERYTHING the house uses — the loading gate waits on these,
+// so nothing pops in after the world is visible
+for (const slug of [
+  "sofa_02",
+  "ArmChair_01",
+  "Ottoman_01",
+  "CoffeeTable_01",
+  "side_table_01",
+  "wooden_table_02",
+  "dining_chair_02",
+  "potted_plant_01",
+  "potted_plant_02",
+  "modern_ceiling_lamp_01",
+  "desk_lamp_arm_01",
+  "electric_stove",
+]) {
+  useGLTF.preload(gltfPath(slug));
+}

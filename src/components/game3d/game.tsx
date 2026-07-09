@@ -15,12 +15,13 @@ import * as THREE from "three";
 import Link from "next/link";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { EffectComposer, Bloom, Vignette, Noise } from "@react-three/postprocessing";
-import { Environment } from "@react-three/drei";
+import { Environment, useProgress } from "@react-three/drei";
 import { Physics, RigidBody, CuboidCollider, useRapier, type RapierRigidBody } from "@react-three/rapier";
 import { detectTier, type CanvasTier } from "../canvas/capability";
 import { DesktopOverlay, type DeskRect } from "./desktop";
 import {
   House,
+  HOUSE,
   HOUSE_WALLS,
   FURNITURE,
   RELICS,
@@ -31,7 +32,7 @@ import {
   STAND,
   DESK_SPOT,
 } from "./house";
-import { startAmbience, setAmbienceInside } from "./ambience";
+import { startAmbience, setAmbienceInside, sfxFootstep, sfxJump, sfxLand } from "./ambience";
 import {
   BUILDINGS,
   DISTRICTS,
@@ -51,6 +52,43 @@ const SEAT_LOOK = new THREE.Vector3(SCREEN.cx, SCREEN.cy, SCREEN.cz);
 
 /** the story card shown after inspecting a relic (E near one) */
 const CAPTION = { title: "", body: "", until: 0 };
+
+/** rolling frame stats — shown by the ?fps=1 overlay */
+const PERF = { fps: 0, worstMs: 0, py: 0, grounded: true };
+
+function FrameStats() {
+  const acc = useRef({ t: 0, n: 0, worst: 0 });
+  useFrame((_, dt) => {
+    const a = acc.current;
+    a.t += dt;
+    a.n += 1;
+    a.worst = Math.max(a.worst, dt);
+    if (a.t >= 0.5) {
+      PERF.fps = Math.round(a.n / a.t);
+      PERF.worstMs = Math.round(a.worst * 1000);
+      PERF.py = Math.round(PHYS.py * 100) / 100;
+      PERF.grounded = PHYS.grounded;
+      a.t = 0;
+      a.n = 0;
+      a.worst = 0;
+    }
+  });
+  return null;
+}
+
+/** DOM side of the fps overlay — polls PERF so the canvas never re-renders */
+function FpsReadout() {
+  const [v, setV] = useState({ fps: 0, worstMs: 0, py: 0, grounded: true });
+  useEffect(() => {
+    const id = setInterval(() => setV({ ...PERF }), 500);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="pointer-events-none absolute bottom-4 left-4 z-40 font-mono text-[12px] text-[#7dff9a]" style={{ textShadow: "0 1px 4px #000" }}>
+      {v.fps} fps · worst {v.worstMs} ms · y {v.py} {v.grounded ? "G" : "A"}
+    </div>
+  );
+}
 
 function nearestRelic(x: number, z: number) {
   let best: (typeof RELICS)[number] | null = null;
@@ -113,6 +151,8 @@ const PHYS = {
   playerTeleport: null as [number, number] | null,
   carTeleport: null as [number, number] | null,
   footSpeed: 0,
+  py: 2.75, // body center height (2.75 = standing on the ground plane)
+  grounded: true,
 };
 
 /** one place to tune the drive feel */
@@ -920,6 +960,11 @@ function StaticColliders() {
             position={[(w[0] + w[2]) / 2, 6, (w[1] + w[3]) / 2]}
           />
         ))}
+        {/* house ceiling — jumping indoors bumps your head, not the roof */}
+        <CuboidCollider
+          args={[(HOUSE.x2 - HOUSE.x1) / 2, 0.3, (HOUSE.z2 - HOUSE.z1) / 2]}
+          position={[(HOUSE.x1 + HOUSE.x2) / 2, HOUSE.wallH + 0.3, (HOUSE.z1 + HOUSE.z2) / 2]}
+        />
         {/* furniture — you can't walk through a couch */}
         {FURNITURE.map((f, i) => (
           <CuboidCollider
@@ -967,6 +1012,20 @@ function DoorColliders() {
   );
 }
 
+/* GoldSrc-feel movement (3 units = 1 m; speeds from the 1998 handbook) */
+const MOVE = {
+  run: 24.4, // ~8.1 m/s — HL1 run speed
+  walk: 12.2, // shift to walk
+  accel: 10, // ground acceleration (x wishspeed / s)
+  airAccel: 10, // air acceleration against the 0.76 m/s air cap
+  airCap: 2.3, // classic air-control speed cap
+  friction: 6,
+  stopSpeed: 7.6, // friction floor — kills drift instantly at low speed
+  gravity: 61, // ~20 m/s² — games run heavy gravity on purpose
+  jumpVel: 20.4, // ~1.1 m jump apex
+  baseY: 2.75, // body center when standing on flat ground
+};
+
 /** the player: kinematic capsule + Rapier character controller */
 function PlayerBody() {
   const body = useRef<RapierRigidBody>(null!);
@@ -974,8 +1033,8 @@ function PlayerBody() {
   // created lazily on the first live frame — a controller made during render
   // can belong to a physics world that no longer exists (dev double-mount)
   const ctrlRef = useRef<ReturnType<typeof world.createCharacterController> | null>(null);
-  const vel = useRef(0);
-  const dir = useRef<[number, number]>([0, -1]);
+  const vel = useRef<[number, number, number]>([0, 0, 0]); // vx, vy, vz
+  const stepDist = useRef(0);
 
   useFrame((_, rawDt) => {
     const rb = body.current;
@@ -983,22 +1042,28 @@ function PlayerBody() {
     if (!ctrlRef.current) {
       const c = world.createCharacterController(0.08);
       c.setSlideEnabled(true);
+      c.enableAutostep(0.9, 0.3, true); // curbs + thresholds
+      c.enableSnapToGround(0.45);
       ctrlRef.current = c;
     }
     const ctrl = ctrlRef.current;
     const dt = Math.min(rawDt, 0.05);
 
     if (PHYS.playerTeleport) {
-      rb.setNextKinematicTranslation({ x: PHYS.playerTeleport[0], y: 2.75, z: PHYS.playerTeleport[1] });
+      rb.setNextKinematicTranslation({ x: PHYS.playerTeleport[0], y: MOVE.baseY, z: PHYS.playerTeleport[1] });
       G.px = PHYS.playerTeleport[0];
       G.pz = PHYS.playerTeleport[1];
+      PHYS.py = MOVE.baseY;
+      vel.current = [0, 0, 0];
       PHYS.playerTeleport = null;
       return;
     }
     if (G.mode !== "foot" || G.deskMode !== "world") {
       PHYS.footSpeed = 0;
       // keep the body parked at the player's logical spot
-      rb.setNextKinematicTranslation({ x: G.px, y: 2.75, z: G.pz });
+      rb.setNextKinematicTranslation({ x: G.px, y: MOVE.baseY, z: G.pz });
+      PHYS.py = MOVE.baseY;
+      vel.current = [0, 0, 0];
       return;
     }
 
@@ -1006,57 +1071,128 @@ function PlayerBody() {
     const down = keys["s"] || keys["arrowdown"];
     const left = keys["a"] || keys["arrowleft"];
     const right = keys["d"] || keys["arrowright"];
-    const run = keys["shift"];
+    const walk = keys["shift"];
+    const jump = keys[" "];
 
+    // wish direction from the camera yaw
     const fx = -Math.sin(LOOK.yaw);
     const fz = -Math.cos(LOOK.yaw);
-    const rx = -fz;
-    const rz = fx;
-    let vx = 0,
-      vz = 0;
+    let wx = 0,
+      wz = 0;
     if (up) {
-      vx += fx;
-      vz += fz;
+      wx += fx;
+      wz += fz;
     }
     if (down) {
-      vx -= fx;
-      vz -= fz;
+      wx -= fx;
+      wz -= fz;
     }
     if (right) {
-      vx += rx;
-      vz += rz;
+      wx += -fz;
+      wz += fx;
     }
     if (left) {
-      vx -= rx;
-      vz -= rz;
+      wx -= -fz;
+      wz -= fx;
     }
-    const len = Math.hypot(vx, vz);
-    const target = len > 0 ? (run ? 26 : 12.5) : 0;
-    vel.current += (target - vel.current) * Math.min(dt * (target > vel.current ? 9 : 12), 1);
-    if (len > 0) {
-      dir.current = [vx / len, vz / len];
+    const wLen = Math.hypot(wx, wz);
+    if (wLen > 0) {
+      wx /= wLen;
+      wz /= wLen;
     }
-    PHYS.footSpeed = vel.current;
+    const wishSpeed = wLen > 0 ? (walk ? MOVE.walk : MOVE.run) : 0;
 
-    const move = {
-      x: dir.current[0] * vel.current * dt,
-      y: 0,
-      z: dir.current[1] * vel.current * dt,
-    };
+    const v = vel.current;
+    const grounded = PHYS.grounded;
+
+    if (grounded) {
+      // friction (Quake-style: low speeds decay against stopSpeed)
+      const speed = Math.hypot(v[0], v[2]);
+      if (speed > 0.01) {
+        const control = Math.max(speed, MOVE.stopSpeed);
+        const newSpeed = Math.max(0, speed - control * MOVE.friction * dt);
+        const k = newSpeed / speed;
+        v[0] *= k;
+        v[2] *= k;
+      } else {
+        v[0] = 0;
+        v[2] = 0;
+      }
+      // accelerate toward the wish
+      if (wishSpeed > 0) {
+        const cur = v[0] * wx + v[2] * wz;
+        const add = Math.min(wishSpeed - cur, MOVE.accel * wishSpeed * dt);
+        if (add > 0) {
+          v[0] += wx * add;
+          v[2] += wz * add;
+        }
+      }
+      if (jump) {
+        v[1] = MOVE.jumpVel;
+        PHYS.grounded = false;
+        sfxJump();
+      } else {
+        v[1] = 0;
+      }
+    } else {
+      // air control: accelerate only up to the air cap along the wish
+      if (wishSpeed > 0) {
+        const capped = Math.min(wishSpeed, MOVE.airCap);
+        const cur = v[0] * wx + v[2] * wz;
+        const add = Math.min(capped - cur, MOVE.airAccel * wishSpeed * dt);
+        if (add > 0) {
+          v[0] += wx * add;
+          v[2] += wz * add;
+        }
+      }
+      v[1] -= MOVE.gravity * dt;
+    }
+
+    const move = { x: v[0] * dt, y: v[1] * dt, z: v[2] * dt };
     const col = rb.collider(0);
     const t = rb.translation();
-    let ox = move.x;
-    let oz = move.z;
+    let ox = move.x,
+      oy = move.y,
+      oz = move.z;
     if (col) {
       ctrl.computeColliderMovement(col, move);
       const out = ctrl.computedMovement();
       ox = out.x;
+      oy = out.y;
       oz = out.z;
+      const wasAirborne = !PHYS.grounded;
+      PHYS.grounded = ctrl.computedGrounded();
+      if (PHYS.grounded && wasAirborne) {
+        sfxLand(Math.min(-v[1] / 30, 1));
+        v[1] = 0;
+      }
+      // velocity clipping — don't store speed against walls or ceilings
+      if (dt > 0) {
+        v[0] = ox / dt;
+        v[2] = oz / dt;
+        if (!PHYS.grounded && v[1] > 0 && oy < move.y - 0.001) v[1] = 0;
+      }
     }
-    rb.setNextKinematicTranslation({ x: t.x + ox, y: 2.75, z: t.z + oz });
+    const ny = Math.max(t.y + oy, MOVE.baseY - 0.001);
+    rb.setNextKinematicTranslation({ x: t.x + ox, y: ny, z: t.z + oz });
     G.px = t.x + ox;
     G.pz = t.z + oz;
+    PHYS.py = ny;
     G.pHeading = LOOK.yaw;
+
+    // footsteps by distance covered on the ground
+    const hSpeed = Math.hypot(v[0], v[2]);
+    PHYS.footSpeed = hSpeed;
+    if (PHYS.grounded && hSpeed > 3) {
+      stepDist.current += hSpeed * dt;
+      const stride = hSpeed > MOVE.walk + 2 ? 2.6 : 2.1;
+      if (stepDist.current > stride) {
+        stepDist.current = 0;
+        sfxFootstep(insideHouse(G.px, G.pz));
+      }
+    } else {
+      stepDist.current = 0;
+    }
   });
 
   return (
@@ -1373,7 +1509,7 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
       G.px = G.cx;
       G.pz = G.cz;
     }
-    bobT.current += PHYS.footSpeed * dt * 0.55;
+    bobT.current += PHYS.footSpeed * dt * 0.42;
     void up;
     void down;
     void left;
@@ -1386,8 +1522,8 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
     const th = G.mode === "car" ? G.cHeading : G.pHeading;
     if (G.deskMode === "world" && G.mode === "foot") {
       // first person
-      const bob = Math.sin(bobT.current * 2.1) * 0.09 * Math.min(PHYS.footSpeed / 12, 1);
-      camera.position.set(G.px, EYE + bob, G.pz);
+      const bob = PHYS.grounded ? Math.sin(bobT.current * 2.3) * 0.055 * Math.min(PHYS.footSpeed / MOVE.run, 1) : 0;
+      camera.position.set(G.px, EYE + (PHYS.py - MOVE.baseY) + bob, G.pz);
       camera.rotation.set(LOOK.pitch, LOOK.yaw, 0, "YXZ");
       camPos.current.copy(camera.position);
     } else if (G.deskMode === "world") {
@@ -1631,6 +1767,18 @@ function Minimap({ h }: { h: HudState }) {
 
 export function CityGame() {
   const [tier, setTier] = useState<CanvasTier | null>(null);
+  const { progress } = useProgress();
+  const [booted, setBooted] = useState(false);
+  useEffect(() => {
+    if (progress >= 100 && !booted) {
+      const id = setTimeout(() => setBooted(true), 450);
+      return () => clearTimeout(id);
+    }
+  }, [progress, booted]);
+  const [fpsOn, setFpsOn] = useState(false);
+  useEffect(() => {
+    setFpsOn(new URLSearchParams(window.location.search).get("fps") === "1");
+  }, []);
   const [hud, setHud] = useState<HudState>({
     mode: "foot",
     mission: -1,
@@ -1823,7 +1971,7 @@ export function CityGame() {
       <Canvas
         data-game-canvas
         dpr={[1, 1.25]}
-        camera={{ fov: 60, near: 0.5, far: 4200, position: [G.px - 10, 8, G.pz + 14] }}
+        camera={{ fov: 74, near: 0.3, far: 4200, position: [G.px - 10, 8, G.pz + 14] }}
         gl={{ antialias: true, powerPreference: "high-performance" }}
         shadows
       >
@@ -1853,6 +2001,7 @@ export function CityGame() {
           <PlayerCar />
           <MissionMarkers tick={hud.mission * 100 + hud.step * 10 + (hud.phase === "active" ? 1 : 0)} />
           <Sim onHud={setHud} />
+          <FrameStats />
           </Physics>
           <EffectComposer multisampling={2}>
             <Bloom intensity={0.6} luminanceThreshold={0.62} mipmapBlur />
@@ -1861,6 +2010,22 @@ export function CityGame() {
           </EffectComposer>
         </Suspense>
       </Canvas>
+
+      {/* loading gate — everything preloads behind this, so nothing pops in */}
+      {!booted && (
+        <div
+          className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black transition-opacity duration-500"
+          style={{ opacity: progress >= 100 ? 0 : 1, pointerEvents: "none" }}
+        >
+          <p className="font-mono text-[11px] uppercase tracking-[0.4em] text-[#e2c078]">Whitehead City</p>
+          <div className="mt-5 h-[3px] w-56 overflow-hidden rounded bg-white/10">
+            <div className="h-full bg-[#e2c078] transition-[width] duration-200" style={{ width: `${progress}%` }} />
+          </div>
+          <p className="mt-3 font-mono text-[10px] tracking-[0.2em] text-white/40">{Math.round(progress)}%</p>
+        </div>
+      )}
+
+      {fpsOn && <FpsReadout />}
 
       {/* -------------------- the desk (the site itself) -------------------- */}
       <DesktopOverlay
