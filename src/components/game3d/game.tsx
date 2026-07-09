@@ -947,18 +947,21 @@ function DoorColliders() {
 function PlayerBody() {
   const body = useRef<RapierRigidBody>(null!);
   const { world } = useRapier();
-  const ctrl = useMemo(() => {
-    const c = world.createCharacterController(0.08);
-    c.setSlideEnabled(true);
-    return c;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // created lazily on the first live frame — a controller made during render
+  // can belong to a physics world that no longer exists (dev double-mount)
+  const ctrlRef = useRef<ReturnType<typeof world.createCharacterController> | null>(null);
   const vel = useRef(0);
   const dir = useRef<[number, number]>([0, -1]);
 
   useFrame((_, rawDt) => {
     const rb = body.current;
     if (!rb) return;
+    if (!ctrlRef.current) {
+      const c = world.createCharacterController(0.08);
+      c.setSlideEnabled(true);
+      ctrlRef.current = c;
+    }
+    const ctrl = ctrlRef.current;
     const dt = Math.min(rawDt, 0.05);
 
     if (PHYS.playerTeleport) {
@@ -1017,12 +1020,18 @@ function PlayerBody() {
       z: dir.current[1] * vel.current * dt,
     };
     const col = rb.collider(0);
-    ctrl.computeColliderMovement(col, move);
-    const out = ctrl.computedMovement();
     const t = rb.translation();
-    rb.setNextKinematicTranslation({ x: t.x + out.x, y: 2.6, z: t.z + out.z });
-    G.px = t.x + out.x;
-    G.pz = t.z + out.z;
+    let ox = move.x;
+    let oz = move.z;
+    if (col) {
+      ctrl.computeColliderMovement(col, move);
+      const out = ctrl.computedMovement();
+      ox = out.x;
+      oz = out.z;
+    }
+    rb.setNextKinematicTranslation({ x: t.x + ox, y: 2.6, z: t.z + oz });
+    G.px = t.x + ox;
+    G.pz = t.z + oz;
     G.pHeading = LOOK.yaw;
   });
 
@@ -1114,7 +1123,6 @@ function CarBody() {
     const fwdX = -Math.sin(G.cHeading);
     const fwdZ = -Math.cos(G.cHeading);
     G.cSpeed = lv.x * fwdX + lv.z * fwdZ;
-    (window as unknown as Record<string, unknown>).__carY = t.y;
   });
 
   return (
