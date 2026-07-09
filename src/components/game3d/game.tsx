@@ -558,6 +558,213 @@ function ParkedCars() {
   );
 }
 
+/* --------------------------------------------------------------- traffic */
+
+const TRAFFIC_HUES = ["#3a6ea5", "#7a7a6a", "#8a4a52", "#4a5a45", "#6a5a3a", "#40404a", "#a05a3a"];
+
+type NpcCar = {
+  corners: [number, number][]; // 4 lane-offset corners, clockwise
+  segLen: number[];
+  perim: number;
+  d: number; // distance along perimeter
+  speed: number;
+  hue: string;
+};
+
+function makeTraffic(n: number): NpcCar[] {
+  const r = mulberrySky(4242);
+  const out: NpcCar[] = [];
+  const L = 5.5; // lane offset
+  for (let i = 0; i < n; i++) {
+    const xi = Math.floor(r() * (ROADS_X.length - 1));
+    const zi = Math.floor(r() * (ROADS_Z.length - 1));
+    const x1 = ROADS_X[xi];
+    const x2 = ROADS_X[xi + 1];
+    const z1 = ROADS_Z[zi];
+    const z2 = ROADS_Z[zi + 1];
+    // clockwise right-hand loop on the road centerlines
+    const corners: [number, number][] = [
+      [x1 + L, z1 + L],
+      [x2 - L, z1 + L],
+      [x2 - L, z2 - L],
+      [x1 + L, z2 - L],
+    ];
+    const segLen: number[] = [];
+    let perim = 0;
+    for (let k = 0; k < 4; k++) {
+      const a = corners[k];
+      const b = corners[(k + 1) % 4];
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      segLen.push(len);
+      perim += len;
+    }
+    out.push({ corners, segLen, perim, d: r() * perim, speed: 18 + r() * 16, hue: TRAFFIC_HUES[i % TRAFFIC_HUES.length] });
+  }
+  return out;
+}
+
+function Traffic() {
+  const cars = useMemo(() => makeTraffic(18), []);
+  const refs = useRef<THREE.Group[]>([]);
+  useFrame((_, dt) => {
+    for (let i = 0; i < cars.length; i++) {
+      const c = cars[i];
+      const g = refs.current[i];
+      if (!g) continue;
+      c.d = (c.d + c.speed * dt) % c.perim;
+      // find segment
+      let acc = 0,
+        seg = 0;
+      while (seg < 3 && acc + c.segLen[seg] < c.d) {
+        acc += c.segLen[seg];
+        seg++;
+      }
+      const a = c.corners[seg];
+      const b = c.corners[(seg + 1) % 4];
+      const f = (c.d - acc) / c.segLen[seg];
+      const x = a[0] + (b[0] - a[0]) * f;
+      const z = a[1] + (b[1] - a[1]) * f;
+      const dx = b[0] - a[0];
+      const dz = b[1] - a[1];
+      g.position.set(x, 0, z);
+      g.rotation.y = Math.atan2(-dx, -dz);
+    }
+  });
+  return (
+    <group>
+      {cars.map((c, i) => (
+        <group
+          key={i}
+          ref={(el: THREE.Group | null) => {
+            if (el) refs.current[i] = el;
+          }}
+        >
+          <mesh position={[0, 1.0, 0]}>
+            <boxGeometry args={[4.2, 1.1, 8.8]} />
+            <meshStandardMaterial color={c.hue} roughness={0.35} metalness={0.55} />
+          </mesh>
+          <mesh position={[0, 1.75, 0.2]}>
+            <boxGeometry args={[3.7, 0.9, 4.0]} />
+            <meshStandardMaterial color="#12151c" roughness={0.1} metalness={0.8} />
+          </mesh>
+          <mesh position={[-1.4, 1.0, -4.5]}>
+            <sphereGeometry args={[0.22, 6, 6]} />
+            <meshBasicMaterial color="#ffe9c0" toneMapped={false} />
+          </mesh>
+          <mesh position={[1.4, 1.0, -4.5]}>
+            <sphereGeometry args={[0.22, 6, 6]} />
+            <meshBasicMaterial color="#ffe9c0" toneMapped={false} />
+          </mesh>
+          <mesh position={[0, 1.0, 4.5]}>
+            <boxGeometry args={[3.6, 0.24, 0.1]} />
+            <meshBasicMaterial color="#ff4444" toneMapped={false} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
+/* ----------------------------------------------------------- pedestrians */
+
+type Ped = { x: number; z: number; axis: "x" | "z"; a: number; b: number; d: number; dir: number; speed: number; hue: string };
+
+function makePeds(n: number): Ped[] {
+  const r = mulberrySky(909);
+  const hues = ["#3b4250", "#5a4636", "#4a4a52", "#6a3a3a", "#3a4a3a", "#7a6a4a"];
+  const out: Ped[] = [];
+  for (let i = 0; i < n; i++) {
+    const onX = r() < 0.5;
+    if (onX) {
+      const line = ROADS_X[Math.floor(r() * ROADS_X.length)] + (r() < 0.5 ? -ROAD / 2 - 3 : ROAD / 2 + 3);
+      const a = -700 + r() * 300;
+      out.push({ x: line, z: a, axis: "z", a, b: a + 120 + r() * 200, d: r(), dir: r() < 0.5 ? 1 : -1, speed: 3 + r() * 2, hue: hues[i % hues.length] });
+    } else {
+      const line = ROADS_Z[Math.floor(r() * ROADS_Z.length)] + (r() < 0.5 ? -ROAD / 2 - 3 : ROAD / 2 + 3);
+      const a = -700 + r() * 300;
+      out.push({ x: a, z: line, axis: "x", a, b: a + 120 + r() * 200, d: r(), dir: r() < 0.5 ? 1 : -1, speed: 3 + r() * 2, hue: hues[i % hues.length] });
+    }
+  }
+  return out;
+}
+
+function Pedestrians() {
+  const peds = useMemo(() => makePeds(20), []);
+  const refs = useRef<THREE.Group[]>([]);
+  const legRefs = useRef<THREE.Mesh[][]>([]);
+  const t = useRef(0);
+  useFrame((_, dt) => {
+    t.current += dt;
+    for (let i = 0; i < peds.length; i++) {
+      const p = peds[i];
+      const g = refs.current[i];
+      if (!g) continue;
+      p.d += p.dir * p.speed * dt;
+      const span = p.b - p.a;
+      if (p.d > span) {
+        p.d = span;
+        p.dir = -1;
+      } else if (p.d < 0) {
+        p.d = 0;
+        p.dir = 1;
+      }
+      const pos = p.a + p.d;
+      if (p.axis === "z") {
+        g.position.set(p.x, 0, pos);
+        g.rotation.y = p.dir > 0 ? 0 : Math.PI;
+      } else {
+        g.position.set(pos, 0, p.z);
+        g.rotation.y = p.dir > 0 ? -Math.PI / 2 : Math.PI / 2;
+      }
+      const sw = Math.sin(t.current * 6 + i) * 0.5;
+      const legs = legRefs.current[i];
+      if (legs) {
+        if (legs[0]) legs[0].rotation.x = sw;
+        if (legs[1]) legs[1].rotation.x = -sw;
+      }
+    }
+  });
+  return (
+    <group>
+      {peds.map((p, i) => (
+        <group
+          key={i}
+          ref={(el: THREE.Group | null) => {
+            if (el) refs.current[i] = el;
+          }}
+        >
+          <mesh position={[0, 2.2, 0]}>
+            <capsuleGeometry args={[0.42, 1.0, 4, 6]} />
+            <meshStandardMaterial color={p.hue} roughness={0.9} />
+          </mesh>
+          <mesh position={[0, 3.35, 0]}>
+            <sphereGeometry args={[0.34, 8, 8]} />
+            <meshStandardMaterial color="#caa07f" roughness={0.7} />
+          </mesh>
+          <mesh
+            ref={(el: THREE.Mesh | null) => {
+              if (el) ((legRefs.current[i] ??= [])[0] = el);
+            }}
+            position={[-0.2, 0.9, 0]}
+          >
+            <capsuleGeometry args={[0.16, 0.85, 4, 5]} />
+            <meshStandardMaterial color="#22262e" />
+          </mesh>
+          <mesh
+            ref={(el: THREE.Mesh | null) => {
+              if (el) ((legRefs.current[i] ??= [])[1] = el);
+            }}
+            position={[0.2, 0.9, 0]}
+          >
+            <capsuleGeometry args={[0.16, 0.85, 4, 5]} />
+            <meshStandardMaterial color="#22262e" />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
 /* ----------------------------------------------------- player + vehicle */
 
 function PlayerCar() {
@@ -1103,6 +1310,8 @@ export function CityGame() {
           <StreetLights />
           <Landmarks />
           <ParkedCars />
+          <Traffic />
+          <Pedestrians />
           <PlayerCar />
           <PlayerFigure />
           <MissionMarkers tick={hud.mission * 100 + hud.step * 10 + (hud.phase === "active" ? 1 : 0)} />
