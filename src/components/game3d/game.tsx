@@ -16,6 +16,7 @@ import Link from "next/link";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { EffectComposer, Bloom, Vignette, Noise } from "@react-three/postprocessing";
 import { detectTier, type CanvasTier } from "../canvas/capability";
+import { DesktopOverlay, type DeskRect } from "./desktop";
 import {
   BUILDINGS,
   DISTRICTS,
@@ -30,7 +31,14 @@ import {
 /* ------------------------------------------------------------- shared */
 
 const WORLD_HALF = 790;
-const CAR_START = { x: -530, z: -530 };
+
+/** Josh's desk — outside Boneyard Studio, Cincinnati Hill. The site lives here. */
+const DESK = { x: 672, z: 352 };
+const SCREEN = { cx: DESK.x, cy: 4.35, cz: DESK.z + 0.3, hw: 3.8, hh: 2.25 };
+const SEAT_POS = new THREE.Vector3(DESK.x, 4.3, DESK.z + 5.9);
+const SEAT_LOOK = new THREE.Vector3(SCREEN.cx, SCREEN.cy, SCREEN.cz);
+const STAND = { x: DESK.x + 4.2, z: DESK.z + 4.6 };
+const CAR_START = { x: 706, z: 336 };
 
 type Mode = "foot" | "car";
 
@@ -47,13 +55,15 @@ type GameState = {
   step: number;
   phase: "roam" | "brief" | "active" | "passed" | "credits";
   phaseT: number;
+  deskMode: "desk" | "toWorld" | "world" | "toDesk";
+  deskT: number; // 0 = seated at the screen, 1 = standing in the world
 };
 
 const G: GameState = {
   mode: "foot",
-  px: CAR_START.x - 20,
-  pz: CAR_START.z + 6,
-  pHeading: 0,
+  px: STAND.x,
+  pz: STAND.z,
+  pHeading: Math.PI,
   cx: CAR_START.x,
   cz: CAR_START.z,
   cHeading: 0,
@@ -62,6 +72,8 @@ const G: GameState = {
   step: 0,
   phase: "roam",
   phaseT: 0,
+  deskMode: "desk",
+  deskT: 0,
 };
 
 const keys: Record<string, boolean> = {};
@@ -128,6 +140,26 @@ function signTexture(label: string, hue: string): THREE.CanvasTexture {
   g.shadowBlur = 18;
   g.fillStyle = hue;
   g.fillText(label, 128, 34);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function siteScreenTexture(): THREE.CanvasTexture {
+  const c = document.createElement("canvas");
+  c.width = 512;
+  c.height = 304;
+  const g = c.getContext("2d")!;
+  g.fillStyle = "#f4eee2";
+  g.fillRect(0, 0, 512, 304);
+  g.fillStyle = "#26221b";
+  g.font = "italic 700 64px Georgia, serif";
+  g.fillText("Josh", 36, 120);
+  g.fillText("Whitehead", 36, 186);
+  g.fillStyle = "#8a8172";
+  for (let i = 0; i < 3; i++) g.fillRect(36, 222 + i * 18, 300 - i * 60, 8);
+  g.fillStyle = "#C8A24B";
+  g.fillRect(36, 282, 90, 10);
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
@@ -558,6 +590,67 @@ function ParkedCars() {
   );
 }
 
+function DeskSet() {
+  const screenTex = useMemo(siteScreenTexture, []);
+  const matRef = useRef<THREE.MeshBasicMaterial>(null!);
+  useFrame(() => {
+    // the physical screen lights up as the DOM overlay hands off
+    if (matRef.current) matRef.current.opacity = THREE.MathUtils.clamp((G.deskT - 0.55) / 0.3, 0.02, 1);
+  });
+  return (
+    <group>
+      {/* desk */}
+      <mesh position={[DESK.x, 2.7, DESK.z + 1.4]}>
+        <boxGeometry args={[9.4, 0.35, 4.4]} />
+        <meshStandardMaterial color="#4a3a2c" roughness={0.6} />
+      </mesh>
+      {[-4.2, 4.2].map((dx) => (
+        <mesh key={dx} position={[DESK.x + dx, 1.32, DESK.z + 1.4]}>
+          <boxGeometry args={[0.4, 2.75, 4.0]} />
+          <meshStandardMaterial color="#2e2620" roughness={0.8} />
+        </mesh>
+      ))}
+      {/* monitor */}
+      <mesh position={[DESK.x, 3.2, DESK.z + 0.1]}>
+        <boxGeometry args={[1.4, 0.7, 0.5]} />
+        <meshStandardMaterial color="#181b20" roughness={0.4} />
+      </mesh>
+      <mesh position={[SCREEN.cx, SCREEN.cy, SCREEN.cz - 0.09]}>
+        <boxGeometry args={[SCREEN.hw * 2 + 0.35, SCREEN.hh * 2 + 0.35, 0.22]} />
+        <meshStandardMaterial color="#0c0e12" roughness={0.3} metalness={0.4} />
+      </mesh>
+      <mesh position={[SCREEN.cx, SCREEN.cy, SCREEN.cz + 0.04]}>
+        <planeGeometry args={[SCREEN.hw * 2, SCREEN.hh * 2]} />
+        <meshBasicMaterial ref={matRef} map={screenTex} transparent opacity={0.02} toneMapped={false} />
+      </mesh>
+      {/* keyboard + mug */}
+      <mesh position={[DESK.x - 0.4, 2.95, DESK.z + 2.2]}>
+        <boxGeometry args={[2.6, 0.12, 0.9]} />
+        <meshStandardMaterial color="#22262e" roughness={0.7} />
+      </mesh>
+      <mesh position={[DESK.x + 2.6, 3.15, DESK.z + 2.3]}>
+        <cylinderGeometry args={[0.28, 0.24, 0.55, 10]} />
+        <meshStandardMaterial color="#C8A24B" roughness={0.4} />
+      </mesh>
+      {/* chair */}
+      <mesh position={[DESK.x, 1.75, DESK.z + 4.6]}>
+        <boxGeometry args={[2.0, 0.3, 2.0]} />
+        <meshStandardMaterial color="#1c1f26" roughness={0.7} />
+      </mesh>
+      <mesh position={[DESK.x, 3.0, DESK.z + 5.6]}>
+        <boxGeometry args={[2.0, 2.4, 0.35]} />
+        <meshStandardMaterial color="#1c1f26" roughness={0.7} />
+      </mesh>
+      <mesh position={[DESK.x, 0.85, DESK.z + 4.6]}>
+        <cylinderGeometry args={[0.16, 0.16, 1.6, 6]} />
+        <meshStandardMaterial color="#0e1014" />
+      </mesh>
+      {/* warm desk lamp pool so the spot reads at night */}
+      <pointLight position={[DESK.x, 5.4, DESK.z + 2]} color="#ffd9a0" intensity={26} distance={26} />
+    </group>
+  );
+}
+
 /* --------------------------------------------------------------- traffic */
 
 const TRAFFIC_HUES = ["#3a6ea5", "#7a7a6a", "#8a4a52", "#4a5a45", "#6a5a3a", "#40404a", "#a05a3a"];
@@ -850,7 +943,7 @@ function PlayerFigure() {
 
   useFrame((_, dt) => {
     if (!grp.current) return;
-    grp.current.visible = G.mode === "foot";
+    grp.current.visible = G.mode === "foot" && G.deskT > 0.45;
     grp.current.position.set(G.px, 0, G.pz);
     grp.current.rotation.y = G.pHeading;
     const moving =
@@ -943,14 +1036,22 @@ function MissionMarkers({ tick }: { tick: number }) {
 /* ------------------------------------------------------------- the sim */
 
 function Sim({ onHud }: { onHud: (h: HudState) => void }) {
-  const { camera } = useThree();
-  const camPos = useRef(new THREE.Vector3(G.px - 10, 8, G.pz + 14));
+  const { camera, size } = useThree();
+  const camPos = useRef(new THREE.Vector3(SEAT_POS.x, SEAT_POS.y, SEAT_POS.z));
   const lastDistrict = useRef<string | null>(null);
   const districtTimer = useRef(0);
+  const v3 = useMemo(() => new THREE.Vector3(), []);
 
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 0.05);
     G.phaseT += dt;
+
+    /* -------- the desk: seated ↔ world -------- */
+    if (G.deskMode === "toWorld") G.deskT = Math.min(G.deskT + dt / 1.7, 1);
+    if (G.deskMode === "toDesk") G.deskT = Math.max(G.deskT - dt / 1.4, 0);
+    if (G.deskMode === "toWorld" && G.deskT >= 1) G.deskMode = "world";
+    if (G.deskMode === "toDesk" && G.deskT <= 0) G.deskMode = "desk";
+    const atDesk = G.deskMode !== "world";
 
     /* -------- movement -------- */
     const up = keys["w"] || keys["arrowup"];
@@ -959,7 +1060,7 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
     const right = keys["d"] || keys["arrowright"];
     const run = keys["shift"];
 
-    if (G.mode === "foot") {
+    if (G.mode === "foot" && !atDesk) {
       // camera-relative: W always walks away from the camera
       const fwd = new THREE.Vector3();
       camera.getWorldDirection(fwd);
@@ -994,7 +1095,7 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
         G.pHeading = Math.atan2(-vx, -vz);
       }
       collide(1.4, "p");
-    } else {
+    } else if (G.mode === "car" && !atDesk) {
       // car — arcade
       const accel = up ? 44 : 0;
       const brake = down ? 60 : 0;
@@ -1015,7 +1116,7 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
     G.cx = THREE.MathUtils.clamp(G.cx, -WORLD_HALF, WORLD_HALF);
     G.cz = THREE.MathUtils.clamp(G.cz, -WORLD_HALF, WORLD_HALF);
 
-    /* -------- camera chase -------- */
+    /* -------- camera: seat ↔ chase, blended by deskT -------- */
     const tx = G.mode === "car" ? G.cx : G.px;
     const tz = G.mode === "car" ? G.cz : G.pz;
     const th = G.mode === "car" ? G.cHeading : G.pHeading;
@@ -1023,12 +1124,59 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
     const height = G.mode === "car" ? 11 : 7;
     const movingNow = up || down || left || right || G.mode === "car";
     const want = new THREE.Vector3(tx + Math.sin(th) * dist, height, tz + Math.cos(th) * dist);
-    camPos.current.lerp(want, movingNow ? 1 - Math.pow(0.0015, dt) : 1 - Math.pow(0.05, dt));
-    camera.position.copy(camPos.current);
-    camera.lookAt(tx, 2.5, tz);
+    if (G.deskMode === "world") {
+      camPos.current.lerp(want, movingNow ? 1 - Math.pow(0.0015, dt) : 1 - Math.pow(0.05, dt));
+      camera.position.copy(camPos.current);
+      camera.lookAt(tx, 2.5, tz);
+    } else {
+      const k = THREE.MathUtils.smoothstep(G.deskT, 0, 1);
+      camera.position.lerpVectors(SEAT_POS, want, k);
+      camPos.current.copy(camera.position);
+      v3.set(
+        SEAT_LOOK.x + (tx - SEAT_LOOK.x) * k,
+        SEAT_LOOK.y + (2.5 - SEAT_LOOK.y) * k,
+        SEAT_LOOK.z + (tz - SEAT_LOOK.z) * k
+      );
+      camera.lookAt(v3);
+    }
 
-    /* -------- missions -------- */
-    if (G.phase === "roam") {
+    /* -------- project the monitor screen for the DOM handoff -------- */
+    let deskRect: DeskRect | null = null;
+    if (atDesk) {
+      let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
+      const corners: [number, number][] = [
+        [-SCREEN.hw, -SCREEN.hh],
+        [SCREEN.hw, -SCREEN.hh],
+        [-SCREEN.hw, SCREEN.hh],
+        [SCREEN.hw, SCREEN.hh],
+      ];
+      for (const [ox, oy] of corners) {
+        v3.set(SCREEN.cx + ox, SCREEN.cy + oy, SCREEN.cz);
+        v3.project(camera);
+        const sx = ((v3.x + 1) / 2) * size.width;
+        const sy = ((1 - v3.y) / 2) * size.height;
+        minX = Math.min(minX, sx);
+        maxX = Math.max(maxX, sx);
+        minY = Math.min(minY, sy);
+        maxY = Math.max(maxY, sy);
+      }
+      // blend from fullscreen (seated) toward the true projection
+      const k = THREE.MathUtils.smoothstep(G.deskT, 0, 1);
+      deskRect = {
+        x: minX * k,
+        y: minY * k,
+        w: size.width + (maxX - minX - size.width) * k,
+        h: size.height + (maxY - minY - size.height) * k,
+      };
+    }
+
+    /* -------- missions (world only) -------- */
+    if (G.deskMode !== "world") {
+      // no mission logic at the desk
+    } else if (G.phase === "roam") {
       const next = G.mission + 1 < MISSIONS.length ? MISSIONS[G.mission + 1] : null;
       if (next && Math.hypot(G.px - next.startX, G.pz - next.startZ) < 6) {
         G.mission++;
@@ -1079,7 +1227,12 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
       heading: th,
       speed: Math.abs(G.cSpeed),
       district: districtTimer.current > 0 ? (d?.name ?? null) : null,
-      nearCar: G.mode === "foot" && Math.hypot(G.px - G.cx, G.pz - G.cz) < 7,
+      nearCar: G.deskMode === "world" && G.mode === "foot" && Math.hypot(G.px - G.cx, G.pz - G.cz) < 7,
+      deskMode: G.deskMode,
+      deskT: G.deskT,
+      deskRect,
+      nearDesk:
+        G.deskMode === "world" && G.mode === "foot" && Math.hypot(G.px - DESK.x, G.pz - (DESK.z + 4)) < 8,
     });
   });
 
@@ -1126,6 +1279,10 @@ type HudState = {
   speed: number;
   district: string | null;
   nearCar: boolean;
+  deskMode: GameState["deskMode"];
+  deskT: number;
+  deskRect: DeskRect | null;
+  nearDesk: boolean;
 };
 
 function Minimap({ h }: { h: HudState }) {
@@ -1208,7 +1365,6 @@ function Minimap({ h }: { h: HudState }) {
 
 export function CityGame() {
   const [tier, setTier] = useState<CanvasTier | null>(null);
-  const [started, setStarted] = useState(false);
   const [hud, setHud] = useState<HudState>({
     mode: "foot",
     mission: -1,
@@ -1220,16 +1376,20 @@ export function CityGame() {
     speed: 0,
     district: null,
     nearCar: false,
+    deskMode: G.deskMode,
+    deskT: G.deskT,
+    deskRect: null,
+    nearDesk: false,
   });
 
   useEffect(() => setTier(detectTier()), []);
 
   useEffect(() => {
     if (tier === "full") {
-      document.documentElement.classList.add("canvas-mode", "chapter-dark");
+      document.documentElement.classList.add("canvas-mode", "chapter-dark", "game-mode");
       document.body.style.overflow = "hidden";
       return () => {
-        document.documentElement.classList.remove("canvas-mode", "chapter-dark");
+        document.documentElement.classList.remove("canvas-mode", "chapter-dark", "game-mode");
         document.body.style.overflow = "";
       };
     }
@@ -1242,7 +1402,17 @@ export function CityGame() {
       const k = ev.key.toLowerCase();
       if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(k)) ev.preventDefault();
       keys[k] = true;
-      if (!started) setStarted(true);
+      if (k === "escape" && G.deskMode === "desk") {
+        G.deskMode = "toWorld";
+        return;
+      }
+      if (G.deskMode !== "world") return;
+      if (k === "e" && G.mode === "foot" && Math.hypot(G.px - DESK.x, G.pz - (DESK.z + 4)) < 8) {
+        G.deskMode = "toDesk";
+        G.px = STAND.x;
+        G.pz = STAND.z;
+        return;
+      }
       if (k === "e") {
         if (G.mode === "foot" && Math.hypot(G.px - G.cx, G.pz - G.cz) < 7) {
           G.mode = "car";
@@ -1265,7 +1435,7 @@ export function CityGame() {
       window.removeEventListener("keyup", up);
       window.removeEventListener("blur", blur);
     };
-  }, [tier, started]);
+  }, [tier]);
 
   /* QA deep link: /?m=5 jump to mission start */
   useEffect(() => {
@@ -1279,7 +1449,8 @@ export function CityGame() {
       G.pz = m.startZ + 10;
       G.cx = m.startX + 18;
       G.cz = m.startZ + 18;
-      setStarted(true);
+      G.deskMode = "world";
+      G.deskT = 1;
     }
   }, [tier]);
 
@@ -1312,6 +1483,7 @@ export function CityGame() {
           <ParkedCars />
           <Traffic />
           <Pedestrians />
+          <DeskSet />
           <PlayerCar />
           <PlayerFigure />
           <MissionMarkers tick={hud.mission * 100 + hud.step * 10 + (hud.phase === "active" ? 1 : 0)} />
@@ -1324,26 +1496,30 @@ export function CityGame() {
         </Suspense>
       </Canvas>
 
+      {/* -------------------- the desk (the site itself) -------------------- */}
+      <DesktopOverlay
+        mode={hud.deskMode}
+        rect={hud.deskRect}
+        opacity={hud.deskMode === "desk" ? 1 : Math.max(0, 1 - Math.max(0, hud.deskT - 0.55) / 0.3)}
+        onStepBack={() => {
+          if (G.deskMode === "desk") G.deskMode = "toWorld";
+        }}
+      />
+
       {/* ------------------------------ HUD ------------------------------ */}
-      <div className="pointer-events-none absolute inset-0 z-10">
-        {/* title screen */}
-        {!started && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/55 text-center backdrop-blur-[2px]">
-            <p className="font-mono text-[11px] uppercase tracking-[0.4em] text-[#e2c078]">
-              Josh Whitehead presents
-            </p>
-            <h1 className="mt-4 font-display text-6xl italic tracking-tight text-white sm:text-8xl" style={{ textShadow: "0 4px 40px rgba(226,192,120,0.4)" }}>
-              Whitehead City
-            </h1>
-            <p className="mt-4 max-w-md px-6 text-white/70">
-              Every place a life happened, stitched into one city. Ten missions, 1993 → now.
-            </p>
-            <p className="mt-8 animate-pulse font-mono text-xs uppercase tracking-[0.3em] text-[#e2c078]">
-              Press any key to start
-            </p>
-            <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.25em] text-white/40">
-              WASD drive/walk · SHIFT run · E enter/exit car
-            </p>
+      <div className="pointer-events-none absolute inset-0 z-10" style={{ opacity: hud.deskMode === "world" ? 1 : hud.deskMode === "toWorld" ? Math.max(0, (hud.deskT - 0.7) / 0.3) : 0 }}>
+        {/* welcome card — the reveal */}
+        {hud.deskMode === "world" && hud.mission === -1 && hud.phase === "roam" && (
+          <div className="absolute inset-x-0 top-[16%] flex justify-center">
+            <div className="max-w-md px-8 text-center">
+              <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-[#e2c078]">Whitehead City</p>
+              <p className="mt-2 text-white/85" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>
+                The site was sitting in a whole world. Your life is out here — follow the gold light.
+              </p>
+              <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.25em] text-white/45">
+                WASD walk · SHIFT run · E car / sit back down
+              </p>
+            </div>
           </div>
         )}
 
@@ -1408,8 +1584,17 @@ export function CityGame() {
           </div>
         )}
 
+        {/* sit-back-down hint */}
+        {hud.nearDesk && hud.deskMode === "world" && (
+          <div className="absolute inset-x-0 bottom-[26%] flex justify-center">
+            <p className="border border-white/20 bg-black/60 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.25em] text-white/85">
+              E — sit back down at the desk
+            </p>
+          </div>
+        )}
+
         {/* enter-car hint */}
-        {hud.nearCar && started && (
+        {hud.nearCar && (
           <div className="absolute inset-x-0 bottom-[18%] flex justify-center">
             <p className="border border-white/20 bg-black/60 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.25em] text-white/85">
               E — get in the car

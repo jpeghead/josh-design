@@ -212,3 +212,6 @@ html.chapter-dark header nav a { color: var(--color-bone); }
 html.chapter-dark header nav a:not([aria-current]) {
   color: color-mix(in srgb, var(--color-bone) 55%, transparent);
 }
+
+/* Game mode — the world owns the chrome; the site lives inside the monitor. */
+html.game-mode header { display: none; }
