@@ -22,7 +22,8 @@ import { DesktopOverlay, type DeskRect } from "./desktop";
 import {
   House,
   HOUSE_WALLS,
-  doorBlockers,
+  FURNITURE,
+  RELICS,
   DOORS,
   insideHouse,
   SEAT_POS,
@@ -47,6 +48,22 @@ import {
 const WORLD_HALF = 790;
 
 const SEAT_LOOK = new THREE.Vector3(SCREEN.cx, SCREEN.cy, SCREEN.cz);
+
+/** the story card shown after inspecting a relic (E near one) */
+const CAPTION = { title: "", body: "", until: 0 };
+
+function nearestRelic(x: number, z: number) {
+  let best: (typeof RELICS)[number] | null = null;
+  let bestD = Infinity;
+  for (const r of RELICS) {
+    const d = Math.hypot(x - r.x, z - r.z);
+    if (d < r.r && d < bestD) {
+      best = r;
+      bestD = d;
+    }
+  }
+  return best;
+}
 const CAR_START = { x: 736, z: 396 }; // the driveway, past the porch
 const EYE = 5.0;
 
@@ -505,6 +522,8 @@ function Landmarks() {
   return (
     <group>
       {LANDMARKS.map((l) => {
+        // the real house is its own geometry (house.tsx) — no placeholder
+        if (l.id === "house") return null;
         switch (l.kind) {
           case "home":
           case "house":
@@ -901,6 +920,14 @@ function StaticColliders() {
             position={[(w[0] + w[2]) / 2, 6, (w[1] + w[3]) / 2]}
           />
         ))}
+        {/* furniture — you can't walk through a couch */}
+        {FURNITURE.map((f, i) => (
+          <CuboidCollider
+            key={"fn" + i}
+            args={[Math.max((f[2] - f[0]) / 2, 0.2), 2.5, Math.max((f[3] - f[1]) / 2, 0.2)]}
+            position={[(f[0] + f[2]) / 2, 2.5, (f[1] + f[3]) / 2]}
+          />
+        ))}
       </RigidBody>
       <DoorColliders />
     </group>
@@ -921,8 +948,8 @@ function DoorColliders() {
   return (
     <>
       {DOORS.map((d, i) => {
-        const cx = d.axis === "x" ? d.hx - d.len / 2 : d.hx;
-        const cz = d.axis === "x" ? d.hz : d.hz - d.len / 2;
+        const cx = d.hx + d.len / 2;
+        const cz = d.hz;
         return (
           <RigidBody
             key={d.id}
@@ -932,10 +959,7 @@ function DoorColliders() {
               refs.current[i] = el;
             }}
           >
-            <CuboidCollider
-              args={d.axis === "x" ? [d.len / 2, 5, 0.4] : [0.4, 5, d.len / 2]}
-              position={[cx, 5, cz]}
-            />
+            <CuboidCollider args={[d.len / 2, 5, 0.45]} position={[cx, 5, cz]} />
           </RigidBody>
         );
       })}
@@ -1484,66 +1508,23 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
       doorPrompt: (() => {
         if (G.deskMode !== "world" || G.mode !== "foot") return null;
         for (const d of DOORS) {
-          const cx = d.axis === "x" ? d.hx - d.len / 2 : d.hx;
-          const cz = d.axis === "x" ? d.hz : d.hz - d.len / 2;
-          if (Math.hypot(G.px - cx, G.pz - cz) < 7.5)
+          const cx = d.hx + d.len / 2;
+          if (Math.hypot(G.px - cx, G.pz - d.hz) < 6.5)
             return d.open > 0.5 ? "E — close the door" : d.id === "front" ? "E — open the front door" : "E — open the door";
         }
         return null;
       })(),
+      relicPrompt: (() => {
+        if (G.deskMode !== "world" || G.mode !== "foot") return null;
+        const r = nearestRelic(G.px, G.pz);
+        return r ? `E — ${r.label}` : null;
+      })(),
+      caption:
+        CAPTION.until > performance.now() ? { title: CAPTION.title, body: CAPTION.body } : null,
     });
   });
 
   return null;
-}
-
-function pushOut(nx: number, nz: number, r: number, box: [number, number, number, number]): [number, number] {
-  const [x1, z1, x2, z2] = box;
-  const cx = (x1 + x2) / 2;
-  const cz = (z1 + z2) / 2;
-  const hw = (x2 - x1) / 2 + r;
-  const hd = (z2 - z1) / 2 + r;
-  const dx = nx - cx;
-  const dz = nz - cz;
-  if (Math.abs(dx) < hw && Math.abs(dz) < hd) {
-    const px = hw - Math.abs(dx);
-    const pz = hd - Math.abs(dz);
-    if (px < pz) nx = cx + Math.sign(dx || 1) * hw;
-    else nz = cz + Math.sign(dz || 1) * hd;
-  }
-  return [nx, nz];
-}
-
-function collide(r: number, who: "p" | "c") {
-  const x = who === "p" ? G.px : G.cx;
-  const z = who === "p" ? G.pz : G.cz;
-  let nx = x,
-    nz = z;
-  // the house: walls + closed doors (players only — cars stay outside anyway)
-  if (who === "p" && insideHouse(nx, nz)) {
-    for (const w of HOUSE_WALLS) [nx, nz] = pushOut(nx, nz, r, w);
-    for (const d of doorBlockers()) [nx, nz] = pushOut(nx, nz, r, d);
-  }
-  for (const b of BUILDINGS) {
-    const hw = b.w / 2 + r;
-    const hd = b.d / 2 + r;
-    const dx = nx - b.x;
-    const dz = nz - b.z;
-    if (Math.abs(dx) < hw && Math.abs(dz) < hd) {
-      const px = hw - Math.abs(dx);
-      const pz = hd - Math.abs(dz);
-      if (px < pz) nx = b.x + Math.sign(dx) * hw;
-      else nz = b.z + Math.sign(dz) * hd;
-      if (who === "c") G.cSpeed *= 0.4;
-    }
-  }
-  if (who === "p") {
-    G.px = nx;
-    G.pz = nz;
-  } else {
-    G.cx = nx;
-    G.cz = nz;
-  }
 }
 
 /* ---------------------------------------------------------------- HUD */
@@ -1566,6 +1547,8 @@ type HudState = {
   locked: boolean;
   inHouse: boolean;
   doorPrompt: string | null;
+  relicPrompt: string | null;
+  caption: { title: string; body: string } | null;
 };
 
 function Minimap({ h }: { h: HudState }) {
@@ -1666,6 +1649,8 @@ export function CityGame() {
     locked: false,
     inHouse: true,
     doorPrompt: null,
+    relicPrompt: null,
+    caption: null,
   });
 
   useEffect(() => {
@@ -1703,12 +1688,19 @@ export function CityGame() {
       if (k === "e" && G.mode === "foot") {
         // doors first — the surprises
         for (const d of DOORS) {
-          const cx = d.axis === "x" ? d.hx - d.len / 2 : d.hx;
-          const cz = d.axis === "x" ? d.hz : d.hz - d.len / 2;
-          if (Math.hypot(G.px - cx, G.pz - cz) < 7.5) {
+          const cx = d.hx + d.len / 2;
+          if (Math.hypot(G.px - cx, G.pz - d.hz) < 6.5) {
             d.target = d.target > 0.5 ? 0 : 1;
             return;
           }
+        }
+        // relics — the stories on the shelves
+        const relic = nearestRelic(G.px, G.pz);
+        if (relic) {
+          CAPTION.title = relic.title;
+          CAPTION.body = relic.body;
+          CAPTION.until = performance.now() + 9000;
+          return;
         }
         // sit back down
         if (Math.hypot(G.px - DESK_SPOT.x, G.pz - DESK_SPOT.z) < 6.5) {
@@ -1785,6 +1777,22 @@ export function CityGame() {
       LOOK.yaw = 0.45; // facing the desk + the framed years
       LOOK.pitch = 0;
     }
+  }, [tier]);
+
+  /* QA deep link: /?p=x,z,yaw stand anywhere */
+  useEffect(() => {
+    if (tier !== "full") return;
+    const raw = new URLSearchParams(window.location.search).get("p");
+    if (!raw) return;
+    const [x, z, yaw] = raw.split(",").map(Number);
+    if (!Number.isFinite(x) || !Number.isFinite(z)) return;
+    G.deskMode = "world";
+    G.deskT = 1;
+    G.px = x;
+    G.pz = z;
+    PHYS.playerTeleport = [x, z];
+    LOOK.yaw = Number.isFinite(yaw) ? yaw : 0;
+    LOOK.pitch = 0;
   }, [tier]);
 
   /* QA deep link: /?m=5 jump to mission start */
@@ -1881,12 +1889,22 @@ export function CityGame() {
           </div>
         )}
 
-        {/* door prompt */}
-        {hud.doorPrompt && (
+        {/* interaction prompt — doors first, then relics */}
+        {(hud.doorPrompt || hud.relicPrompt) && !hud.caption && (
           <div className="absolute inset-x-0 bottom-[30%] flex justify-center">
             <p className="border border-white/20 bg-black/60 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.25em] text-white/85">
-              {hud.doorPrompt}
+              {hud.doorPrompt ?? hud.relicPrompt}
             </p>
+          </div>
+        )}
+
+        {/* relic story card */}
+        {hud.caption && (
+          <div className="absolute inset-x-0 bottom-[18%] flex justify-center">
+            <div className="max-w-md border border-white/15 bg-black/70 px-8 py-5 text-center backdrop-blur-sm">
+              <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-[#e2c078]">{hud.caption.title}</p>
+              <p className="mt-2 text-[15px] leading-relaxed text-white/85">{hud.caption.body}</p>
+            </div>
           </div>
         )}
 

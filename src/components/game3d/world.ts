@@ -117,7 +117,7 @@ const LANDMARK_CLEAR: [number, number, number][] = [
   [-40, 640, 90], // terminal
   [-560, 240, 60], // strip offices
   [-560, 60, 55], // keynote hall
-  [560, 240, 55], // the house (cincy)
+  [704, 342, 80], // the REAL house footprint (x 664-744, z 300-384) + yard
   [440, 120, 55], // hospital
   [640, 320, 55], // boneyard studio
 ];
@@ -150,7 +150,8 @@ export const LANDMARKS: Landmark[] = [
   { id: "spin", x: -520, z: 360, label: "SPIN HQ", kind: "neon" },
   { id: "keynote", x: -560, z: 60, label: "KEYNOTE HALL", kind: "hall" },
   { id: "hospital", x: 440, z: 120, label: "ST. SIGNAL", kind: "hospital" },
-  { id: "house", x: 560, z: 240, label: "THE HOUSE", kind: "house" },
+  // the REAL walkable house (house.tsx) — landmark points at the curb out front
+  { id: "house", x: 726, z: 398, label: "THE HOUSE", kind: "house" },
   { id: "boneyard", x: 640, z: 320, label: "BONEYARD STUDIO", kind: "studio" },
 ];
 
