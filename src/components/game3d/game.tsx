@@ -265,6 +265,77 @@ function Buildings() {
   );
 }
 
+function Sidewalks() {
+  return (
+    <group>
+      {ROADS_X.map((x) => (
+        <group key={"sx" + x}>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[x - ROAD / 2 - 3, 0.05, 0]}>
+            <planeGeometry args={[6, 1600]} />
+            <meshStandardMaterial color="#3a3f47" roughness={1} />
+          </mesh>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[x + ROAD / 2 + 3, 0.05, 0]}>
+            <planeGeometry args={[6, 1600]} />
+            <meshStandardMaterial color="#3a3f47" roughness={1} />
+          </mesh>
+        </group>
+      ))}
+      {ROADS_Z.map((z) => (
+        <group key={"sz" + z}>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.055, z - ROAD / 2 - 3]}>
+            <planeGeometry args={[1600, 6]} />
+            <meshStandardMaterial color="#3a3f47" roughness={1} />
+          </mesh>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.055, z + ROAD / 2 + 3]}>
+            <planeGeometry args={[1600, 6]} />
+            <meshStandardMaterial color="#3a3f47" roughness={1} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
+/** distant skyline ring — depth beyond the playable island */
+function Skyline() {
+  const ref = useRef<THREE.InstancedMesh>(null!);
+  const spots = useMemo(() => {
+    const out: { x: number; z: number; w: number; h: number }[] = [];
+    const r = mulberrySky(777);
+    for (let i = 0; i < 64; i++) {
+      const a = (i / 64) * Math.PI * 2 + r() * 0.06;
+      const rad = 1050 + r() * 320;
+      out.push({ x: Math.cos(a) * rad, z: Math.sin(a) * rad, w: 40 + r() * 90, h: 60 + r() * 220 });
+    }
+    return out;
+  }, []);
+  useEffect(() => {
+    const m = new THREE.Matrix4();
+    spots.forEach((sp, i) => {
+      m.makeScale(sp.w, sp.h, sp.w);
+      m.setPosition(sp.x, sp.h / 2 - 8, sp.z);
+      ref.current.setMatrixAt(i, m);
+    });
+    ref.current.instanceMatrix.needsUpdate = true;
+  }, [spots]);
+  return (
+    <instancedMesh ref={ref} args={[undefined, undefined, spots.length]}>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshBasicMaterial color="#231b33" />
+    </instancedMesh>
+  );
+}
+
+function mulberrySky(seed: number) {
+  let t = seed >>> 0;
+  return () => {
+    t += 0x6d2b79f5;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 function Palms() {
   const trunks = useRef<THREE.InstancedMesh>(null!);
   const heads = useRef<THREE.InstancedMesh>(null!);
@@ -323,6 +394,11 @@ function StreetLights() {
           <sprite position={[0, 10.4, 0]} scale={[6, 6, 1]}>
             <spriteMaterial map={glow} transparent depthWrite={false} blending={THREE.AdditiveBlending} />
           </sprite>
+          {/* warm pool on the pavement */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.08, 0]}>
+            <circleGeometry args={[7, 16]} />
+            <meshBasicMaterial map={glow} transparent opacity={0.35} depthWrite={false} blending={THREE.AdditiveBlending} />
+          </mesh>
         </group>
       ))}
     </group>
@@ -486,77 +562,146 @@ function ParkedCars() {
 
 function PlayerCar() {
   const grp = useRef<THREE.Group>(null!);
-  useFrame(() => {
+  const wheels = useRef<THREE.Mesh[]>([]);
+  const spin = useRef(0);
+  useFrame((_, dt) => {
     if (!grp.current) return;
     grp.current.position.set(G.cx, 0, G.cz);
     grp.current.rotation.y = G.cHeading;
+    spin.current += (G.cSpeed / 0.75) * dt;
+    for (const w of wheels.current) if (w) w.rotation.x = spin.current;
   });
   return (
     <group ref={grp}>
-      <mesh position={[0, 1.1, 0]} castShadow>
-        <boxGeometry args={[4.6, 1.5, 9.4]} />
-        <meshStandardMaterial color="#d8535f" roughness={0.25} metalness={0.6} />
+      {/* body — low muscle-car mass */}
+      <mesh position={[0, 1.05, 0]} castShadow>
+        <boxGeometry args={[4.5, 1.15, 9.6]} />
+        <meshStandardMaterial color="#c9384a" roughness={0.28} metalness={0.65} />
       </mesh>
-      <mesh position={[0, 2.2, -0.4]}>
-        <boxGeometry args={[4.0, 1.2, 4.6]} />
-        <meshStandardMaterial color="#20242c" roughness={0.15} metalness={0.7} />
+      {/* hood + trunk taper */}
+      <mesh position={[0, 1.62, -3.35]}>
+        <boxGeometry args={[4.3, 0.32, 2.6]} />
+        <meshStandardMaterial color="#c9384a" roughness={0.28} metalness={0.65} />
+      </mesh>
+      <mesh position={[0, 1.62, 3.5]}>
+        <boxGeometry args={[4.3, 0.32, 2.2]} />
+        <meshStandardMaterial color="#c9384a" roughness={0.28} metalness={0.65} />
+      </mesh>
+      {/* cabin with dark glass */}
+      <mesh position={[0, 2.16, 0.1]}>
+        <boxGeometry args={[3.9, 1.0, 4.2]} />
+        <meshStandardMaterial color="#11151c" roughness={0.08} metalness={0.85} />
+      </mesh>
+      {/* rocker stripe */}
+      <mesh position={[0, 0.62, 0]}>
+        <boxGeometry args={[4.62, 0.18, 9.0]} />
+        <meshStandardMaterial color="#f1e6cf" roughness={0.5} />
       </mesh>
       {[
-        [-1.9, -3.2],
-        [1.9, -3.2],
-        [-1.9, 3.2],
-        [1.9, 3.2],
+        [-1.95, -3.2],
+        [1.95, -3.2],
+        [-1.95, 3.2],
+        [1.95, 3.2],
       ].map(([wx, wz], i) => (
-        <mesh key={i} position={[wx, 0.75, wz]} rotation={[0, 0, Math.PI / 2]}>
-          <cylinderGeometry args={[0.75, 0.75, 0.6, 10]} />
+        <mesh
+          key={i}
+          ref={(el: THREE.Mesh | null) => {
+            if (el) wheels.current[i] = el;
+          }}
+          position={[wx, 0.78, wz]}
+          rotation={[0, 0, Math.PI / 2]}
+        >
+          <cylinderGeometry args={[0.78, 0.78, 0.62, 12]} />
           <meshStandardMaterial color="#0c0e12" roughness={0.9} />
         </mesh>
       ))}
-      {/* headlights */}
-      <mesh position={[-1.4, 1.1, -4.75]}>
-        <sphereGeometry args={[0.28, 6, 6]} />
-        <meshBasicMaterial color="#ffe9c0" toneMapped={false} />
-      </mesh>
-      <mesh position={[1.4, 1.1, -4.75]}>
-        <sphereGeometry args={[0.28, 6, 6]} />
-        <meshBasicMaterial color="#ffe9c0" toneMapped={false} />
-      </mesh>
+      {/* headlights + taillights */}
+      {[-1.5, 1.5].map((x) => (
+        <mesh key={"h" + x} position={[x, 1.15, -4.85]}>
+          <sphereGeometry args={[0.26, 6, 6]} />
+          <meshBasicMaterial color="#ffe9c0" toneMapped={false} />
+        </mesh>
+      ))}
+      {[-1.5, 1.5].map((x) => (
+        <mesh key={"t" + x} position={[x, 1.15, 4.85]}>
+          <boxGeometry args={[0.7, 0.22, 0.1]} />
+          <meshBasicMaterial color="#ff4444" toneMapped={false} />
+        </mesh>
+      ))}
     </group>
   );
 }
 
+/** Digital Josh — bald, full auburn beard, orange tee. Low-poly, reads instantly. */
 function PlayerFigure() {
   const grp = useRef<THREE.Group>(null!);
+  const lLeg = useRef<THREE.Mesh>(null!);
+  const rLeg = useRef<THREE.Mesh>(null!);
+  const lArm = useRef<THREE.Mesh>(null!);
+  const rArm = useRef<THREE.Mesh>(null!);
   const walk = useRef(0);
+
   useFrame((_, dt) => {
     if (!grp.current) return;
     grp.current.visible = G.mode === "foot";
     grp.current.position.set(G.px, 0, G.pz);
     grp.current.rotation.y = G.pHeading;
-    const moving = keys["w"] || keys["s"] || keys["arrowup"] || keys["arrowdown"] || keys["a"] || keys["d"] || keys["arrowleft"] || keys["arrowright"];
-    if (moving && G.mode === "foot") walk.current += dt * 10;
-    const sw = Math.sin(walk.current) * 0.5;
-    const legs = grp.current.children as THREE.Mesh[];
-    if (legs[2]) legs[2].rotation.x = sw;
-    if (legs[3]) legs[3].rotation.x = -sw;
+    const moving =
+      keys["w"] || keys["s"] || keys["arrowup"] || keys["arrowdown"] || keys["a"] || keys["d"] || keys["arrowleft"] || keys["arrowright"];
+    if (moving && G.mode === "foot") walk.current += dt * (keys["shift"] ? 13 : 9);
+    const sw = moving ? Math.sin(walk.current) * 0.55 : 0;
+    if (lLeg.current) lLeg.current.rotation.x = sw;
+    if (rLeg.current) rLeg.current.rotation.x = -sw;
+    if (lArm.current) lArm.current.rotation.x = -sw * 0.8;
+    if (rArm.current) rArm.current.rotation.x = sw * 0.8;
+    // idle breath
+    grp.current.children[0].position.y = 2.45 + (moving ? 0 : Math.sin(walk.current * 0.15 + performance.now() / 900) * 0.03);
   });
+
+  const skin = "#d9ad91";
+  const beard = "#7a4526";
+  const tee = "#e05a1e";
+  const jeans = "#2c3340";
+
   return (
     <group ref={grp}>
-      <mesh position={[0, 2.5, 0]} castShadow>
-        <capsuleGeometry args={[0.55, 1.6, 4, 8]} />
-        <meshStandardMaterial color="#1a1d24" roughness={0.8} />
+      {/* torso — the orange tee */}
+      <mesh position={[0, 2.45, 0]}>
+        <capsuleGeometry args={[0.62, 1.2, 4, 10]} />
+        <meshStandardMaterial color={tee} roughness={0.85} />
       </mesh>
-      <mesh position={[0, 4.15, 0]}>
-        <sphereGeometry args={[0.42, 10, 10]} />
-        <meshStandardMaterial color="#north" onUpdate={(m) => ((m as THREE.MeshStandardMaterial).color = new THREE.Color("#c9a582"))} />
+      {/* head — bald, skin */}
+      <mesh position={[0, 4.28, 0]}>
+        <sphereGeometry args={[0.46, 14, 12]} />
+        <meshStandardMaterial color={skin} roughness={0.6} />
       </mesh>
-      <mesh position={[-0.26, 1.05, 0]}>
-        <capsuleGeometry args={[0.2, 0.9, 4, 6]} />
-        <meshStandardMaterial color="#22262e" />
+      {/* the beard — full, jaw-wrapping */}
+      <mesh position={[0, 4.02, -0.16]} scale={[0.92, 0.78, 0.82]}>
+        <sphereGeometry args={[0.46, 12, 10]} />
+        <meshStandardMaterial color={beard} roughness={0.95} />
       </mesh>
-      <mesh position={[0.26, 1.05, 0]}>
-        <capsuleGeometry args={[0.2, 0.9, 4, 6]} />
-        <meshStandardMaterial color="#22262e" />
+      {/* brow shadow */}
+      <mesh position={[0, 4.42, -0.34]} scale={[0.7, 0.14, 0.3]}>
+        <sphereGeometry args={[0.46, 8, 6]} />
+        <meshStandardMaterial color="#b98e72" roughness={0.8} />
+      </mesh>
+      {/* arms — skin (tee sleeves end high) */}
+      <mesh ref={lArm} position={[-0.78, 3.1, 0]} rotation={[0, 0, 0.12]}>
+        <capsuleGeometry args={[0.17, 1.15, 4, 6]} />
+        <meshStandardMaterial color={skin} roughness={0.7} />
+      </mesh>
+      <mesh ref={rArm} position={[0.78, 3.1, 0]} rotation={[0, 0, -0.12]}>
+        <capsuleGeometry args={[0.17, 1.15, 4, 6]} />
+        <meshStandardMaterial color={skin} roughness={0.7} />
+      </mesh>
+      {/* legs — jeans */}
+      <mesh ref={lLeg} position={[-0.28, 1.1, 0]}>
+        <capsuleGeometry args={[0.21, 1.0, 4, 6]} />
+        <meshStandardMaterial color={jeans} />
+      </mesh>
+      <mesh ref={rLeg} position={[0.28, 1.1, 0]}>
+        <capsuleGeometry args={[0.21, 1.0, 4, 6]} />
+        <meshStandardMaterial color={jeans} />
       </mesh>
     </group>
   );
@@ -608,20 +753,38 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
     const run = keys["shift"];
 
     if (G.mode === "foot") {
+      // camera-relative: W always walks away from the camera
+      const fwd = new THREE.Vector3();
+      camera.getWorldDirection(fwd);
+      fwd.y = 0;
+      fwd.normalize();
+      const rightV = new THREE.Vector3(-fwd.z, 0, fwd.x);
       let vx = 0,
         vz = 0;
-      if (up) vz -= 1;
-      if (down) vz += 1;
-      if (left) vx -= 1;
-      if (right) vx += 1;
+      if (up) {
+        vx += fwd.x;
+        vz += fwd.z;
+      }
+      if (down) {
+        vx -= fwd.x;
+        vz -= fwd.z;
+      }
+      if (right) {
+        vx += rightV.x;
+        vz += rightV.z;
+      }
+      if (left) {
+        vx -= rightV.x;
+        vz -= rightV.z;
+      }
       const len = Math.hypot(vx, vz);
       if (len > 0) {
         vx /= len;
         vz /= len;
-        const sp = run ? 26 : 14;
+        const sp = run ? 27 : 15;
         G.px += vx * sp * dt;
         G.pz += vz * sp * dt;
-        G.pHeading = Math.atan2(-vx, -vz) + Math.PI;
+        G.pHeading = Math.atan2(-vx, -vz);
       }
       collide(1.4, "p");
     } else {
@@ -630,10 +793,10 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
       const brake = down ? 60 : 0;
       G.cSpeed += (accel - Math.sign(G.cSpeed) * (brake + 8)) * dt;
       if (down && Math.abs(G.cSpeed) < 2) G.cSpeed = -16; // reverse
-      G.cSpeed = THREE.MathUtils.clamp(G.cSpeed, -22, 74);
+      G.cSpeed = THREE.MathUtils.clamp(G.cSpeed, -24, 66);
       if (!up && !down) G.cSpeed *= 1 - 1.2 * dt;
       const steer = (left ? 1 : 0) - (right ? 1 : 0);
-      G.cHeading += steer * dt * 1.9 * THREE.MathUtils.clamp(Math.abs(G.cSpeed) / 40, 0, 1) * Math.sign(G.cSpeed);
+      G.cHeading += steer * dt * 2.2 * THREE.MathUtils.clamp(Math.abs(G.cSpeed) / 26, 0.15, 1) * Math.sign(G.cSpeed || 1);
       G.cx -= Math.sin(G.cHeading) * G.cSpeed * dt;
       G.cz -= Math.cos(G.cHeading) * G.cSpeed * dt;
       collide(3.2, "c");
@@ -651,8 +814,9 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
     const th = G.mode === "car" ? G.cHeading : G.pHeading;
     const dist = G.mode === "car" ? 26 : 15;
     const height = G.mode === "car" ? 11 : 7;
+    const movingNow = up || down || left || right || G.mode === "car";
     const want = new THREE.Vector3(tx + Math.sin(th) * dist, height, tz + Math.cos(th) * dist);
-    camPos.current.lerp(want, 1 - Math.pow(0.0015, dt));
+    camPos.current.lerp(want, movingNow ? 1 - Math.pow(0.0015, dt) : 1 - Math.pow(0.05, dt));
     camera.position.copy(camPos.current);
     camera.lookAt(tx, 2.5, tz);
 
@@ -875,20 +1039,24 @@ export function CityGame() {
       if (k === "e") {
         if (G.mode === "foot" && Math.hypot(G.px - G.cx, G.pz - G.cz) < 7) {
           G.mode = "car";
-        } else if (G.mode === "car" && Math.abs(G.cSpeed) < 4) {
+        } else if (G.mode === "car" && Math.abs(G.cSpeed) < 6) {
           G.mode = "foot";
-          G.px = G.cx + Math.cos(G.cHeading) * 5;
-          G.pz = G.cz - Math.sin(G.cHeading) * 5;
+          G.px = G.cx + Math.cos(G.cHeading) * 6.5;
+          G.pz = G.cz - Math.sin(G.cHeading) * 6.5;
+          G.pHeading = G.cHeading;
           G.cSpeed = 0;
         }
       }
     };
     const up = (ev: KeyboardEvent) => (keys[ev.key.toLowerCase()] = false);
+    const blur = () => Object.keys(keys).forEach((k) => (keys[k] = false));
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
+    window.addEventListener("blur", blur);
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", blur);
     };
   }, [tier, started]);
 
@@ -928,6 +1096,8 @@ export function CityGame() {
           <directionalLight position={[-600, 300, 400]} intensity={1.1} color="#ffb37a" />
           <fog attach="fog" args={["#5a3a55", 220, 1500]} />
           <Ground />
+          <Sidewalks />
+          <Skyline />
           <Buildings />
           <Palms />
           <StreetLights />
@@ -1010,7 +1180,7 @@ export function CityGame() {
 
         {/* MISSION PASSED */}
         {hud.phase === "passed" && m && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center" style={{ background: "radial-gradient(60% 50% at 50% 50%, rgba(226,192,120,0.14), transparent 70%)" }}>
             <h2 className="font-display text-6xl italic text-[#e2c078]" style={{ textShadow: "0 4px 40px rgba(0,0,0,0.9)" }}>
               MISSION PASSED
             </h2>
