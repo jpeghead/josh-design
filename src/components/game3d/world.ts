@@ -64,7 +64,7 @@ export const BLOCK = 160; // grid pitch
 
 /** grid roads at multiples of BLOCK from -800..800 (skip water margin) */
 export const ROADS_X: number[] = [-640, -480, -320, -160, 0, 160, 320, 480, 640];
-export const ROADS_Z: number[] = [-640, -480, -320, -160, 0, 160, 320, 480, 640];
+export const ROADS_Z: number[] = [-640, -480, -320, -160, 0, 160, 480, 640];
 
 function onRoad(x: number, z: number, margin = ROAD * 0.5 + 6): boolean {
   for (const rx of ROADS_X) if (Math.abs(x - rx) < margin) return true;

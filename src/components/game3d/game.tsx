@@ -18,6 +18,18 @@ import { EffectComposer, Bloom, Vignette, Noise } from "@react-three/postprocess
 import { detectTier, type CanvasTier } from "../canvas/capability";
 import { DesktopOverlay, type DeskRect } from "./desktop";
 import {
+  House,
+  HOUSE_WALLS,
+  doorBlockers,
+  DOORS,
+  insideHouse,
+  SEAT_POS,
+  SCREEN,
+  STAND,
+  DESK_SPOT,
+} from "./house";
+import { startAmbience, setAmbienceInside } from "./ambience";
+import {
   BUILDINGS,
   DISTRICTS,
   LANDMARKS,
@@ -32,13 +44,12 @@ import {
 
 const WORLD_HALF = 790;
 
-/** Josh's desk — outside Boneyard Studio, Cincinnati Hill. The site lives here. */
-const DESK = { x: 672, z: 352 };
-const SCREEN = { cx: DESK.x, cy: 4.35, cz: DESK.z + 0.3, hw: 3.8, hh: 2.25 };
-const SEAT_POS = new THREE.Vector3(DESK.x, 4.3, DESK.z + 5.9);
 const SEAT_LOOK = new THREE.Vector3(SCREEN.cx, SCREEN.cy, SCREEN.cz);
-const STAND = { x: DESK.x + 4.2, z: DESK.z + 4.6 };
-const CAR_START = { x: 706, z: 336 };
+const CAR_START = { x: 736, z: 396 }; // the driveway, past the porch
+const EYE = 5.0;
+
+/** first-person look state — written by pointer-lock mouse, read by Sim */
+const LOOK = { yaw: 0, pitch: -0.04, locked: false };
 
 type Mode = "foot" | "car";
 
@@ -63,7 +74,7 @@ const G: GameState = {
   mode: "foot",
   px: STAND.x,
   pz: STAND.z,
-  pHeading: Math.PI,
+  pHeading: 0,
   cx: CAR_START.x,
   cz: CAR_START.z,
   cHeading: 0,
@@ -590,64 +601,17 @@ function ParkedCars() {
   );
 }
 
-function DeskSet() {
+function ScreenGlow() {
   const screenTex = useMemo(siteScreenTexture, []);
   const matRef = useRef<THREE.MeshBasicMaterial>(null!);
   useFrame(() => {
-    // the physical screen lights up as the DOM overlay hands off
-    if (matRef.current) matRef.current.opacity = THREE.MathUtils.clamp((G.deskT - 0.55) / 0.3, 0.02, 1);
+    if (matRef.current) matRef.current.opacity = THREE.MathUtils.clamp((G.deskT - 0.5) / 0.32, 0.03, 1);
   });
   return (
-    <group>
-      {/* desk */}
-      <mesh position={[DESK.x, 2.7, DESK.z + 1.4]}>
-        <boxGeometry args={[9.4, 0.35, 4.4]} />
-        <meshStandardMaterial color="#4a3a2c" roughness={0.6} />
-      </mesh>
-      {[-4.2, 4.2].map((dx) => (
-        <mesh key={dx} position={[DESK.x + dx, 1.32, DESK.z + 1.4]}>
-          <boxGeometry args={[0.4, 2.75, 4.0]} />
-          <meshStandardMaterial color="#2e2620" roughness={0.8} />
-        </mesh>
-      ))}
-      {/* monitor */}
-      <mesh position={[DESK.x, 3.2, DESK.z + 0.1]}>
-        <boxGeometry args={[1.4, 0.7, 0.5]} />
-        <meshStandardMaterial color="#181b20" roughness={0.4} />
-      </mesh>
-      <mesh position={[SCREEN.cx, SCREEN.cy, SCREEN.cz - 0.09]}>
-        <boxGeometry args={[SCREEN.hw * 2 + 0.35, SCREEN.hh * 2 + 0.35, 0.22]} />
-        <meshStandardMaterial color="#0c0e12" roughness={0.3} metalness={0.4} />
-      </mesh>
-      <mesh position={[SCREEN.cx, SCREEN.cy, SCREEN.cz + 0.04]}>
-        <planeGeometry args={[SCREEN.hw * 2, SCREEN.hh * 2]} />
-        <meshBasicMaterial ref={matRef} map={screenTex} transparent opacity={0.02} toneMapped={false} />
-      </mesh>
-      {/* keyboard + mug */}
-      <mesh position={[DESK.x - 0.4, 2.95, DESK.z + 2.2]}>
-        <boxGeometry args={[2.6, 0.12, 0.9]} />
-        <meshStandardMaterial color="#22262e" roughness={0.7} />
-      </mesh>
-      <mesh position={[DESK.x + 2.6, 3.15, DESK.z + 2.3]}>
-        <cylinderGeometry args={[0.28, 0.24, 0.55, 10]} />
-        <meshStandardMaterial color="#C8A24B" roughness={0.4} />
-      </mesh>
-      {/* chair */}
-      <mesh position={[DESK.x, 1.75, DESK.z + 4.6]}>
-        <boxGeometry args={[2.0, 0.3, 2.0]} />
-        <meshStandardMaterial color="#1c1f26" roughness={0.7} />
-      </mesh>
-      <mesh position={[DESK.x, 3.0, DESK.z + 5.6]}>
-        <boxGeometry args={[2.0, 2.4, 0.35]} />
-        <meshStandardMaterial color="#1c1f26" roughness={0.7} />
-      </mesh>
-      <mesh position={[DESK.x, 0.85, DESK.z + 4.6]}>
-        <cylinderGeometry args={[0.16, 0.16, 1.6, 6]} />
-        <meshStandardMaterial color="#0e1014" />
-      </mesh>
-      {/* warm desk lamp pool so the spot reads at night */}
-      <pointLight position={[DESK.x, 5.4, DESK.z + 2]} color="#ffd9a0" intensity={26} distance={26} />
-    </group>
+    <mesh position={[SCREEN.cx, SCREEN.cy, SCREEN.cz + 0.05]}>
+      <planeGeometry args={[SCREEN.hw * 2, SCREEN.hh * 2]} />
+      <meshBasicMaterial ref={matRef} map={screenTex} transparent opacity={0.03} toneMapped={false} />
+    </mesh>
   );
 }
 
@@ -1038,6 +1002,9 @@ function MissionMarkers({ tick }: { tick: number }) {
 function Sim({ onHud }: { onHud: (h: HudState) => void }) {
   const { camera, size } = useThree();
   const camPos = useRef(new THREE.Vector3(SEAT_POS.x, SEAT_POS.y, SEAT_POS.z));
+  const footVel = useRef(0);
+  const bobT = useRef(0);
+  const lastDir = useRef<[number, number]>([0, -1]);
   const lastDistrict = useRef<string | null>(null);
   const districtTimer = useRef(0);
   const v3 = useMemo(() => new THREE.Vector3(), []);
@@ -1061,39 +1028,43 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
     const run = keys["shift"];
 
     if (G.mode === "foot" && !atDesk) {
-      // camera-relative: W always walks away from the camera
-      const fwd = new THREE.Vector3();
-      camera.getWorldDirection(fwd);
-      fwd.y = 0;
-      fwd.normalize();
-      const rightV = new THREE.Vector3(-fwd.z, 0, fwd.x);
+      // first person: WASD relative to where you're LOOKING
+      const fx = -Math.sin(LOOK.yaw);
+      const fz = -Math.cos(LOOK.yaw);
+      const rx = -fz;
+      const rz = fx;
       let vx = 0,
         vz = 0;
       if (up) {
-        vx += fwd.x;
-        vz += fwd.z;
+        vx += fx;
+        vz += fz;
       }
       if (down) {
-        vx -= fwd.x;
-        vz -= fwd.z;
+        vx -= fx;
+        vz -= fz;
       }
       if (right) {
-        vx += rightV.x;
-        vz += rightV.z;
+        vx += rx;
+        vz += rz;
       }
       if (left) {
-        vx -= rightV.x;
-        vz -= rightV.z;
+        vx -= rx;
+        vz -= rz;
       }
       const len = Math.hypot(vx, vz);
+      const targetSp = len > 0 ? (run ? 26 : 12.5) : 0;
+      // velocity smoothing — no more Game Boy starts and stops
+      footVel.current += (targetSp - footVel.current) * Math.min(dt * (targetSp > footVel.current ? 9 : 12), 1);
       if (len > 0) {
         vx /= len;
         vz /= len;
-        const sp = run ? 27 : 15;
-        G.px += vx * sp * dt;
-        G.pz += vz * sp * dt;
-        G.pHeading = Math.atan2(-vx, -vz);
+        lastDir.current[0] = vx;
+        lastDir.current[1] = vz;
       }
+      G.px += lastDir.current[0] * footVel.current * dt;
+      G.pz += lastDir.current[1] * footVel.current * dt;
+      G.pHeading = LOOK.yaw;
+      bobT.current += footVel.current * dt * 0.55;
       collide(1.4, "p");
     } else if (G.mode === "car" && !atDesk) {
       // car — arcade
@@ -1116,28 +1087,34 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
     G.cx = THREE.MathUtils.clamp(G.cx, -WORLD_HALF, WORLD_HALF);
     G.cz = THREE.MathUtils.clamp(G.cz, -WORLD_HALF, WORLD_HALF);
 
-    /* -------- camera: seat ↔ chase, blended by deskT -------- */
+    /* -------- camera: FP on foot, chase in car, seat blend at desk -------- */
     const tx = G.mode === "car" ? G.cx : G.px;
     const tz = G.mode === "car" ? G.cz : G.pz;
     const th = G.mode === "car" ? G.cHeading : G.pHeading;
-    const dist = G.mode === "car" ? 26 : 15;
-    const height = G.mode === "car" ? 11 : 7;
-    const movingNow = up || down || left || right || G.mode === "car";
-    const want = new THREE.Vector3(tx + Math.sin(th) * dist, height, tz + Math.cos(th) * dist);
-    if (G.deskMode === "world") {
-      camPos.current.lerp(want, movingNow ? 1 - Math.pow(0.0015, dt) : 1 - Math.pow(0.05, dt));
+    if (G.deskMode === "world" && G.mode === "foot") {
+      // first person
+      const bob = Math.sin(bobT.current * 2.1) * 0.09 * Math.min(footVel.current / 12, 1);
+      camera.position.set(G.px, EYE + bob, G.pz);
+      camera.rotation.set(LOOK.pitch, LOOK.yaw, 0, "YXZ");
+      camPos.current.copy(camera.position);
+    } else if (G.deskMode === "world") {
+      // car chase
+      const want = new THREE.Vector3(tx + Math.sin(th) * 26, 11, tz + Math.cos(th) * 26);
+      camPos.current.lerp(want, 1 - Math.pow(0.0015, dt));
       camera.position.copy(camPos.current);
       camera.lookAt(tx, 2.5, tz);
     } else {
+      // seated ↔ standing FP blend
       const k = THREE.MathUtils.smoothstep(G.deskT, 0, 1);
-      camera.position.lerpVectors(SEAT_POS, want, k);
+      const standPos = v3.set(G.px, EYE, G.pz);
+      camera.position.lerpVectors(SEAT_POS, standPos, k);
       camPos.current.copy(camera.position);
-      v3.set(
-        SEAT_LOOK.x + (tx - SEAT_LOOK.x) * k,
-        SEAT_LOOK.y + (2.5 - SEAT_LOOK.y) * k,
-        SEAT_LOOK.z + (tz - SEAT_LOOK.z) * k
+      const fwd = new THREE.Vector3(
+        SEAT_LOOK.x + (G.px - Math.sin(LOOK.yaw) * 10 - SEAT_LOOK.x) * k,
+        SEAT_LOOK.y + (EYE + -Math.sin(LOOK.pitch) * 10 - SEAT_LOOK.y) * k,
+        SEAT_LOOK.z + (G.pz - Math.cos(LOOK.yaw) * 10 - SEAT_LOOK.z) * k
       );
-      camera.lookAt(v3);
+      camera.lookAt(fwd);
     }
 
     /* -------- project the monitor screen for the DOM handoff -------- */
@@ -1232,11 +1209,40 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
       deskT: G.deskT,
       deskRect,
       nearDesk:
-        G.deskMode === "world" && G.mode === "foot" && Math.hypot(G.px - DESK.x, G.pz - (DESK.z + 4)) < 8,
+        G.deskMode === "world" && G.mode === "foot" && Math.hypot(G.px - DESK_SPOT.x, G.pz - DESK_SPOT.z) < 6.5,
+      locked: LOOK.locked,
+      inHouse: insideHouse(G.px, G.pz),
+      doorPrompt: (() => {
+        if (G.deskMode !== "world" || G.mode !== "foot") return null;
+        for (const d of DOORS) {
+          const cx = d.axis === "x" ? d.hx - d.len / 2 : d.hx;
+          const cz = d.axis === "x" ? d.hz : d.hz - d.len / 2;
+          if (Math.hypot(G.px - cx, G.pz - cz) < 7.5)
+            return d.open > 0.5 ? "E — close the door" : d.id === "front" ? "E — open the front door" : "E — open the door";
+        }
+        return null;
+      })(),
     });
   });
 
   return null;
+}
+
+function pushOut(nx: number, nz: number, r: number, box: [number, number, number, number]): [number, number] {
+  const [x1, z1, x2, z2] = box;
+  const cx = (x1 + x2) / 2;
+  const cz = (z1 + z2) / 2;
+  const hw = (x2 - x1) / 2 + r;
+  const hd = (z2 - z1) / 2 + r;
+  const dx = nx - cx;
+  const dz = nz - cz;
+  if (Math.abs(dx) < hw && Math.abs(dz) < hd) {
+    const px = hw - Math.abs(dx);
+    const pz = hd - Math.abs(dz);
+    if (px < pz) nx = cx + Math.sign(dx || 1) * hw;
+    else nz = cz + Math.sign(dz || 1) * hd;
+  }
+  return [nx, nz];
 }
 
 function collide(r: number, who: "p" | "c") {
@@ -1244,6 +1250,11 @@ function collide(r: number, who: "p" | "c") {
   const z = who === "p" ? G.pz : G.cz;
   let nx = x,
     nz = z;
+  // the house: walls + closed doors (players only — cars stay outside anyway)
+  if (who === "p" && insideHouse(nx, nz)) {
+    for (const w of HOUSE_WALLS) [nx, nz] = pushOut(nx, nz, r, w);
+    for (const d of doorBlockers()) [nx, nz] = pushOut(nx, nz, r, d);
+  }
   for (const b of BUILDINGS) {
     const hw = b.w / 2 + r;
     const hd = b.d / 2 + r;
@@ -1283,6 +1294,9 @@ type HudState = {
   deskT: number;
   deskRect: DeskRect | null;
   nearDesk: boolean;
+  locked: boolean;
+  inHouse: boolean;
+  doorPrompt: string | null;
 };
 
 function Minimap({ h }: { h: HudState }) {
@@ -1380,7 +1394,14 @@ export function CityGame() {
     deskT: G.deskT,
     deskRect: null,
     nearDesk: false,
+    locked: false,
+    inHouse: true,
+    doorPrompt: null,
   });
+
+  useEffect(() => {
+    setAmbienceInside(hud.inHouse);
+  }, [hud.inHouse]);
 
   useEffect(() => setTier(detectTier()), []);
 
@@ -1402,16 +1423,31 @@ export function CityGame() {
       const k = ev.key.toLowerCase();
       if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(k)) ev.preventDefault();
       keys[k] = true;
+      startAmbience();
       if (k === "escape" && G.deskMode === "desk") {
         G.deskMode = "toWorld";
+        LOOK.yaw = 0;
+        LOOK.pitch = -0.04;
         return;
       }
       if (G.deskMode !== "world") return;
-      if (k === "e" && G.mode === "foot" && Math.hypot(G.px - DESK.x, G.pz - (DESK.z + 4)) < 8) {
-        G.deskMode = "toDesk";
-        G.px = STAND.x;
-        G.pz = STAND.z;
-        return;
+      if (k === "e" && G.mode === "foot") {
+        // doors first — the surprises
+        for (const d of DOORS) {
+          const cx = d.axis === "x" ? d.hx - d.len / 2 : d.hx;
+          const cz = d.axis === "x" ? d.hz : d.hz - d.len / 2;
+          if (Math.hypot(G.px - cx, G.pz - cz) < 7.5) {
+            d.target = d.target > 0.5 ? 0 : 1;
+            return;
+          }
+        }
+        // sit back down
+        if (Math.hypot(G.px - DESK_SPOT.x, G.pz - DESK_SPOT.z) < 6.5) {
+          G.deskMode = "toDesk";
+          G.px = STAND.x;
+          G.pz = STAND.z;
+          return;
+        }
       }
       if (k === "e") {
         if (G.mode === "foot" && Math.hypot(G.px - G.cx, G.pz - G.cz) < 7) {
@@ -1435,6 +1471,46 @@ export function CityGame() {
       window.removeEventListener("keyup", up);
       window.removeEventListener("blur", blur);
     };
+  }, [tier]);
+
+  /* pointer-lock mouse look — the core of the feel fix */
+  useEffect(() => {
+    if (tier !== "full") return;
+    const el = document.querySelector("[data-game-canvas]") as HTMLElement | null;
+    if (!el) return;
+    const onClick = () => {
+      startAmbience();
+      if (G.deskMode === "world" && !LOOK.locked) el.requestPointerLock();
+    };
+    const onLockChange = () => {
+      LOOK.locked = document.pointerLockElement === el;
+    };
+    const onMove = (ev: MouseEvent) => {
+      if (!LOOK.locked) return;
+      LOOK.yaw -= ev.movementX * 0.0021;
+      LOOK.pitch = THREE.MathUtils.clamp(LOOK.pitch - ev.movementY * 0.0021, -1.25, 1.25);
+    };
+    el.addEventListener("click", onClick);
+    document.addEventListener("pointerlockchange", onLockChange);
+    document.addEventListener("mousemove", onMove);
+    return () => {
+      el.removeEventListener("click", onClick);
+      document.removeEventListener("pointerlockchange", onLockChange);
+      document.removeEventListener("mousemove", onMove);
+    };
+  }, [tier]);
+
+  /* QA deep link: /?room=1 stand in the office */
+  useEffect(() => {
+    if (tier !== "full") return;
+    if (new URLSearchParams(window.location.search).get("room") === "1") {
+      G.deskMode = "world";
+      G.deskT = 1;
+      G.px = 690;
+      G.pz = 330;
+      LOOK.yaw = 0.45; // facing the desk + the framed years
+      LOOK.pitch = 0;
+    }
   }, [tier]);
 
   /* QA deep link: /?m=5 jump to mission start */
@@ -1462,6 +1538,7 @@ export function CityGame() {
   return (
     <section aria-label="Whitehead City — the game" data-canvas-walk className="fixed inset-0 z-0 bg-black">
       <Canvas
+        data-game-canvas
         dpr={[1, 1.5]}
         camera={{ fov: 60, near: 0.5, far: 4200, position: [G.px - 10, 8, G.pz + 14] }}
         gl={{ antialias: true, powerPreference: "high-performance" }}
@@ -1483,9 +1560,9 @@ export function CityGame() {
           <ParkedCars />
           <Traffic />
           <Pedestrians />
-          <DeskSet />
+          <House />
+          <ScreenGlow />
           <PlayerCar />
-          <PlayerFigure />
           <MissionMarkers tick={hud.mission * 100 + hud.step * 10 + (hud.phase === "active" ? 1 : 0)} />
           <Sim onHud={setHud} />
           <EffectComposer>
@@ -1508,16 +1585,52 @@ export function CityGame() {
 
       {/* ------------------------------ HUD ------------------------------ */}
       <div className="pointer-events-none absolute inset-0 z-10" style={{ opacity: hud.deskMode === "world" ? 1 : hud.deskMode === "toWorld" ? Math.max(0, (hud.deskT - 0.7) / 0.3) : 0 }}>
-        {/* welcome card — the reveal */}
-        {hud.deskMode === "world" && hud.mission === -1 && hud.phase === "roam" && (
+        {/* crosshair */}
+        {hud.deskMode === "world" && hud.mode === "foot" && hud.locked && (
+          <div className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/70" />
+        )}
+
+        {/* click to look */}
+        {hud.deskMode === "world" && hud.mode === "foot" && !hud.locked && (
+          <div className="absolute inset-x-0 top-[12%] flex justify-center">
+            <p className="border border-white/20 bg-black/60 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.25em] text-white/85">
+              Click — look around
+            </p>
+          </div>
+        )}
+
+        {/* door prompt */}
+        {hud.doorPrompt && (
+          <div className="absolute inset-x-0 bottom-[30%] flex justify-center">
+            <p className="border border-white/20 bg-black/60 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.25em] text-white/85">
+              {hud.doorPrompt}
+            </p>
+          </div>
+        )}
+
+        {/* welcome cards — the house first, the city after */}
+        {hud.deskMode === "world" && hud.mission === -1 && hud.phase === "roam" && hud.inHouse && (
+          <div className="absolute inset-x-0 top-[16%] flex justify-center">
+            <div className="max-w-md px-8 text-center">
+              <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-[#e2c078]">Home</p>
+              <p className="mt-2 text-white/85" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>
+                Look around. It&rsquo;s all here.
+              </p>
+              <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.25em] text-white/45">
+                Mouse look · WASD walk · E opens things
+              </p>
+            </div>
+          </div>
+        )}
+        {hud.deskMode === "world" && hud.mission === -1 && hud.phase === "roam" && !hud.inHouse && (
           <div className="absolute inset-x-0 top-[16%] flex justify-center">
             <div className="max-w-md px-8 text-center">
               <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-[#e2c078]">Whitehead City</p>
               <p className="mt-2 text-white/85" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>
-                The site was sitting in a whole world. Your life is out here — follow the gold light.
+                The house was sitting in a whole world. Your life is out here — follow the gold light.
               </p>
               <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.25em] text-white/45">
-                WASD walk · SHIFT run · E car / sit back down
+                E — the car is in the driveway
               </p>
             </div>
           </div>
@@ -1602,10 +1715,12 @@ export function CityGame() {
           </div>
         )}
 
-        {/* minimap */}
-        <div className="absolute bottom-6 left-6">
-          <Minimap h={hud} />
-        </div>
+        {/* minimap — city gear stays outside the house */}
+        {!hud.inHouse && (
+          <div className="absolute bottom-6 left-6">
+            <Minimap h={hud} />
+          </div>
+        )}
 
         {/* credits */}
         {hud.phase === "credits" && (

@@ -66,7 +66,7 @@ export function DesktopOverlay({
       </div>
 
       {/* the browser window */}
-      <div className="absolute left-1/2 top-1/2 flex h-[84vh] w-[92vw] max-w-[1240px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-white/15 bg-[#101216] shadow-[0_40px_120px_rgba(0,0,0,0.6)]">
+      <div className="absolute left-1/2 top-[52%] flex h-[91vh] w-[97vw] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-white/15 bg-[#101216] shadow-[0_40px_120px_rgba(0,0,0,0.6)]">
         {/* title bar */}
         <div className="flex items-center gap-3 border-b border-white/10 bg-[#181b21] px-3 py-2.5">
           <div className="flex items-center gap-2">
@@ -82,12 +82,7 @@ export function DesktopOverlay({
           <div className="mx-auto flex w-[60%] items-center justify-center gap-2 rounded-md border border-white/10 bg-black/40 px-3 py-1.5 font-mono text-[11px] text-white/70">
             <span className="text-[#28c840]">●</span> josh.design
           </div>
-          <button
-            onClick={onStepBack}
-            className="whitespace-nowrap rounded-md border border-white/15 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-white/60 transition-colors hover:border-gold hover:text-gold"
-          >
-            ⌫ Step back
-          </button>
+          <span className="w-20" />
         </div>
         {/* the actual site */}
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-paper">
@@ -101,8 +96,8 @@ export function DesktopOverlay({
         className="group absolute bottom-5 right-5 flex items-center gap-3 rounded-full border border-white/20 bg-black/50 py-2.5 pl-4 pr-5 font-mono text-[11px] uppercase tracking-[0.2em] text-white/80 backdrop-blur-md transition-colors hover:border-gold hover:text-gold"
       >
         <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-gold" />
-        Step back from the desk
-        <span className="text-white/40 transition-colors group-hover:text-gold/60">Esc</span>
+        Esc — stand up
+
       </button>
     </div>
   );
