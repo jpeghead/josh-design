@@ -15,7 +15,7 @@ import * as THREE from "three";
 import Link from "next/link";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { EffectComposer, Bloom, Vignette, Noise } from "@react-three/postprocessing";
-import { Environment, useProgress } from "@react-three/drei";
+import { Environment, Preload, useProgress } from "@react-three/drei";
 import { Physics, RigidBody, CuboidCollider, useRapier, type RapierRigidBody } from "@react-three/rapier";
 import { detectTier, type CanvasTier } from "../canvas/capability";
 import { DesktopOverlay, type DeskRect } from "./desktop";
@@ -2003,6 +2003,7 @@ export function CityGame() {
           <Sim onHud={setHud} />
           <FrameStats />
           </Physics>
+          <Preload all />
           <EffectComposer multisampling={2}>
             <Bloom intensity={0.6} luminanceThreshold={0.62} mipmapBlur />
             <Noise opacity={0.035} />

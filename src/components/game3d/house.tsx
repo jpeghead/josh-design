@@ -38,13 +38,15 @@ export const DESK_SPOT = { x: 695, z: 331.3 };
  * Door gaps are 36" (2.85); arches 5–6 units (1.7–2 m).
  */
 const OPENINGS = {
-  officeDoor: { wall: "z339" as const, from: 694, to: 696.85 }, // office → dining
-  archDL: { wall: "x704" as const, from: 344, to: 350 }, // dining ↔ living
-  archKL: { wall: "z339" as const, from: 710, to: 715 }, // kitchen ↔ living
-  frontDoor: { wall: "z356" as const, from: 712, to: 714.85 }, // living → the city
+  officeDoor: { wall: "z339" as const, from: 693.85, to: 697 }, // office → dining
+  archDL: { wall: "x704" as const, from: 343.5, to: 350.5 }, // dining ↔ living
+  archKL: { wall: "z339" as const, from: 709.5, to: 715.5 }, // kitchen ↔ living
+  frontDoor: { wall: "z356" as const, from: 711.85, to: 715 }, // living → the city
 };
 
-const DOOR_H = 6.15; // 80" door leaf + frame
+// 2.2 m — taller than a real 80" door on purpose: first-person cameras
+// make true dimensions feel cramped, so doorways get the theater cut
+const DOOR_H = 6.6;
 
 export type Door = {
   id: string;
@@ -110,14 +112,14 @@ export const HOUSE_WALLS: [number, number, number, number][] = (() => {
 export const FURNITURE: [number, number, number, number][] = [
   // office
   [692.3, 326.7, 697.7, 329.1], // desk
-  [686.25, 328.2, 687.45, 333.8], // bookshelf (west wall)
+  [686.25, 326.7, 687.45, 332.3], // bookshelf (west wall)
   [686.9, 336.9, 688.3, 338.3], // poster tubes corner
   // kitchen — counter split around the freestanding range
   [704.25, 326.5, 711.1, 328.45],
   [713.5, 326.5, 721.75, 328.45],
   [711.15, 326.6, 713.45, 328.5], // range
   [719.3, 330.3, 721.8, 332.7], // fridge (east wall)
-  [708.7, 332.85, 715.3, 336.15], // island
+  [708.7, 332.45, 715.3, 335.15], // island
   // dining
   [692.6, 346.15, 697.4, 348.85], // table
   [693.0, 344.6, 694.2, 345.8], // chairs
@@ -129,20 +131,20 @@ export const FURNITURE: [number, number, number, number][] = [
   [720.5, 344.8, 721.8, 350.2], // TV console (east wall)
   [712.0, 344.3, 715.0, 350.7], // sofa (faces the TV)
   [716.3, 345.6, 718.7, 349.4], // coffee table
-  [713.3, 341.0, 715.9, 343.6], // armchair
+  [715.9, 341.3, 718.5, 343.9], // armchair
 ];
 
 /** things you can look at — E near one shows its story */
 export type Relic = { x: number; z: number; r: number; label: string; title: string; body: string };
 export const RELICS: Relic[] = [
   {
-    x: 686.9, z: 329.6, r: 2.4,
+    x: 686.9, z: 330.8, r: 2.4,
     label: "the folded flag",
     title: "The Flag",
     body: "Parris Island, then MCAS New River. The Corps is where discipline stopped being a word and became a habit.",
   },
   {
-    x: 686.9, z: 332.4, r: 2.2,
+    x: 686.9, z: 328.0, r: 2.2,
     label: "the Nikon",
     title: "The Nikon",
     body: "The first camera. Photography taught me to see long before design taught me to ship.",
@@ -480,19 +482,13 @@ function CoatRack({ x, z }: { x: number; z: number }) {
         <boxGeometry args={[0.95, 1.8, 0.45]} />
         <meshStandardMaterial color="#4a5a3a" roughness={1} />
       </mesh>
-      {/* shoes by the door */}
-      <mesh position={[1.1, 0.2, 0.6]} rotation={[0, 0.4, 0]}>
-        <boxGeometry args={[0.5, 0.36, 1.15]} />
-        <meshStandardMaterial color="#2c2118" roughness={0.9} />
-      </mesh>
-      <mesh position={[1.75, 0.2, 0.5]} rotation={[0, 0.15, 0]}>
-        <boxGeometry args={[0.5, 0.36, 1.15]} />
-        <meshStandardMaterial color="#5a2a24" roughness={0.9} />
-      </mesh>
-      <mesh position={[1.45, 0.15, -0.45]} rotation={[0, -0.3, 0]}>
-        <boxGeometry args={[0.36, 0.26, 0.85]} />
-        <meshStandardMaterial color="#8f6c58" roughness={0.9} />
-      </mesh>
+      {/* one pair of shoes, squared up by the door */}
+      {[-0.31, 0.31].map((sx) => (
+        <mesh key={sx} position={[0.9 + sx * 0.55, 0.18, 0.35]} rotation={[0, 0.12, 0]}>
+          <boxGeometry args={[0.42, 0.32, 1.1]} />
+          <meshStandardMaterial color="#2c2118" roughness={0.9} />
+        </mesh>
+      ))}
     </group>
   );
 }
@@ -514,12 +510,46 @@ function Kitchen() {
           </mesh>
         </group>
       ))}
-      {/* cabinet seams */}
-      {[706, 708.4, 710.6, 714.2, 716.4, 719.6].map((cx) => (
-        <mesh key={cx} position={[cx, 1.2, 328.46]}>
-          <boxGeometry args={[0.04, 2.1, 0.03]} />
-          <meshStandardMaterial color="#2c2620" />
+      {/* toe kicks under the counter runs */}
+      {[[707.68, 6.4], [717.63, 7.8]].map(([cx, w]) => (
+        <mesh key={"tk" + cx} position={[cx, 0.2, 327.3]}>
+          <boxGeometry args={[w, 0.4, 1.5]} />
+          <meshStandardMaterial color="#2c2620" roughness={0.9} />
         </mesh>
+      ))}
+      {/* cabinet seams + bar handles */}
+      {[706, 708.4, 710.6, 714.2, 716.4, 719.6].map((cx) => (
+        <group key={cx}>
+          <mesh position={[cx, 1.2, 328.46]}>
+            <boxGeometry args={[0.04, 2.1, 0.03]} />
+            <meshStandardMaterial color="#2c2620" />
+          </mesh>
+          <mesh position={[cx + 0.55, 2.05, 328.5]}>
+            <boxGeometry args={[0.5, 0.06, 0.06]} />
+            <meshStandardMaterial color="#8a8d92" metalness={0.7} roughness={0.35} />
+          </mesh>
+        </group>
+      ))}
+      {/* upper cabinets along the north wall (clear of window + hood) */}
+      {[[706.6, 4.6], [720.2, 2.9]].map(([cx, w]) => (
+        <group key={"uc" + cx}>
+          <mesh position={[cx, 6.5, 326.9]} castShadow>
+            <boxGeometry args={[w, 2.4, 1.2]} />
+            <meshStandardMaterial color="#4c443a" roughness={0.6} />
+          </mesh>
+          <mesh position={[cx, 6.5, 327.52]}>
+            <boxGeometry args={[0.04, 2.2, 0.03]} />
+            <meshStandardMaterial color="#2c2620" />
+          </mesh>
+          <mesh position={[cx - 0.45, 5.55, 327.55]}>
+            <boxGeometry args={[0.06, 0.4, 0.06]} />
+            <meshStandardMaterial color="#8a8d92" metalness={0.7} roughness={0.35} />
+          </mesh>
+          <mesh position={[cx + 0.45, 5.55, 327.55]}>
+            <boxGeometry args={[0.06, 0.4, 0.06]} />
+            <meshStandardMaterial color="#8a8d92" metalness={0.7} roughness={0.35} />
+          </mesh>
+        </group>
       ))}
       {/* the range — 30" wide, 36" tall, matches the counters */}
       <Model slug="electric_stove" position={[712.3, 0.06, 327.6]} scale={3.1} />
@@ -532,36 +562,93 @@ function Kitchen() {
         <boxGeometry args={[1.5, 2.8, 1.5]} />
         <meshStandardMaterial color="#a4a8ad" roughness={0.4} metalness={0.5} />
       </mesh>
-      {/* sink + faucet */}
-      <mesh position={[717.5, 2.56, 327.5]}>
-        <boxGeometry args={[2.4, 0.05, 1.5]} />
+      {/* sink — rim, sunken basin, gooseneck faucet */}
+      <mesh position={[717.5, 2.57, 327.5]}>
+        <boxGeometry args={[2.4, 0.04, 1.5]} />
         <meshStandardMaterial color="#9aa0a6" roughness={0.3} metalness={0.6} />
       </mesh>
-      <mesh position={[717.5, 3.0, 326.9]} rotation={[0.5, 0, 0]}>
-        <cylinderGeometry args={[0.06, 0.06, 1.1, 6]} />
-        <meshStandardMaterial color="#b9bdc2" metalness={0.7} roughness={0.3} />
+      <mesh position={[717.5, 2.38, 327.5]}>
+        <boxGeometry args={[2.0, 0.4, 1.1]} />
+        <meshStandardMaterial color="#63686e" roughness={0.35} metalness={0.6} />
       </mesh>
-      {/* fridge — 36" wide, 71" tall, on the east wall */}
-      <mesh position={[720.55, 2.7, 331.5]} castShadow>
-        <boxGeometry args={[2.4, 5.4, 2.4]} />
-        <meshStandardMaterial color="#b9bdc2" roughness={0.35} metalness={0.5} />
+      <group position={[717.5, 2.55, 326.85]}>
+        <mesh position={[0, 0.45, 0]}>
+          <cylinderGeometry args={[0.05, 0.07, 0.9, 8]} />
+          <meshStandardMaterial color="#b9bdc2" metalness={0.8} roughness={0.25} />
+        </mesh>
+        <mesh position={[0, 0.9, 0.18]} rotation={[1.1, 0, 0]}>
+          <cylinderGeometry args={[0.045, 0.045, 0.5, 8]} />
+          <meshStandardMaterial color="#b9bdc2" metalness={0.8} roughness={0.25} />
+        </mesh>
+        <mesh position={[0, 0.82, 0.42]} rotation={[Math.PI / 2 + 0.35, 0, 0]}>
+          <cylinderGeometry args={[0.04, 0.04, 0.3, 8]} />
+          <meshStandardMaterial color="#b9bdc2" metalness={0.8} roughness={0.25} />
+        </mesh>
+        <mesh position={[0.35, 0.32, 0]} rotation={[0, 0, -0.5]}>
+          <cylinderGeometry args={[0.035, 0.035, 0.3, 6]} />
+          <meshStandardMaterial color="#b9bdc2" metalness={0.8} roughness={0.25} />
+        </mesh>
+      </group>
+      {/* fridge — 36" wide, 71" tall, freezer-over, on the east wall */}
+      <group>
+        <mesh position={[720.55, 2.7, 331.5]} castShadow>
+          <boxGeometry args={[2.4, 5.4, 2.4]} />
+          <meshStandardMaterial color="#b9bdc2" roughness={0.35} metalness={0.5} />
+        </mesh>
+        {/* door split (freezer top third) + gasket lines */}
+        <mesh position={[719.34, 3.62, 331.5]}>
+          <boxGeometry args={[0.03, 0.06, 2.3]} />
+          <meshStandardMaterial color="#63686e" />
+        </mesh>
+        <mesh position={[719.34, 2.7, 330.38]}>
+          <boxGeometry args={[0.03, 5.3, 0.05]} />
+          <meshStandardMaterial color="#63686e" />
+        </mesh>
+        {/* handles: freezer + fridge */}
+        <mesh position={[719.25, 4.15, 330.75]}>
+          <boxGeometry args={[0.08, 0.75, 0.09]} />
+          <meshStandardMaterial color="#7a8086" metalness={0.6} roughness={0.3} />
+        </mesh>
+        <mesh position={[719.25, 2.45, 330.75]}>
+          <boxGeometry args={[0.08, 1.6, 0.09]} />
+          <meshStandardMaterial color="#7a8086" metalness={0.6} roughness={0.3} />
+        </mesh>
+        {/* vent grille at the toe */}
+        <mesh position={[719.36, 0.25, 331.5]}>
+          <boxGeometry args={[0.03, 0.3, 2.1]} />
+          <meshStandardMaterial color="#4a4e54" roughness={0.8} />
+        </mesh>
+      </group>
+      {/* kids' drawing, letter-paper sized, held by two magnets */}
+      <mesh position={[719.31, 3.4, 331.9]} rotation={[0, -Math.PI / 2, 0.04]}>
+        <planeGeometry args={[0.65, 0.85]} />
+        <meshStandardMaterial color="#ece5d8" roughness={0.9} />
       </mesh>
-      <mesh position={[719.32, 3.0, 330.9]}>
-        <boxGeometry args={[0.06, 1.8, 0.09]} />
-        <meshStandardMaterial color="#7a8086" metalness={0.6} />
+      <mesh position={[719.3, 3.42, 331.9]} rotation={[0, -Math.PI / 2, 0.04]}>
+        <planeGeometry args={[0.55, 0.72]} />
+        <meshStandardMaterial map={useTexture("/framer/cms/blog/do-i-still-care-about-this__image.jpeg")} roughness={0.85} />
       </mesh>
-      {/* kids' drawings on the fridge face */}
-      <Framed src="/framer/cms/blog/do-i-still-care-about-this__image.jpeg" x={719.3} y={3.7} z={331.5} w={1.1} h={0.85} ry={-Math.PI / 2} />
-      {/* island (7' x 3'6", 36" tall) + stools */}
-      <mesh position={[712, 1.2, 334.5]} castShadow>
-        <boxGeometry args={[6.6, 2.4, 3.3]} />
+      {[[3.82, 331.72], [3.82, 332.08]].map(([my, mz], i) => (
+        <mesh key={i} position={[719.28, my, mz]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.05, 0.05, 0.03, 8]} />
+          <meshStandardMaterial color={i ? "#a83232" : "#3264a8"} roughness={0.5} />
+        </mesh>
+      ))}
+      {/* island (7' x 3', 36" tall) + stools */}
+      <mesh position={[712, 1.2, 333.8]} castShadow>
+        <boxGeometry args={[6.6, 2.4, 2.7]} />
         <meshStandardMaterial color="#4c443a" roughness={0.6} />
       </mesh>
-      <mesh position={[712, 2.48, 334.5]}>
-        <boxGeometry args={[6.9, 0.15, 3.6]} />
+      <mesh position={[712, 2.48, 333.8]}>
+        <boxGeometry args={[6.9, 0.15, 3.0]} />
         <meshStandardMaterial color="#d8d2c4" roughness={0.25} />
       </mesh>
-      {[333.6, 335.4].map((sz) => (
+      {/* island toe kick */}
+      <mesh position={[712, 0.2, 333.8]}>
+        <boxGeometry args={[6.2, 0.4, 2.3]} />
+        <meshStandardMaterial color="#2c2620" roughness={0.9} />
+      </mesh>
+      {[332.9, 334.7].map((sz) => (
         <group key={sz} position={[716.4, 0, sz]}>
           <mesh position={[0, 0.98, 0]}>
             <cylinderGeometry args={[0.1, 0.1, 1.95, 8]} />
@@ -574,11 +661,11 @@ function Kitchen() {
         </group>
       ))}
       {/* gold mug + cutting board on the island */}
-      <mesh position={[713.2, 2.78, 334.9]}>
+      <mesh position={[713.2, 2.78, 334.2]}>
         <cylinderGeometry args={[0.18, 0.16, 0.42, 10]} />
         <meshStandardMaterial color="#c8a24b" roughness={0.4} />
       </mesh>
-      <mesh position={[711, 2.6, 334.1]} rotation={[0, 0.3, 0]}>
+      <mesh position={[711, 2.6, 333.5]} rotation={[0, 0.3, 0]}>
         <boxGeometry args={[1.5, 0.08, 1.0]} />
         <meshStandardMaterial color="#8f6c58" roughness={0.8} />
       </mesh>
@@ -598,8 +685,8 @@ function Kitchen() {
         </mesh>
       </group>
       {/* island pendants — one carries the room light */}
-      <HangingLamp x={710.8} z={334.5} ceiling={HOUSE.wallH} scale={1.15} intensity={16} />
-      <HangingLamp x={713.2} z={334.5} ceiling={HOUSE.wallH} scale={1.15} lit={false} />
+      <HangingLamp x={710.8} z={333.8} ceiling={HOUSE.wallH} scale={1.15} intensity={16} />
+      <HangingLamp x={713.2} z={333.8} ceiling={HOUSE.wallH} scale={1.15} lit={false} />
     </group>
   );
 }
@@ -642,14 +729,14 @@ export function House() {
       ))}
 
       {/* opening trim — headers + jambs make every passage read as built */}
-      <OpeningTrim cx={695.4} cz={339} w={2.85} along="x" /> {/* office door */}
-      <OpeningTrim cx={704} cz={347} w={6} along="z" /> {/* dining ↔ living arch */}
-      <OpeningTrim cx={712.5} cz={339} w={5} along="x" /> {/* kitchen ↔ living arch */}
-      <OpeningTrim cx={713.4} cz={356} w={2.85} along="x" /> {/* front door */}
+      <OpeningTrim cx={695.42} cz={339} w={3.15} along="x" /> {/* office door */}
+      <OpeningTrim cx={704} cz={347} w={7} along="z" /> {/* dining ↔ living arch */}
+      <OpeningTrim cx={712.5} cz={339} w={6} along="x" /> {/* kitchen ↔ living arch */}
+      <OpeningTrim cx={713.42} cz={356} w={3.15} along="x" /> {/* front door */}
 
       {/* frosted windows — the city is a sound, not a view */}
       <Frosted x={695} z={HOUSE.z1 + 0.28} w={4.2} axis="x" /> {/* office, behind the monitor */}
-      <Frosted x={HOUSE.x1 + 0.28} z={335} w={4.5} axis="z" />
+      <Frosted x={HOUSE.x1 + 0.28} z={334.5} w={3.3} axis="z" />
       <Frosted x={HOUSE.x1 + 0.28} z={343.5} w={4.2} axis="z" bright={0.8} />
       <Frosted x={717.5} z={HOUSE.z1 + 0.28} w={4.2} axis="x" bright={0.9} /> {/* kitchen, over the sink */}
       <Frosted x={HOUSE.x2 - 0.28} z={353} w={3.6} axis="z" bright={1.1} /> {/* living */}
@@ -701,23 +788,49 @@ export function House() {
         </mesh>
         {/* desk lamp — a real one */}
         <Model slug="desk_lamp_arm_01" position={[697.4, 2.32, 327.4]} rotation={[0, -0.7, 0]} scale={1.0} />
-        {/* task chair */}
-        <mesh position={[695, 1.45, 330.4]}>
-          <boxGeometry args={[1.5, 0.14, 1.5]} />
-          <meshStandardMaterial color="#1c1f26" roughness={0.7} />
-        </mesh>
-        <mesh position={[695, 2.55, 331.1]}>
-          <boxGeometry args={[1.5, 2.0, 0.16]} />
-          <meshStandardMaterial color="#1c1f26" roughness={0.7} />
-        </mesh>
-        <mesh position={[695, 0.72, 330.4]}>
-          <cylinderGeometry args={[0.09, 0.09, 1.45, 6]} />
-          <meshStandardMaterial color="#0e1014" />
-        </mesh>
-        <mesh position={[695, 0.06, 330.4]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.75, 10]} />
-          <meshStandardMaterial color="#0e1014" />
-        </mesh>
+        {/* task chair: seat cushion, tilted back, arms, gas lift, 5-star base */}
+        <group position={[695, 0, 330.5]}>
+          <mesh position={[0, 1.42, 0]} castShadow>
+            <boxGeometry args={[1.45, 0.28, 1.4]} />
+            <meshStandardMaterial color="#23262e" roughness={0.85} />
+          </mesh>
+          <mesh position={[0, 2.55, 0.72]} rotation={[-0.12, 0, 0]} castShadow>
+            <boxGeometry args={[1.4, 2.1, 0.24]} />
+            <meshStandardMaterial color="#23262e" roughness={0.85} />
+          </mesh>
+          <mesh position={[0, 3.68, 0.86]} rotation={[-0.16, 0, 0]}>
+            <boxGeometry args={[1.1, 0.5, 0.22]} />
+            <meshStandardMaterial color="#1a1d24" roughness={0.85} />
+          </mesh>
+          {[-0.78, 0.78].map((ax) => (
+            <group key={ax}>
+              <mesh position={[ax, 1.95, 0.1]}>
+                <boxGeometry args={[0.1, 0.75, 0.1]} />
+                <meshStandardMaterial color="#0e1014" />
+              </mesh>
+              <mesh position={[ax, 2.35, 0.02]}>
+                <boxGeometry args={[0.14, 0.08, 0.85]} />
+                <meshStandardMaterial color="#1a1d24" roughness={0.7} />
+              </mesh>
+            </group>
+          ))}
+          <mesh position={[0, 0.85, 0]}>
+            <cylinderGeometry args={[0.07, 0.09, 1.0, 8]} />
+            <meshStandardMaterial color="#63686e" metalness={0.7} roughness={0.3} />
+          </mesh>
+          {[0, 1.257, 2.513, 3.77, 5.027].map((ang) => (
+            <group key={ang} rotation={[0, ang, 0]}>
+              <mesh position={[0, 0.18, 0.42]} rotation={[0.12, 0, 0]}>
+                <boxGeometry args={[0.12, 0.09, 0.85]} />
+                <meshStandardMaterial color="#0e1014" />
+              </mesh>
+              <mesh position={[0, 0.09, 0.82]} rotation={[Math.PI / 2, 0, 0]}>
+                <cylinderGeometry args={[0.09, 0.09, 0.07, 8]} />
+                <meshStandardMaterial color="#1a1d24" />
+              </mesh>
+            </group>
+          ))}
+        </group>
         {/* bin */}
         <mesh position={[698.6, 0.66, 327.8]}>
           <cylinderGeometry args={[0.4, 0.33, 1.3, 10]} />
@@ -729,17 +842,29 @@ export function House() {
       <Framed src="/archive/web/ILQgtzAfoB1DMrSNqEKzs19bQ.jpg" x={699.7} y={4.9} z={326.3} w={3.4} h={2.3} />
       <Framed src="/archive/web/drPyB0qigdiXyCjHkK3HdKQsuE.jpg" x={703.72} y={4.7} z={331} w={2.8} h={2.8} ry={-Math.PI / 2} />
       <Framed src="/archive/web/dPjaqyIJCrIhH7ybw1Id4MdMDzs.jpg" x={703.72} y={4.7} z={336} w={3.4} h={1.8} ry={-Math.PI / 2} />
-      {/* poster tubes in the corner */}
-      <group position={[687.6, 0, 337.6]}>
-        {[0, 0.5, 0.95].map((dx, i) => (
-          <mesh key={i} position={[dx, 1.35, 0]} rotation={[0, 0, 0.14 - i * 0.09]}>
-            <cylinderGeometry args={[0.16, 0.16, 2.7, 8]} />
-            <meshStandardMaterial color={["#8a7a5a", "#6a5a4a", "#7a6a55"][i]} roughness={0.9} />
-          </mesh>
+      {/* poster tubes leaning into the corner, caps on */}
+      <group position={[687.3, 0, 337.9]}>
+        {[[0, 0.13, -0.04], [0.5, 0.09, -0.09], [0.98, 0.17, 0.03]].map(([dx, tilt, lean], i) => (
+          <group key={i} position={[dx, 0, 0]} rotation={[Number(lean), 0, Number(tilt)]}>
+            <mesh position={[0, 1.4, 0]}>
+              <cylinderGeometry args={[0.19, 0.19, 2.8, 10]} />
+              <meshStandardMaterial color={["#8a7a5a", "#6a5a4a", "#7a6a55"][i]} roughness={0.9} />
+            </mesh>
+            <mesh position={[0, 2.82, 0]}>
+              <cylinderGeometry args={[0.21, 0.21, 0.12, 10]} />
+              <meshStandardMaterial color="#2c2620" roughness={0.7} />
+            </mesh>
+            {i === 1 && (
+              <mesh position={[0, 3.05, 0]}>
+                <cylinderGeometry args={[0.14, 0.15, 0.5, 8]} />
+                <meshStandardMaterial color="#ece5d8" roughness={0.95} />
+              </mesh>
+            )}
+          </group>
         ))}
       </group>
       {/* bookshelf on the west wall — flag + Nikon */}
-      <Shelf x={686.85} z={331} ry={Math.PI / 2} />
+      <Shelf x={686.85} z={329.5} ry={Math.PI / 2} />
 
       {/* -------- DINING -------- */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[695, 0.09, 347.5]}>
@@ -754,7 +879,6 @@ export function House() {
       <Model slug="dining_chair_02" position={[696.4, 0.08, 349.8]} rotation={[0, Math.PI - 0.12, 0]} scale={2.9} />
       <HangingLamp x={695} z={347.5} ceiling={HOUSE.wallH} scale={1.3} intensity={22} />
       <Sideboard x={686.95} z={351} />
-      <Model slug="potted_plant_02" position={[686.95, 2.62, 349.6]} scale={1.2} shadow={false} />
       <Framed src="/archive/web/lUfbKLTE61YByqT1TJBRTeMjA.jpg" x={686.3} y={5.1} z={351} w={3.2} h={2.1} ry={Math.PI / 2} />
 
       {/* -------- LIVING -------- */}
@@ -801,11 +925,8 @@ export function House() {
         <boxGeometry args={[1.0, 0.13, 1.35]} />
         <meshStandardMaterial color="#5a3a34" roughness={0.8} />
       </mesh>
-      {/* armchair + side table complete the corner */}
-      <Model slug="ArmChair_01" position={[714.6, 0.08, 342.3]} rotation={[0, 2.4, 0]} scale={3.2} />
-      <Model slug="Ottoman_01" position={[716.9, 0.08, 343.4]} rotation={[0, 0.8, 0]} scale={2.8} />
-      <Model slug="side_table_01" position={[712.7, 0.08, 351.9]} scale={2.6} />
-      <Model slug="potted_plant_02" position={[712.7, 1.5, 351.9]} scale={1.1} shadow={false} />
+      {/* one armchair, angled into the conversation corner */}
+      <Model slug="ArmChair_01" position={[717.2, 0.08, 342.6]} rotation={[0, 2.75, 0]} scale={3.2} />
       {/* the photo wall — on the arch wall, facing the living room */}
       <Framed src="/archive/web/RAOF0jiw87qsIU7GR1OeKHsHEs.jpg" x={704.28} y={4.8} z={341.8} w={3.3} h={2.25} ry={Math.PI / 2} />
       <Framed src="/framer/cms/downloads/xenomorph-typeface__image.png" x={704.28} y={4.6} z={352.6} w={2.4} h={2.1} ry={Math.PI / 2} />
@@ -817,7 +938,7 @@ export function House() {
         <planeGeometry args={[3.2, 2.2]} />
         <meshStandardMaterial color="#3e332a" roughness={1} />
       </mesh>
-      <CoatRack x={710.6} z={354.4} />
+      <CoatRack x={709.4} z={355.0} />
 
       {/* -------- KITCHEN -------- */}
       <Kitchen />
