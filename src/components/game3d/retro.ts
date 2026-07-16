@@ -251,6 +251,91 @@ export function retroRug(rx = 1, ry = 1, a = "#7a5a4a", b = "#5a4034") {
   );
 }
 
+/** building facade — wall bands, window grid with sills, lit variation.
+ *  Instance color tints the wall; windows stay dark/lit. */
+export function retroFacade(rx = 1, ry = 1) {
+  return cached("facade", rx, ry, () =>
+    make(256, (g, s) => {
+      const r = prng(97);
+      // wall base — light so instance tint owns the hue
+      g.fillStyle = "#b8b2a6";
+      g.fillRect(0, 0, s, s);
+      // panel seams
+      g.fillStyle = "rgba(60,54,46,0.35)";
+      for (let y = 0; y < s; y += 32) g.fillRect(0, y, s, 2);
+      // window grid: 6 columns x 8 floors
+      const cw = s / 6;
+      const ch = s / 8;
+      for (let fy = 0; fy < 8; fy++) {
+        for (let fx = 0; fx < 6; fx++) {
+          const wx = fx * cw + cw * 0.22;
+          const wy = fy * ch + ch * 0.2;
+          const ww = cw * 0.56;
+          const wh = ch * 0.52;
+          const lit = r() < 0.34;
+          g.fillStyle = lit ? (r() < 0.3 ? "#ffd9a0" : "#a8c0da") : "#232830";
+          g.fillRect(wx, wy, ww, wh);
+          // sill
+          g.fillStyle = "rgba(40,36,30,0.6)";
+          g.fillRect(wx - 2, wy + wh, ww + 4, 3);
+        }
+      }
+      // grime streaks
+      for (let i = 0; i < 30; i++) {
+        g.fillStyle = `rgba(50,46,40,${0.04 + r() * 0.08})`;
+        g.fillRect(r() * s, 0, 2 + r() * 5, s);
+      }
+    })
+  );
+}
+
+/** road asphalt — dashed centerline, wheel-path wear, gutter edges */
+export function retroAsphalt(rx = 1, ry = 1) {
+  return cached("asphalt", rx, ry, () =>
+    make(256, (g, s) => {
+      const r = prng(113);
+      g.fillStyle = "#2e3136";
+      g.fillRect(0, 0, s, s);
+      // speckle
+      for (let i = 0; i < 900; i++) {
+        const v = 38 + r() * 34;
+        g.fillStyle = `rgba(${v},${v + 2},${v + 6},0.5)`;
+        g.fillRect(r() * s, r() * s, 1 + r() * 2, 1);
+      }
+      // wheel-path wear (two lighter bands per side)
+      g.fillStyle = "rgba(90,92,96,0.14)";
+      for (const bx of [0.16, 0.36, 0.62, 0.82]) g.fillRect(bx * s - 8, 0, 16, s);
+      // dashed centerline
+      g.fillStyle = "#c9b98a";
+      for (let y = 0; y < s; y += 64) g.fillRect(s / 2 - 3, y + 10, 6, 34);
+      // gutters
+      g.fillStyle = "rgba(20,22,26,0.8)";
+      g.fillRect(0, 0, 5, s);
+      g.fillRect(s - 5, 0, 5, s);
+    })
+  );
+}
+
+/** sidewalk — scored concrete squares */
+export function retroSidewalk(rx = 1, ry = 1) {
+  return cached("sidewalk", rx, ry, () =>
+    make(128, (g, s) => {
+      const r = prng(127);
+      g.fillStyle = "#8a857b";
+      g.fillRect(0, 0, s, s);
+      for (let i = 0; i < 420; i++) {
+        const v = 105 + r() * 55;
+        g.fillStyle = `rgba(${v},${v - 4},${v - 12},0.4)`;
+        g.fillRect(r() * s, r() * s, 1 + r() * 2, 1);
+      }
+      // score lines
+      g.fillStyle = "rgba(55,52,46,0.7)";
+      g.fillRect(0, 0, s, 3);
+      g.fillRect(0, s / 2, s, 2);
+    })
+  );
+}
+
 /* --------------------------------------- retrofit imported GLTF models */
 
 const doneScenes = new WeakSet<THREE.Object3D>();

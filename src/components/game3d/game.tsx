@@ -33,6 +33,7 @@ import {
   DESK_SPOT,
 } from "./house";
 import { startAmbience, setAmbienceInside, sfxFootstep, sfxJump, sfxLand } from "./ambience";
+import { retroFacade, retroAsphalt, retroSidewalk, retroConcrete } from "./retro";
 import {
   BUILDINGS,
   DISTRICTS,
@@ -102,7 +103,7 @@ function nearestRelic(x: number, z: number) {
   }
   return best;
 }
-const CAR_START = { x: 717.5, z: 363 }; // the driveway, past the porch
+const CAR_START = { x: 719, z: 363.5 }; // the driveway, past the porch
 const EYE = 5.2; // 6'1" player, 3 units = 1 m
 
 /** first-person look state — written by pointer-lock mouse, read by Sim */
@@ -160,9 +161,9 @@ const CAR_TUNE = {
   engineForce: 2600,
   brakeForce: 6,
   maxSteer: 0.52,
-  suspensionRest: 0.9,
+  suspensionRest: 1.0,
   suspensionStiffness: 34,
-  wheelRadius: 0.78,
+  wheelRadius: 0.95,
   wheelFriction: 2.2,
 };
 
@@ -327,13 +328,14 @@ function Sun() {
 }
 
 function Ground() {
-  const road = useMemo(roadTexture, []);
+  const road = useMemo(() => retroAsphalt(1, 1), []);
+  const lot = useMemo(() => retroConcrete(140, 140), []);
   return (
     <group>
-      {/* земля base */}
+      {/* ground base — worn lot concrete, tinted dark */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
         <planeGeometry args={[1620, 1620]} />
-        <meshStandardMaterial color="#2c3038" roughness={1} />
+        <meshLambertMaterial map={lot} color="#7a7c80" />
       </mesh>
       {/* water frame */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.6, 0]}>
@@ -347,7 +349,7 @@ function Ground() {
         return (
           <mesh key={"rx" + x} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.02, 0]}>
             <planeGeometry args={[ROAD, 1600]} />
-            <meshStandardMaterial map={t} roughness={0.95} />
+            <meshLambertMaterial map={t} />
           </mesh>
         );
       })}
@@ -357,7 +359,7 @@ function Ground() {
         return (
           <mesh key={"rz" + z} rotation={[-Math.PI / 2, 0, Math.PI / 2]} position={[0, 0.03, z]}>
             <planeGeometry args={[ROAD, 1600]} />
-            <meshStandardMaterial map={t} roughness={0.95} />
+            <meshLambertMaterial map={t} />
           </mesh>
         );
       })}
@@ -371,7 +373,7 @@ function Ground() {
 }
 
 function Buildings() {
-  const winTex = useMemo(windowTexture, []);
+  const winTex = useMemo(() => retroFacade(1, 1), []);
   const { normal, neon } = useMemo(() => {
     const normal: typeof BUILDINGS = [];
     const neon: typeof BUILDINGS = [];
@@ -406,30 +408,32 @@ function Buildings() {
 
   return (
     <group>
-      <instancedMesh ref={normalRef} args={[undefined, undefined, normal.length]}>
+      <instancedMesh ref={normalRef} args={[undefined, undefined, normal.length]} frustumCulled={false}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial map={winTex} roughness={0.85} />
+        <meshLambertMaterial map={winTex} />
       </instancedMesh>
-      <instancedMesh ref={neonRef} args={[undefined, undefined, neon.length]}>
+      <instancedMesh ref={neonRef} args={[undefined, undefined, neon.length]} frustumCulled={false}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial map={winTex} roughness={0.6} emissive="#ffffff" emissiveIntensity={0.12} />
+        <meshLambertMaterial map={winTex} emissive="#ffffff" emissiveIntensity={0.12} />
       </instancedMesh>
     </group>
   );
 }
 
 function Sidewalks() {
+  const walkX = useMemo(() => retroSidewalk(1, 260), []);
+  const walkZ = useMemo(() => retroSidewalk(260, 1), []);
   return (
     <group>
       {ROADS_X.map((x) => (
         <group key={"sx" + x}>
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[x - ROAD / 2 - 3, 0.05, 0]}>
             <planeGeometry args={[6, 1600]} />
-            <meshStandardMaterial color="#3a3f47" roughness={1} />
+            <meshLambertMaterial map={walkX} />
           </mesh>
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[x + ROAD / 2 + 3, 0.05, 0]}>
             <planeGeometry args={[6, 1600]} />
-            <meshStandardMaterial color="#3a3f47" roughness={1} />
+            <meshLambertMaterial map={walkX} />
           </mesh>
         </group>
       ))}
@@ -437,11 +441,11 @@ function Sidewalks() {
         <group key={"sz" + z}>
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.055, z - ROAD / 2 - 3]}>
             <planeGeometry args={[1600, 6]} />
-            <meshStandardMaterial color="#3a3f47" roughness={1} />
+            <meshLambertMaterial map={walkZ} />
           </mesh>
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.055, z + ROAD / 2 + 3]}>
             <planeGeometry args={[1600, 6]} />
-            <meshStandardMaterial color="#3a3f47" roughness={1} />
+            <meshLambertMaterial map={walkZ} />
           </mesh>
         </group>
       ))}
@@ -472,7 +476,7 @@ function Skyline() {
     ref.current.instanceMatrix.needsUpdate = true;
   }, [spots]);
   return (
-    <instancedMesh ref={ref} args={[undefined, undefined, spots.length]}>
+    <instancedMesh ref={ref} args={[undefined, undefined, spots.length]} frustumCulled={false}>
       <boxGeometry args={[1, 1, 1]} />
       <meshBasicMaterial color="#231b33" />
     </instancedMesh>
@@ -698,7 +702,7 @@ function ParkedCars() {
     const c = new THREE.Color();
     spots.forEach((s, i) => {
       q.setFromEuler(new THREE.Euler(0, s.rot, 0));
-      m.compose(new THREE.Vector3(s.x, 1, s.z), q, new THREE.Vector3(4.4, 2, 9));
+      m.compose(new THREE.Vector3(s.x, 1.9, s.z), q, new THREE.Vector3(5.4, 3.8, 13.2));
       ref.current.setMatrixAt(i, m);
       ref.current.setColorAt(i, c.set(s.hue));
     });
@@ -706,9 +710,9 @@ function ParkedCars() {
     if (ref.current.instanceColor) ref.current.instanceColor.needsUpdate = true;
   }, [spots]);
   return (
-    <instancedMesh ref={ref} args={[undefined, undefined, spots.length]}>
+    <instancedMesh ref={ref} args={[undefined, undefined, spots.length]} frustumCulled={false}>
       <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial roughness={0.35} metalness={0.5} />
+      <meshLambertMaterial />
     </instancedMesh>
   );
 }
@@ -808,24 +812,24 @@ function Traffic() {
             if (el) refs.current[i] = el;
           }}
         >
-          <mesh position={[0, 1.0, 0]}>
-            <boxGeometry args={[4.2, 1.1, 8.8]} />
-            <meshStandardMaterial color={c.hue} roughness={0.35} metalness={0.55} />
+          <mesh position={[0, 1.3, 0]}>
+            <boxGeometry args={[5.2, 1.5, 12.6]} />
+            <meshLambertMaterial color={c.hue} />
           </mesh>
-          <mesh position={[0, 1.75, 0.2]}>
-            <boxGeometry args={[3.7, 0.9, 4.0]} />
-            <meshStandardMaterial color="#12151c" roughness={0.1} metalness={0.8} />
+          <mesh position={[0, 2.7, 0.25]}>
+            <boxGeometry args={[4.5, 1.3, 5.4]} />
+            <meshLambertMaterial color="#151920" />
           </mesh>
-          <mesh position={[-1.4, 1.0, -4.5]}>
-            <sphereGeometry args={[0.22, 6, 6]} />
+          <mesh position={[-1.8, 1.4, -6.35]}>
+            <sphereGeometry args={[0.28, 6, 6]} />
             <meshBasicMaterial color="#ffe9c0" toneMapped={false} />
           </mesh>
-          <mesh position={[1.4, 1.0, -4.5]}>
-            <sphereGeometry args={[0.22, 6, 6]} />
+          <mesh position={[1.8, 1.4, -6.35]}>
+            <sphereGeometry args={[0.28, 6, 6]} />
             <meshBasicMaterial color="#ffe9c0" toneMapped={false} />
           </mesh>
-          <mesh position={[0, 1.0, 4.5]}>
-            <boxGeometry args={[3.6, 0.24, 0.1]} />
+          <mesh position={[0, 1.4, 6.35]}>
+            <boxGeometry args={[4.4, 0.28, 0.1]} />
             <meshBasicMaterial color="#ff4444" toneMapped={false} />
           </mesh>
         </group>
@@ -1222,10 +1226,10 @@ function CarBody() {
       const v = world.createVehicleController(rb);
       const h = -0.6; // wheel mount height on chassis
       const pts: [number, number, boolean][] = [
-        [-1.95, -3.3, true], // front left (steered)
-        [1.95, -3.3, true], // front right
-        [-1.95, 3.3, false],
-        [1.95, 3.3, false],
+        [-2.4, -4.05, true], // front left (steered)
+        [2.4, -4.05, true], // front right
+        [-2.4, 4.05, false],
+        [2.4, 4.05, false],
       ];
       pts.forEach(([wx, wz]) => {
         v.addWheel(
@@ -1294,7 +1298,7 @@ function CarBody() {
       angularDamping={2}
       linearDamping={0.05}
     >
-      <CuboidCollider args={[2.3, 0.7, 4.9]} position={[0, 0.2, 0]} mass={26} />
+      <CuboidCollider args={[2.7, 0.75, 6.6]} position={[0, 0.2, 0]} mass={26} />
     </RigidBody>
   );
 }
@@ -1309,63 +1313,63 @@ function PlayerCar() {
     if (!grp.current) return;
     grp.current.position.set(G.cx, 0, G.cz);
     grp.current.rotation.y = G.cHeading;
-    spin.current += (G.cSpeed / 0.75) * dt;
+    spin.current += (G.cSpeed / 0.95) * dt;
     for (const w of wheels.current) if (w) w.rotation.x = spin.current;
   });
   return (
     <group ref={grp}>
-      {/* body — low muscle-car mass */}
-      <mesh position={[0, 1.05, 0]} castShadow>
-        <boxGeometry args={[4.5, 1.15, 9.6]} />
-        <meshStandardMaterial color="#c9384a" roughness={0.28} metalness={0.65} />
+      {/* body — a real sedan footprint, muscle stance */}
+      <mesh position={[0, 1.35, 0]} castShadow>
+        <boxGeometry args={[5.4, 1.5, 13.2]} />
+        <meshLambertMaterial color="#a83a3a" />
       </mesh>
-      {/* hood + trunk taper */}
-      <mesh position={[0, 1.62, -3.35]}>
-        <boxGeometry args={[4.3, 0.32, 2.6]} />
-        <meshStandardMaterial color="#c9384a" roughness={0.28} metalness={0.65} />
+      {/* hood + trunk */}
+      <mesh position={[0, 2.2, -4.4]}>
+        <boxGeometry args={[5.2, 0.35, 3.8]} />
+        <meshLambertMaterial color="#a83a3a" />
       </mesh>
-      <mesh position={[0, 1.62, 3.5]}>
-        <boxGeometry args={[4.3, 0.32, 2.2]} />
-        <meshStandardMaterial color="#c9384a" roughness={0.28} metalness={0.65} />
+      <mesh position={[0, 2.2, 4.7]}>
+        <boxGeometry args={[5.2, 0.35, 3.2]} />
+        <meshLambertMaterial color="#a83a3a" />
       </mesh>
       {/* cabin with dark glass */}
-      <mesh position={[0, 2.16, 0.1]}>
-        <boxGeometry args={[3.9, 1.0, 4.2]} />
-        <meshStandardMaterial color="#11151c" roughness={0.08} metalness={0.85} />
+      <mesh position={[0, 2.95, 0.2]}>
+        <boxGeometry args={[4.7, 1.35, 5.6]} />
+        <meshLambertMaterial color="#151920" />
       </mesh>
       {/* rocker stripe */}
-      <mesh position={[0, 0.62, 0]}>
-        <boxGeometry args={[4.62, 0.18, 9.0]} />
-        <meshStandardMaterial color="#f1e6cf" roughness={0.5} />
+      <mesh position={[0, 0.75, 0]}>
+        <boxGeometry args={[5.5, 0.22, 12.4]} />
+        <meshLambertMaterial color="#e8dcc4" />
       </mesh>
       {[
-        [-1.95, -3.2],
-        [1.95, -3.2],
-        [-1.95, 3.2],
-        [1.95, 3.2],
+        [-2.4, -4.05],
+        [2.4, -4.05],
+        [-2.4, 4.05],
+        [2.4, 4.05],
       ].map(([wx, wz], i) => (
         <mesh
           key={i}
           ref={(el: THREE.Mesh | null) => {
             if (el) wheels.current[i] = el;
           }}
-          position={[wx, 0.78, wz]}
+          position={[wx, 0.95, wz]}
           rotation={[0, 0, Math.PI / 2]}
         >
-          <cylinderGeometry args={[0.78, 0.78, 0.62, 12]} />
-          <meshStandardMaterial color="#0c0e12" roughness={0.9} />
+          <cylinderGeometry args={[0.95, 0.95, 0.7, 12]} />
+          <meshLambertMaterial color="#0c0e12" />
         </mesh>
       ))}
       {/* headlights + taillights */}
-      {[-1.5, 1.5].map((x) => (
-        <mesh key={"h" + x} position={[x, 1.15, -4.85]}>
-          <sphereGeometry args={[0.26, 6, 6]} />
+      {[-1.9, 1.9].map((x) => (
+        <mesh key={"h" + x} position={[x, 1.55, -6.65]}>
+          <sphereGeometry args={[0.3, 6, 6]} />
           <meshBasicMaterial color="#ffe9c0" toneMapped={false} />
         </mesh>
       ))}
-      {[-1.5, 1.5].map((x) => (
-        <mesh key={"t" + x} position={[x, 1.15, 4.85]}>
-          <boxGeometry args={[0.7, 0.22, 0.1]} />
+      {[-1.9, 1.9].map((x) => (
+        <mesh key={"t" + x} position={[x, 1.55, 6.65]}>
+          <boxGeometry args={[0.85, 0.26, 0.1]} />
           <meshBasicMaterial color="#ff4444" toneMapped={false} />
         </mesh>
       ))}
@@ -1979,7 +1983,8 @@ export function CityGame() {
           <Sky />
           <Sun />
           <Environment files="/hdri/sunset.hdr" background={false} />
-          <hemisphereLight args={["#ff9a6a", "#2a1f3d", 0.5]} />
+          <hemisphereLight args={["#ffb98a", "#3a2f4d", 1.15]} />
+          <ambientLight color="#ffd9b0" intensity={0.22} />
           <ShadowSun />
           <fog attach="fog" args={["#5a3a55", 220, 1500]} />
           <Physics gravity={[0, -32, 0]}>
