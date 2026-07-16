@@ -22,7 +22,16 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
-import { Model, HangingLamp, usePBR } from "./models";
+import { Model, HangingLamp } from "./models";
+import {
+  retroPlaster,
+  retroFloor,
+  retroWood,
+  retroDoor,
+  retroCounter,
+  retroConcrete,
+  retroRug,
+} from "./retro";
 
 /* ------------------------------------------------------------- geometry */
 
@@ -304,7 +313,8 @@ function DoorMesh({ d, front = false }: { d: Door; front?: boolean }) {
     // -y rotation swings the panel from +x toward +z (south / outward)
     if (grp.current) grp.current.rotation.y = -d.open * Math.PI * 0.55;
   });
-  const wood = front ? "#5a3a24" : "#4a3626";
+  const wood = front ? "#c99a6e" : "#a98a68"; // tint over the door grain map
+  const doorMap = retroDoor(1, 1);
   const leafH = DOOR_H - 0.1;
   return (
     <group position={[d.hx, 0, d.hz]}>
@@ -316,7 +326,7 @@ function DoorMesh({ d, front = false }: { d: Door; front?: boolean }) {
       <group ref={grp}>
         <mesh position={[d.len / 2, leafH / 2, 0]} castShadow>
           <boxGeometry args={[d.len, leafH, 0.15]} />
-          <meshStandardMaterial color={wood} roughness={0.55} />
+          <meshLambertMaterial map={doorMap} color={wood} />
         </mesh>
         {/* panel insets, both faces */}
         {([0.09, -0.09] as const).map((dz) => (
@@ -372,7 +382,7 @@ function Shelf({ x, z, ry = 0 }: { x: number; z: number; ry?: number }) {
     <group position={[x, 0, z]} rotation={[0, ry, 0]}>
       <mesh position={[0, 3, 0]} castShadow>
         <boxGeometry args={[5.4, 6, 1.05]} />
-        <meshStandardMaterial color="#3a2c1f" roughness={0.7} />
+        <meshLambertMaterial map={retroWood(1.8, 2)} color="#7a6248" />
       </mesh>
       {[1.2, 2.9, 4.6].map((y) => (
         <mesh key={y} position={[0, y, 0.1]}>
@@ -411,7 +421,7 @@ function Sideboard({ x, z }: { x: number; z: number }) {
     <group position={[x, 0, z]}>
       <mesh position={[0, 1.25, 0]} castShadow>
         <boxGeometry args={[1.3, 2.5, 4.5]} />
-        <meshStandardMaterial color="#3a2c1f" roughness={0.7} />
+        <meshLambertMaterial map={retroWood(1.5, 0.9)} color="#7a6248" />
       </mesh>
       <mesh position={[0, 2.56, 0]}>
         <boxGeometry args={[1.45, 0.12, 4.65]} />
@@ -502,11 +512,11 @@ function Kitchen() {
         <group key={cx}>
           <mesh position={[cx, 1.2, 327.48]} castShadow>
             <boxGeometry args={[w, 2.4, 1.95]} />
-            <meshStandardMaterial color="#4c443a" roughness={0.6} />
+            <meshLambertMaterial map={retroWood(2.4, 1)} color="#8a7a64" />
           </mesh>
           <mesh position={[cx, 2.48, 327.53]}>
             <boxGeometry args={[w, 0.15, 2.1]} />
-            <meshStandardMaterial color="#d8d2c4" roughness={0.25} />
+            <meshLambertMaterial map={retroCounter(2.4, 0.8)} />
           </mesh>
         </group>
       ))}
@@ -535,7 +545,7 @@ function Kitchen() {
         <group key={"uc" + cx}>
           <mesh position={[cx, 6.5, 326.9]} castShadow>
             <boxGeometry args={[w, 2.4, 1.2]} />
-            <meshStandardMaterial color="#4c443a" roughness={0.6} />
+            <meshLambertMaterial map={retroWood(1.6, 0.9)} color="#8a7a64" />
           </mesh>
           <mesh position={[cx, 6.5, 327.52]}>
             <boxGeometry args={[0.04, 2.2, 0.03]} />
@@ -637,11 +647,11 @@ function Kitchen() {
       {/* island (7' x 3', 36" tall) + stools */}
       <mesh position={[712, 1.2, 333.8]} castShadow>
         <boxGeometry args={[6.6, 2.4, 2.7]} />
-        <meshStandardMaterial color="#4c443a" roughness={0.6} />
+        <meshLambertMaterial map={retroWood(2.2, 0.9)} color="#8a7a64" />
       </mesh>
       <mesh position={[712, 2.48, 333.8]}>
         <boxGeometry args={[6.9, 0.15, 3.0]} />
-        <meshStandardMaterial color="#d8d2c4" roughness={0.25} />
+        <meshLambertMaterial map={retroCounter(2.2, 1)} />
       </mesh>
       {/* island toe kick */}
       <mesh position={[712, 0.2, 333.8]}>
@@ -694,15 +704,14 @@ function Kitchen() {
 /* ------------------------------------------------------------ the house */
 
 export function House() {
-  const floorTex = usePBR("diagonal_parquet", 12, 10);
-  const wallTex = usePBR("beige_wall_001", 4, 1.4);
-  const rugLiving = usePBR("fabric_pattern_07", 2.6, 2);
-  const rugDining = usePBR("fabric_pattern_07", 2.2, 1.7);
-  const rugOffice = usePBR("fabric_pattern_07", 2.2, 1.6);
-  const porchTex = usePBR("concrete_floor_01", 1.4, 0.9);
+  const floorTex = useMemo(() => retroFloor(9, 7.5), []);
+  const rugLiving = useMemo(() => retroRug(2.6, 2), []);
+  const rugDining = useMemo(() => retroRug(2.1, 1.6, "#8a6a52", "#a89078"), []);
+  const rugOffice = useMemo(() => retroRug(2.5, 1.75, "#5a5248", "#7a7266"), []);
+  const porchTex = useMemo(() => retroConcrete(1.4, 0.9), []);
   const wallMat = useMemo(
-    () => new THREE.MeshStandardMaterial({ ...wallTex, normalScale: new THREE.Vector2(0.5, 0.5) }),
-    [wallTex]
+    () => new THREE.MeshLambertMaterial({ map: retroPlaster(4, 1.4) }),
+    []
   );
 
   return (
@@ -710,7 +719,7 @@ export function House() {
       {/* floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[(HOUSE.x1 + HOUSE.x2) / 2, 0.06, (HOUSE.z1 + HOUSE.z2) / 2]} receiveShadow>
         <planeGeometry args={[HOUSE.x2 - HOUSE.x1, HOUSE.z2 - HOUSE.z1]} />
-        <meshStandardMaterial {...floorTex} envMapIntensity={0.35} />
+        <meshLambertMaterial map={floorTex} />
       </mesh>
       {/* ceiling */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[(HOUSE.x1 + HOUSE.x2) / 2, HOUSE.wallH - 0.04, (HOUSE.z1 + HOUSE.z2) / 2]}>
@@ -750,13 +759,13 @@ export function House() {
       {/* rug */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[695, 0.1, 332.5]}>
         <planeGeometry args={[10, 7]} />
-        <meshStandardMaterial {...rugOffice} color="#8a8078" />
+        <meshLambertMaterial map={rugOffice} />
       </mesh>
       {/* the desk (1.8 m x 0.8 m, 30" tall; monitor faces the seat) */}
       <group>
         <mesh position={[695, 2.25, 327.9]} castShadow>
           <boxGeometry args={[5.4, 0.12, 2.4]} />
-          <meshStandardMaterial color="#4a3a2c" roughness={0.5} />
+          <meshLambertMaterial map={retroWood(2, 1)} color="#9a8468" />
         </mesh>
         {[[-2.5, -0.9], [2.5, -0.9], [-2.5, 0.9], [2.5, 0.9]].map(([dx, dz], i) => (
           <mesh key={i} position={[695 + dx, 1.1, 327.9 + dz]}>
@@ -869,7 +878,7 @@ export function House() {
       {/* -------- DINING -------- */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[695, 0.09, 347.5]}>
         <planeGeometry args={[8.5, 6.5]} />
-        <meshStandardMaterial {...rugDining} color="#a89486" />
+        <meshLambertMaterial map={rugDining} />
       </mesh>
       {/* table 63" x 35", top 29" */}
       <Model slug="wooden_table_02" position={[695, 0.1, 347.5]} scale={[4.2, 3.1, 3.8]} />
@@ -885,12 +894,12 @@ export function House() {
       {/* rug */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[716, 0.1, 347.5]}>
         <planeGeometry args={[10.5, 8]} />
-        <meshStandardMaterial {...rugLiving} />
+        <meshLambertMaterial map={rugLiving} />
       </mesh>
       {/* TV console (6' x 16") + 65" TV on the east wall */}
       <mesh position={[721.15, 0.75, 347.5]} castShadow>
         <boxGeometry args={[1.2, 1.5, 5.4]} />
-        <meshStandardMaterial color="#3a2c1f" roughness={0.6} />
+        <meshLambertMaterial map={retroWood(1.8, 0.6)} color="#7a6248" />
       </mesh>
       <mesh position={[721.62, 3.7, 347.5]}>
         <boxGeometry args={[0.15, 2.5, 4.35]} />
@@ -951,7 +960,7 @@ export function House() {
       {/* -------- porch -------- */}
       <mesh position={[713.4, 0.17, 357.4]} receiveShadow>
         <boxGeometry args={[4.5, 0.35, 2.6]} />
-        <meshStandardMaterial {...porchTex} />
+        <meshLambertMaterial map={porchTex} />
       </mesh>
       <mesh position={[713.4, 0.06, 359.1]}>
         <boxGeometry args={[3.5, 0.12, 1.1]} />

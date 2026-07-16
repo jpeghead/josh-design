@@ -10,6 +10,7 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 import { Clone, useGLTF, useTexture } from "@react-three/drei";
+import { retrofitModel } from "./retro";
 
 const gltfPath = (slug: string) => `/models/${slug}/${slug}_1k.gltf`;
 
@@ -29,9 +30,10 @@ export function Model({
   shadow?: boolean;
 }) {
   const { scene } = useGLTF(gltfPath(slug));
+  const retro = useMemo(() => retrofitModel(scene), [scene]);
   return (
     <Clone
-      object={scene}
+      object={retro}
       position={position}
       rotation={rotation}
       scale={scale}
