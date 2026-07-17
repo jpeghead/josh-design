@@ -85,7 +85,7 @@ function scatterDistrict(
 ) {
   let placed = 0;
   let guard = 0;
-  while (placed < count && guard++ < count * 30) {
+  while (placed < count && guard++ < count * 45) {
     const w = 22 + rnd() * 26;
     const dep = 22 + rnd() * 26;
     const x = d.x1 + 30 + rnd() * (d.x2 - d.x1 - 60);
@@ -114,9 +114,9 @@ export const LANDMARK_CLEAR: [number, number, number][] = [
   [-560, -560, 50], // childhood home
   [-240, -400, 55], // high school / career school
   [560, -400, 50], // recruiting office downtown
-  [520, 640, 70], // base gate + barracks
+  [520, 575, 70], // base gate + barracks
   [580, 726, 60], // the rifle range
-  [-40, 640, 90], // terminal
+  [-40, 575, 90], // terminal
   [-560, 240, 60], // strip offices
   [-560, 60, 55], // keynote hall
   [704, 341, 45], // the REAL house footprint (x 686-722, z 326-356) + yard
@@ -124,12 +124,12 @@ export const LANDMARK_CLEAR: [number, number, number][] = [
   [640, 320, 55], // boneyard studio
 ];
 
-scatterDistrict(DISTRICTS[0], 60, 10, 20, [0.42, 0.4, 0.36], 0.35); // ohio suburbs
-scatterDistrict(DISTRICTS[1], 70, 40, 150, [0.35, 0.38, 0.45], 0.4); // downtown towers
-scatterDistrict(DISTRICTS[2], 55, 16, 44, [0.5, 0.36, 0.5], 0.5, 0.45); // vice strip
-scatterDistrict(DISTRICTS[3], 60, 12, 26, [0.5, 0.36, 0.3], 0.35); // cincy brick
-scatterDistrict(DISTRICTS[4], 30, 8, 14, [0.36, 0.4, 0.33], 0.25); // base barracks
-scatterDistrict(DISTRICTS[5], 14, 10, 22, [0.42, 0.46, 0.5], 0.3); // airport outbuildings
+scatterDistrict(DISTRICTS[0], 95, 10, 20, [0.42, 0.4, 0.36], 0.35); // ohio suburbs
+scatterDistrict(DISTRICTS[1], 105, 40, 150, [0.35, 0.38, 0.45], 0.4); // downtown towers
+scatterDistrict(DISTRICTS[2], 85, 16, 44, [0.5, 0.36, 0.5], 0.5, 0.45); // vice strip
+scatterDistrict(DISTRICTS[3], 95, 12, 26, [0.5, 0.36, 0.3], 0.35); // cincy brick
+scatterDistrict(DISTRICTS[4], 50, 8, 14, [0.36, 0.4, 0.33], 0.25); // base barracks
+scatterDistrict(DISTRICTS[5], 22, 10, 22, [0.42, 0.46, 0.5], 0.3); // airport outbuildings
 
 /* ------------------------------------------------------------ landmarks */
 
@@ -145,8 +145,8 @@ export const LANDMARKS: Landmark[] = [
   { id: "childhood", x: -560, z: -560, label: "HOME", kind: "home" },
   { id: "school", x: -240, z: -400, label: "CAREER SCHOOL", kind: "school" },
   { id: "recruiter", x: 560, z: -400, label: "USMC RECRUITING", kind: "office" },
-  { id: "basegate", x: 520, z: 640, label: "THE BASE", kind: "gate" },
-  { id: "terminal", x: -40, z: 640, label: "WHITEHEAD INTL.", kind: "terminal" },
+  { id: "basegate", x: 520, z: 575, label: "THE BASE", kind: "gate" },
+  { id: "terminal", x: -40, z: 575, label: "WHITEHEAD INTL.", kind: "terminal" },
   { id: "saucey", x: -600, z: 200, label: "SAUCEY", kind: "neon" },
   { id: "hush", x: -560, z: 280, label: "HUSH", kind: "neon" },
   { id: "spin", x: -520, z: 360, label: "SPIN HQ", kind: "neon" },

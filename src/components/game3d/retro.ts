@@ -253,10 +253,10 @@ export function retroRug(rx = 1, ry = 1, a = "#7a5a4a", b = "#5a4034") {
 
 /** building facade — wall bands, window grid with sills, lit variation.
  *  Instance color tints the wall; windows stay dark/lit. */
-export function retroFacade(rx = 1, ry = 1, rows = 8) {
-  return cached(`facade:${rows}`, rx, ry, () =>
+export function retroFacade(rx = 1, ry = 1, rows = 8, variant = 0) {
+  return cached(`facade:${rows}:${variant}`, rx, ry, () =>
     make(256, (g, s) => {
-      const r = prng(97 + rows);
+      const r = prng(97 + rows * 7 + variant * 131);
       // wall base — light so instance tint owns the hue
       g.fillStyle = "#b8b2a6";
       g.fillRect(0, 0, s, s);

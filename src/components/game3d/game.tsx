@@ -56,6 +56,9 @@ const SEAT_LOOK = new THREE.Vector3(SCREEN.cx, SCREEN.cy, SCREEN.cz);
 /** the story card shown after inspecting a relic (E near one) */
 const CAPTION = { title: "", body: "", until: 0 };
 
+/** pause/map screen — Tab (or M/P) toggles; inputs freeze while open */
+const PAUSE = { open: false };
+
 /** rolling frame stats — shown by the ?fps=1 overlay */
 const PERF = { fps: 0, worstMs: 0, py: 0, grounded: true };
 
@@ -375,27 +378,40 @@ function Ground() {
 }
 
 function Buildings() {
-  const texLow = useMemo(() => retroFacade(1, 1, 2), []);
-  const texMid = useMemo(() => retroFacade(1, 1, 4), []);
-  const texHigh = useMemo(() => retroFacade(1, 1, 8), []);
-  const { low, mid, high, neon } = useMemo(() => {
-    const low: typeof BUILDINGS = [];
-    const mid: typeof BUILDINGS = [];
-    const high: typeof BUILDINGS = [];
+  const texLowA = useMemo(() => retroFacade(1, 1, 2, 0), []);
+  const texLowB = useMemo(() => retroFacade(1, 1, 2, 1), []);
+  const texMidA = useMemo(() => retroFacade(1, 1, 4, 0), []);
+  const texMidB = useMemo(() => retroFacade(1, 1, 4, 1), []);
+  const texHigh = useMemo(() => retroFacade(1, 1, 8, 0), []);
+  const texHighB = useMemo(() => retroFacade(1, 1, 8, 1), []);
+  const { lowA, lowB, midA, midB, highA, highB, neon } = useMemo(() => {
+    const lowA: typeof BUILDINGS = [];
+    const lowB: typeof BUILDINGS = [];
+    const midA: typeof BUILDINGS = [];
+    const midB: typeof BUILDINGS = [];
+    const highA: typeof BUILDINGS = [];
+    const highB: typeof BUILDINGS = [];
     const neon: typeof BUILDINGS = [];
+    let i = 0;
     for (const b of BUILDINGS) {
+      i++;
       if (b.neon) neon.push(b);
-      else if (b.h < 26) low.push(b);
-      else if (b.h < 70) mid.push(b);
-      else high.push(b);
+      else if (b.h < 26) (i % 2 ? lowA : lowB).push(b);
+      else if (b.h < 70) (i % 2 ? midA : midB).push(b);
+      else (i % 2 ? highA : highB).push(b);
     }
-    return { low, mid, high, neon };
+    return { lowA, lowB, midA, midB, highA, highB, neon };
   }, []);
 
-  const lowRef = useRef<THREE.InstancedMesh>(null!);
-  const midRef = useRef<THREE.InstancedMesh>(null!);
-  const highRef = useRef<THREE.InstancedMesh>(null!);
-  const neonRef = useRef<THREE.InstancedMesh>(null!);
+  const refs = {
+    lowA: useRef<THREE.InstancedMesh>(null!),
+    lowB: useRef<THREE.InstancedMesh>(null!),
+    midA: useRef<THREE.InstancedMesh>(null!),
+    midB: useRef<THREE.InstancedMesh>(null!),
+    highA: useRef<THREE.InstancedMesh>(null!),
+    highB: useRef<THREE.InstancedMesh>(null!),
+    neon: useRef<THREE.InstancedMesh>(null!),
+  };
 
   useEffect(() => {
     const m = new THREE.Matrix4();
@@ -416,30 +432,41 @@ function Buildings() {
       ref.current.instanceMatrix.needsUpdate = true;
       if (ref.current.instanceColor) ref.current.instanceColor.needsUpdate = true;
     };
-    fill(lowRef, low);
-    fill(midRef, mid);
-    fill(highRef, high);
-    fill(neonRef, neon, true);
-  }, [low, mid, high, neon]);
+    fill(refs.lowA, lowA);
+    fill(refs.lowB, lowB);
+    fill(refs.midA, midA);
+    fill(refs.midB, midB);
+    fill(refs.highA, highA);
+    fill(refs.highB, highB);
+    fill(refs.neon, neon, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lowA, lowB, midA, midB, highA, highB, neon]);
+
+  const bucket = (
+    ref: React.RefObject<THREE.InstancedMesh>,
+    list: typeof BUILDINGS,
+    tex: THREE.Texture,
+    emissive = 0
+  ) => (
+    <instancedMesh ref={ref} args={[undefined, undefined, list.length]} frustumCulled={false}>
+      <boxGeometry args={[1, 1, 1]} />
+      {emissive > 0 ? (
+        <meshLambertMaterial map={tex} emissive="#ffffff" emissiveIntensity={emissive} />
+      ) : (
+        <meshLambertMaterial map={tex} />
+      )}
+    </instancedMesh>
+  );
 
   return (
     <group>
-      <instancedMesh ref={lowRef} args={[undefined, undefined, low.length]} frustumCulled={false}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshLambertMaterial map={texLow} />
-      </instancedMesh>
-      <instancedMesh ref={midRef} args={[undefined, undefined, mid.length]} frustumCulled={false}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshLambertMaterial map={texMid} />
-      </instancedMesh>
-      <instancedMesh ref={highRef} args={[undefined, undefined, high.length]} frustumCulled={false}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshLambertMaterial map={texHigh} />
-      </instancedMesh>
-      <instancedMesh ref={neonRef} args={[undefined, undefined, neon.length]} frustumCulled={false}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshLambertMaterial map={texMid} emissive="#ffffff" emissiveIntensity={0.12} />
-      </instancedMesh>
+      {bucket(refs.lowA, lowA, texLowA)}
+      {bucket(refs.lowB, lowB, texLowB)}
+      {bucket(refs.midA, midA, texMidA)}
+      {bucket(refs.midB, midB, texMidB)}
+      {bucket(refs.highA, highA, texHigh)}
+      {bucket(refs.highB, highB, texHighB)}
+      {bucket(refs.neon, neon, texMidA, 0.12)}
     </group>
   );
 }
@@ -518,7 +545,7 @@ function Trees() {
     const r = mulberrySky(31337);
     const out: { x: number; z: number; s: number }[] = [];
     let guard = 0;
-    while (out.length < 170 && guard++ < 4000) {
+    while (out.length < 260 && guard++ < 7000) {
       const x = -790 + r() * 1580;
       const z = -790 + r() * 1580;
       const d = districtAt(x, z);
@@ -542,6 +569,7 @@ function Trees() {
   }, []);
   const trunks = useRef<THREE.InstancedMesh>(null!);
   const crowns = useRef<THREE.InstancedMesh>(null!);
+  const crowns2 = useRef<THREE.InstancedMesh>(null!);
   useEffect(() => {
     const m = new THREE.Matrix4();
     const c = new THREE.Color();
@@ -550,13 +578,21 @@ function Trees() {
       m.setPosition(t.x, t.s * 3.2, t.z);
       trunks.current.setMatrixAt(i, m);
       m.makeScale(t.s, t.s, t.s);
-      m.setPosition(t.x, t.s * 7.6, t.z);
+      m.setPosition(t.x, t.s * 7.4, t.z);
       crowns.current.setMatrixAt(i, m);
-      crowns.current.setColorAt(i, c.set(i % 3 === 0 ? "#5a7046" : i % 3 === 1 ? "#4c6240" : "#6a7a4a"));
+      const tint = i % 3 === 0 ? "#5a7046" : i % 3 === 1 ? "#4c6240" : "#6a7a4a";
+      crowns.current.setColorAt(i, c.set(tint));
+      // upper tier, offset for a broken silhouette
+      m.makeScale(t.s * 0.62, t.s * 0.62, t.s * 0.62);
+      m.setPosition(t.x + ((i % 5) - 2) * 0.5, t.s * 10.2, t.z + ((i % 7) - 3) * 0.4);
+      crowns2.current.setMatrixAt(i, m);
+      crowns2.current.setColorAt(i, c.set(tint).offsetHSL(0, 0, 0.03));
     });
     trunks.current.instanceMatrix.needsUpdate = true;
     crowns.current.instanceMatrix.needsUpdate = true;
+    crowns2.current.instanceMatrix.needsUpdate = true;
     if (crowns.current.instanceColor) crowns.current.instanceColor.needsUpdate = true;
+    if (crowns2.current.instanceColor) crowns2.current.instanceColor.needsUpdate = true;
   }, [spots]);
   return (
     <group>
@@ -565,6 +601,10 @@ function Trees() {
         <meshLambertMaterial color="#5a4632" />
       </instancedMesh>
       <instancedMesh ref={crowns} args={[undefined, undefined, spots.length]} frustumCulled={false}>
+        <icosahedronGeometry args={[3.4, 0]} />
+        <meshLambertMaterial />
+      </instancedMesh>
+      <instancedMesh ref={crowns2} args={[undefined, undefined, spots.length]} frustumCulled={false}>
         <icosahedronGeometry args={[3.4, 0]} />
         <meshLambertMaterial />
       </instancedMesh>
@@ -583,8 +623,8 @@ function StreetProps() {
       for (const z of ROADS_Z) {
         const o = ROAD / 2 + 3;
         if (r() < 0.4) hyd.push([x + o, z + o + 6]);
-        if (r() < 0.4) can.push([x - o, z - o - 8]);
-        if (r() < 0.25) bench.push([x + o + 1, z - o - 16, Math.PI / 2]);
+        if (r() < 0.3) can.push([x - o - 0.5, z - o - 8]);
+        if (r() < 0.25) bench.push([x + o + 1.4, z - o - 16, -Math.PI / 2]);
       }
     return { hyd, can, bench };
   }, []);
@@ -625,6 +665,69 @@ function StreetProps() {
             </mesh>
           ))}
         </group>
+      ))}
+    </group>
+  );
+}
+
+/** the sun low on the horizon + a slow drift of clouds */
+function SkyLife() {
+  const cloudTex = useMemo(() => {
+    const c = document.createElement("canvas");
+    c.width = 128;
+    c.height = 64;
+    const g = c.getContext("2d")!;
+    for (const [cx, cy, r0, a0] of [
+      [40, 38, 26, 0.5],
+      [66, 30, 30, 0.55],
+      [92, 40, 24, 0.45],
+      [56, 44, 20, 0.4],
+    ] as const) {
+      const grad = g.createRadialGradient(cx, cy, 4, cx, cy, r0);
+      grad.addColorStop(0, `rgba(255,236,214,${a0})`);
+      grad.addColorStop(1, "rgba(255,236,214,0)");
+      g.fillStyle = grad;
+      g.fillRect(0, 0, 128, 64);
+    }
+    return new THREE.CanvasTexture(c);
+  }, []);
+  const clouds = useMemo(() => {
+    const r = mulberrySky(20260717);
+    return Array.from({ length: 34 }, () => ({
+      x: -1900 + r() * 3800,
+      y: 260 + r() * 260,
+      z: -1900 + r() * 3800,
+      s: 120 + r() * 220,
+      v: 1.2 + r() * 1.6,
+    }));
+  }, []);
+  const refs = useRef<THREE.Sprite[]>([]);
+  useFrame((_, dt) => {
+    for (let i = 0; i < clouds.length; i++) {
+      const spr = refs.current[i];
+      if (!spr) continue;
+      clouds[i].x += clouds[i].v * dt;
+      if (clouds[i].x > 2000) clouds[i].x = -2000;
+      spr.position.set(clouds[i].x, clouds[i].y, clouds[i].z);
+    }
+  });
+  return (
+    <group>
+      {/* the sun — matches the shadow light azimuth */}
+      <sprite position={[-1500, 520, 950]} scale={[420, 420, 1]}>
+        <spriteMaterial color="#ffdca0" transparent opacity={0.9} depthWrite={false} blending={THREE.AdditiveBlending} map={cloudTex} />
+      </sprite>
+      {clouds.map((cl, i) => (
+        <sprite
+          key={i}
+          ref={(el: THREE.Sprite | null) => {
+            if (el) refs.current[i] = el;
+          }}
+          position={[cl.x, cl.y, cl.z]}
+          scale={[cl.s, cl.s * 0.42, 1]}
+        >
+          <spriteMaterial map={cloudTex} transparent opacity={0.5} depthWrite={false} />
+        </sprite>
       ))}
     </group>
   );
@@ -873,24 +976,33 @@ function ParkedCars() {
       }
     return out;
   }, []);
-  useEffect(() => {
-    const m = new THREE.Matrix4();
-    const q = new THREE.Quaternion();
-    const c = new THREE.Color();
-    spots.forEach((s, i) => {
-      q.setFromEuler(new THREE.Euler(0, s.rot, 0));
-      m.compose(new THREE.Vector3(s.x, 1.9, s.z), q, new THREE.Vector3(5.4, 3.8, 13.2));
-      ref.current.setMatrixAt(i, m);
-      ref.current.setColorAt(i, c.set(s.hue));
-    });
-    ref.current.instanceMatrix.needsUpdate = true;
-    if (ref.current.instanceColor) ref.current.instanceColor.needsUpdate = true;
-  }, [spots]);
+  void ref;
   return (
-    <instancedMesh ref={ref} args={[undefined, undefined, spots.length]} frustumCulled={false}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshLambertMaterial />
-    </instancedMesh>
+    <group>
+      {spots.map((sp, i) => (
+        <group key={i} position={[sp.x, 0, sp.z]} rotation={[0, sp.rot, 0]}>
+          <mesh position={[0, 1.55, 0]} castShadow>
+            <boxGeometry args={[5.2, 1.5, 12.6]} />
+            <meshLambertMaterial color={sp.hue} />
+          </mesh>
+          <mesh position={[0, 2.95, 0.25]}>
+            <boxGeometry args={[4.5, 1.3, 5.4]} />
+            <meshLambertMaterial color="#151920" />
+          </mesh>
+          {[
+            [-2.3, -4.0],
+            [2.3, -4.0],
+            [-2.3, 4.0],
+            [2.3, 4.0],
+          ].map(([wx, wz], wi) => (
+            <mesh key={wi} position={[wx, 0.95, wz]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.95, 0.95, 0.6, 10]} />
+              <meshLambertMaterial color="#0c0e12" />
+            </mesh>
+          ))}
+        </group>
+      ))}
+    </group>
   );
 }
 
@@ -989,23 +1101,34 @@ function Traffic() {
             if (el) refs.current[i] = el;
           }}
         >
-          <mesh position={[0, 1.3, 0]}>
+          <mesh position={[0, 1.55, 0]}>
             <boxGeometry args={[5.2, 1.5, 12.6]} />
             <meshLambertMaterial color={c.hue} />
           </mesh>
-          <mesh position={[0, 2.7, 0.25]}>
+          <mesh position={[0, 2.95, 0.25]}>
             <boxGeometry args={[4.5, 1.3, 5.4]} />
             <meshLambertMaterial color="#151920" />
           </mesh>
-          <mesh position={[-1.8, 1.4, -6.35]}>
+          {[
+            [-2.3, -4.0],
+            [2.3, -4.0],
+            [-2.3, 4.0],
+            [2.3, 4.0],
+          ].map(([wx, wz], wi) => (
+            <mesh key={wi} position={[wx, 0.95, wz]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.95, 0.95, 0.6, 10]} />
+              <meshLambertMaterial color="#0c0e12" />
+            </mesh>
+          ))}
+          <mesh position={[-1.8, 1.65, -6.35]}>
             <sphereGeometry args={[0.28, 6, 6]} />
             <meshBasicMaterial color="#ffe9c0" toneMapped={false} />
           </mesh>
-          <mesh position={[1.8, 1.4, -6.35]}>
+          <mesh position={[1.8, 1.65, -6.35]}>
             <sphereGeometry args={[0.28, 6, 6]} />
             <meshBasicMaterial color="#ffe9c0" toneMapped={false} />
           </mesh>
-          <mesh position={[0, 1.4, 6.35]}>
+          <mesh position={[0, 1.65, 6.35]}>
             <boxGeometry args={[4.4, 0.28, 0.1]} />
             <meshBasicMaterial color="#ff4444" toneMapped={false} />
           </mesh>
@@ -1239,7 +1362,7 @@ function PlayerBody() {
       PHYS.playerTeleport = null;
       return;
     }
-    if (G.mode !== "foot" || G.deskMode !== "world") {
+    if (G.mode !== "foot" || G.deskMode !== "world" || PAUSE.open) {
       PHYS.footSpeed = 0;
       // keep the body parked at the player's logical spot
       rb.setNextKinematicTranslation({ x: G.px, y: MOVE.baseY, z: G.pz });
@@ -1435,7 +1558,7 @@ function CarBody() {
       PHYS.carTeleport = null;
     }
 
-    const driving = G.mode === "car" && G.deskMode === "world";
+    const driving = G.mode === "car" && G.deskMode === "world" && !PAUSE.open;
     if (driving) rb.wakeUp();
     const up = keys["w"] || keys["arrowup"];
     const down = keys["s"] || keys["arrowdown"];
@@ -1681,6 +1804,7 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
   const districtTimer = useRef(0);
   const stepKey = useRef("");
   const stepHitsBase = useRef(0);
+  const lastHudAt = useRef(0);
   const v3 = useMemo(() => new THREE.Vector3(), []);
 
   useFrame((_, rawDt) => {
@@ -1833,7 +1957,11 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
     }
     if (districtTimer.current > 0) districtTimer.current -= dt;
 
-    /* -------- HUD sync -------- */
+    /* -------- HUD sync — 10 Hz except during desk transitions -------- */
+    const hudNow = performance.now();
+    const perFrame = G.deskMode === "toWorld" || G.deskMode === "toDesk";
+    if (!perFrame && hudNow - lastHudAt.current < 100) return;
+    lastHudAt.current = hudNow;
     onHud({
       mode: G.mode,
       mission: G.mission,
@@ -1870,6 +1998,7 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
         CAPTION.until > performance.now() ? { title: CAPTION.title, body: CAPTION.body } : null,
       weapon: WEAPON.slot,
       lockFallback: LOOK.fallback,
+      paused: PAUSE.open,
       stepHits: Math.max(0, RANGE_SCORE.hits - stepHitsBase.current),
       objective: (() => {
         if (G.deskMode !== "world") return null;
@@ -1940,7 +2069,95 @@ type HudState = {
   lockFallback: boolean;
   stepHits: number;
   objective: { label: string; dist: number; bearing: number; color: string } | null;
+  paused: boolean;
 };
+
+/** the pause-screen map: whole city, labeled landmarks, player + objective */
+function PauseMap({ h }: { h: HudState }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const c = ref.current;
+    if (!c) return;
+    const g = c.getContext("2d")!;
+    const S = 460;
+    c.width = S * 2;
+    c.height = S * 2;
+    g.scale(2, 2);
+    const w2m = (v: number) => ((v + 820) / 1640) * S;
+    g.fillStyle = "#151b28";
+    g.fillRect(0, 0, S, S);
+    // the island
+    g.fillStyle = "#232a35";
+    g.fillRect(w2m(-800), w2m(-800), w2m(800) - w2m(-800), w2m(800) - w2m(-800));
+    for (const d of DISTRICTS) {
+      g.fillStyle = d.hue + "88";
+      g.fillRect(w2m(d.x1), w2m(d.z1), w2m(d.x2) - w2m(d.x1), w2m(d.z2) - w2m(d.z1));
+      g.fillStyle = "#ffffffcc";
+      g.font = "600 9px monospace";
+      g.fillText(d.name, w2m(d.x1) + 6, w2m(d.z1) + 12);
+    }
+    g.strokeStyle = "#6a727e";
+    g.lineWidth = 3;
+    for (const x of ROADS_X) {
+      g.beginPath();
+      g.moveTo(w2m(x), 0);
+      g.lineTo(w2m(x), S);
+      g.stroke();
+    }
+    for (const z of ROADS_Z) {
+      g.beginPath();
+      g.moveTo(0, w2m(z));
+      g.lineTo(S, w2m(z));
+      g.stroke();
+    }
+    // landmarks
+    g.font = "600 8px monospace";
+    for (const l of LANDMARKS) {
+      g.fillStyle = "#c8a24b";
+      g.fillRect(w2m(l.x) - 2, w2m(l.z) - 2, 4, 4);
+      g.fillStyle = "#ffffff99";
+      g.fillText(l.label, w2m(l.x) + 5, w2m(l.z) + 3);
+    }
+    // objective
+    const m = h.mission >= 0 ? MISSIONS[h.mission] : null;
+    const next = h.mission + 1 < MISSIONS.length ? MISSIONS[h.mission + 1] : null;
+    let bx: number | null = null,
+      bz: number | null = null,
+      bc = "#e2c078";
+    if (h.phase === "active" && m) {
+      bx = m.steps[h.step].x;
+      bz = m.steps[h.step].z;
+      bc = "#7fd3ff";
+    } else if (next) {
+      bx = next.startX;
+      bz = next.startZ;
+    }
+    if (bx !== null && bz !== null) {
+      g.strokeStyle = bc;
+      g.lineWidth = 2;
+      g.beginPath();
+      g.arc(w2m(bx), w2m(bz), 7, 0, Math.PI * 2);
+      g.stroke();
+      g.fillStyle = bc;
+      g.beginPath();
+      g.arc(w2m(bx), w2m(bz), 3, 0, Math.PI * 2);
+      g.fill();
+    }
+    // player
+    g.save();
+    g.translate(w2m(h.px), w2m(h.pz));
+    g.rotate(-h.heading);
+    g.fillStyle = "#ffffff";
+    g.beginPath();
+    g.moveTo(0, -7);
+    g.lineTo(4.5, 6);
+    g.lineTo(-4.5, 6);
+    g.closePath();
+    g.fill();
+    g.restore();
+  }, [h]);
+  return <canvas ref={ref} className="h-[460px] w-[460px] rounded-md border border-white/15" />;
+}
 
 function Minimap({ h }: { h: HudState }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -2106,6 +2323,7 @@ export function CityGame() {
     lockFallback: false,
     stepHits: 0,
     objective: null,
+    paused: false,
   });
 
   useEffect(() => {
@@ -2130,7 +2348,15 @@ export function CityGame() {
     if (tier !== "full") return;
     const down = (ev: KeyboardEvent) => {
       const k = ev.key.toLowerCase();
-      if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(k)) ev.preventDefault();
+      if (["arrowup", "arrowdown", "arrowleft", "arrowright", " ", "tab"].includes(k)) ev.preventDefault();
+      if ((k === "tab" || k === "m" || k === "p") && G.deskMode === "world") {
+        PAUSE.open = !PAUSE.open;
+        return;
+      }
+      if (PAUSE.open) {
+        if (k === "escape") PAUSE.open = false;
+        return;
+      }
       keys[k] = true;
       startAmbience();
       if (k === "escape" && G.deskMode === "desk") {
@@ -2371,6 +2597,7 @@ export function CityGame() {
           <CityBlocks />
           <Trees />
           <StreetProps />
+          <SkyLife />
           <Skyline />
           <Buildings />
           <Palms />
@@ -2423,6 +2650,64 @@ export function CityGame() {
       )}
 
       {fpsOn && <FpsReadout />}
+
+      {/* ------------------------- pause / map screen ------------------------- */}
+      {hud.paused && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/85">
+          <div className="flex max-h-[92vh] gap-8 overflow-hidden p-6">
+            <div>
+              <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.35em] text-[#e2c078]">Whitehead City</p>
+              <PauseMap h={hud} />
+              <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
+                Tab — resume · your position, landmarks, and the next objective
+              </p>
+            </div>
+            <div className="flex w-80 flex-col gap-5 overflow-y-auto pr-1">
+              <div>
+                <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-[#e2c078]">Missions · 1993 → now</p>
+                {MISSIONS.map((mm, i) => {
+                  const done = i <= hud.mission && !(i === hud.mission && hud.phase === "active");
+                  const current = i === hud.mission + 1 && hud.phase === "roam" ? true : i === hud.mission && hud.phase !== "roam";
+                  return (
+                    <div key={mm.id} className="flex items-center gap-2 py-1 font-mono text-[11px] uppercase tracking-[0.14em]">
+                      <span className={done ? "text-[#7dff9a]" : current ? "text-[#e2c078]" : "text-white/30"}>
+                        {done ? "✓" : current ? "▶" : "·"}
+                      </span>
+                      <span className={done ? "text-white/60 line-through" : current ? "text-white" : "text-white/35"}>
+                        {mm.year} — {mm.title}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div>
+                <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-[#e2c078]">Controls</p>
+                {[
+                  ["WASD", "move"],
+                  ["Mouse / drag", "look"],
+                  ["Space", "jump"],
+                  ["E", "interact · car · doors"],
+                  ["1 / 2", "x-acto · pistol"],
+                  ["Click / F", "fire"],
+                  ["Esc", "sit at the desk"],
+                  ["Tab / M", "this screen"],
+                ].map(([k, v]) => (
+                  <div key={k} className="flex justify-between py-0.5 font-mono text-[11px]">
+                    <span className="text-white/85">{k}</span>
+                    <span className="uppercase tracking-[0.14em] text-white/45">{v}</span>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.3em] text-[#e2c078]">The Range</p>
+                <p className="font-mono text-[11px] text-white/70">
+                  Best streak {hud.range?.best ?? RANGE_SCORE.best} · lifetime hits {hud.range?.hits ?? RANGE_SCORE.hits}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* -------------------- the desk (the site itself) -------------------- */}
       <DesktopOverlay
