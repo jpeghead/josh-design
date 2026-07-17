@@ -292,15 +292,15 @@ function Framed({ src, x, y, z, w, h, ry = 0 }: { src: string; x: number; y: num
   tex.colorSpace = THREE.SRGBColorSpace;
   return (
     <group position={[x, y, z]} rotation={[0, ry, 0]}>
-      <mesh position={[0, 0, 0.08]} castShadow>
-        <boxGeometry args={[w + 0.4, h + 0.4, 0.16]} />
+      <mesh position={[0, 0, 0.05]} castShadow>
+        <boxGeometry args={[w + 0.4, h + 0.4, 0.1]} />
         <meshStandardMaterial color="#1e1a14" roughness={0.5} />
       </mesh>
-      <mesh position={[0, 0, 0.165]}>
+      <mesh position={[0, 0, 0.105]}>
         <planeGeometry args={[w + 0.2, h + 0.2]} />
         <meshStandardMaterial color="#ece5d8" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 0, 0.175]}>
+      <mesh position={[0, 0, 0.112]}>
         <planeGeometry args={[w, h]} />
         <meshStandardMaterial map={tex} roughness={0.6} emissive="#ffffff" emissiveMap={tex} emissiveIntensity={0.14} />
       </mesh>

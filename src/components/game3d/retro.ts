@@ -337,6 +337,66 @@ export function retroSidewalk(rx = 1, ry = 1) {
   );
 }
 
+/** lawn grass — mottled green with mow stripes */
+export function retroGrass(rx = 1, ry = 1) {
+  return cached("grass", rx, ry, () =>
+    make(128, (g, s) => {
+      const r = prng(151);
+      g.fillStyle = "#556446";
+      g.fillRect(0, 0, s, s);
+      // mow stripes
+      for (let i = 0; i < 8; i++) {
+        g.fillStyle = i % 2 ? "rgba(96,116,80,0.16)" : "rgba(70,86,58,0.16)";
+        g.fillRect(0, (i * s) / 8, s, s / 8);
+      }
+      for (let i = 0; i < 700; i++) {
+        const v = 74 + r() * 46;
+        g.fillStyle = `rgba(${v * 0.8},${v},${v * 0.62},0.4)`;
+        g.fillRect(r() * s, r() * s, 1 + r() * 2, 1);
+      }
+      // worn patches
+      for (let i = 0; i < 4; i++) {
+        g.fillStyle = "rgba(122,106,74,0.18)";
+        g.beginPath();
+        g.ellipse(r() * s, r() * s, 6 + r() * 12, 4 + r() * 8, r() * 3, 0, 7);
+        g.fill();
+      }
+    })
+  );
+}
+
+/** parking lot — asphalt with painted stalls */
+export function retroLot(rx = 1, ry = 1) {
+  return cached("lot", rx, ry, () =>
+    make(128, (g, s) => {
+      const r = prng(163);
+      g.fillStyle = "#33363c";
+      g.fillRect(0, 0, s, s);
+      for (let i = 0; i < 500; i++) {
+        const v = 42 + r() * 30;
+        g.fillStyle = `rgba(${v},${v + 2},${v + 6},0.45)`;
+        g.fillRect(r() * s, r() * s, 1 + r() * 2, 1);
+      }
+      // stall rows
+      g.strokeStyle = "rgba(201,185,138,0.5)";
+      g.lineWidth = 2;
+      for (const row of [0.25, 0.75]) {
+        for (let i = 0; i < 6; i++) {
+          const x = (i / 6) * s + 8;
+          g.beginPath();
+          g.moveTo(x, row * s - 14);
+          g.lineTo(x, row * s + 14);
+          g.stroke();
+        }
+        g.beginPath();
+        g.moveTo(0, row * s);
+        g.lineTo(s, row * s);
+        g.stroke();
+      }
+    })
+  );
+}
+
 /* --------------------------------------- retrofit imported GLTF models */
 
 const doneScenes = new WeakSet<THREE.Object3D>();

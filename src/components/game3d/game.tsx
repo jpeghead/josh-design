@@ -33,12 +33,13 @@ import {
   DESK_SPOT,
 } from "./house";
 import { startAmbience, setAmbienceInside, sfxFootstep, sfxJump, sfxLand } from "./ambience";
-import { retroFacade, retroAsphalt, retroSidewalk, retroConcrete } from "./retro";
+import { retroFacade, retroAsphalt, retroSidewalk, retroConcrete, retroGrass, retroLot } from "./retro";
 import { WEAPON, FIRE, RANGE, RANGE_SCORE, ViewModel, Shooter, ShotFX, Range } from "./weapons";
 import {
   BUILDINGS,
   DISTRICTS,
   LANDMARKS,
+  LANDMARK_CLEAR,
   MISSIONS,
   ROADS_X,
   ROADS_Z,
@@ -470,6 +471,159 @@ function Sidewalks() {
             <planeGeometry args={[1600, 6]} />
             <meshLambertMaterial map={walkZ} />
           </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
+/** per-block ground: lawns in the residential districts, lots downtown */
+function CityBlocks() {
+  const grass = useMemo(() => retroGrass(6, 6), []);
+  const lot = useMemo(() => retroLot(4, 4), []);
+  const cells = useMemo(() => {
+    const out: { x: number; z: number; w: number; d: number; kind: "grass" | "lot" }[] = [];
+    for (let i = 0; i < ROADS_X.length - 1; i++) {
+      for (let j = 0; j < ROADS_Z.length - 1; j++) {
+        const x1 = ROADS_X[i] + ROAD / 2 + 6;
+        const x2 = ROADS_X[i + 1] - ROAD / 2 - 6;
+        const z1 = ROADS_Z[j] + ROAD / 2 + 6;
+        const z2 = ROADS_Z[j + 1] - ROAD / 2 - 6;
+        if (x2 - x1 < 20 || z2 - z1 < 20) continue;
+        const cx = (x1 + x2) / 2;
+        const cz = (z1 + z2) / 2;
+        const d = districtAt(cx, cz);
+        if (!d) continue;
+        const kind = d.id === "downtown" || d.id === "strip" || d.id === "airport" ? "lot" : "grass";
+        out.push({ x: cx, z: cz, w: x2 - x1, d: z2 - z1, kind });
+      }
+    }
+    return out;
+  }, []);
+  return (
+    <group>
+      {cells.map((c, i) => (
+        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[c.x, 0.015, c.z]}>
+          <planeGeometry args={[c.w, c.d]} />
+          <meshLambertMaterial map={c.kind === "grass" ? grass : lot} color={c.kind === "grass" ? "#8f9a80" : "#9a9da2"} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/** deciduous trees across the green districts — instanced, chunky */
+function Trees() {
+  const spots = useMemo(() => {
+    const r = mulberrySky(31337);
+    const out: { x: number; z: number; s: number }[] = [];
+    let guard = 0;
+    while (out.length < 170 && guard++ < 4000) {
+      const x = -790 + r() * 1580;
+      const z = -790 + r() * 1580;
+      const d = districtAt(x, z);
+      if (!d || d.id === "downtown" || d.id === "strip" || d.id === "airport") continue;
+      // stay off roads, clearings, buildings
+      let bad = false;
+      for (const rx of ROADS_X) if (Math.abs(x - rx) < ROAD / 2 + 8) bad = true;
+      for (const rz of ROADS_Z) if (Math.abs(z - rz) < ROAD / 2 + 8) bad = true;
+      if (!bad) for (const c of LANDMARK_CLEAR) if (Math.abs(x - c[0]) < c[2] && Math.abs(z - c[1]) < c[2]) bad = true;
+      if (!bad)
+        for (const b of BUILDINGS) {
+          if (Math.abs(x - b.x) < b.w / 2 + 4 && Math.abs(z - b.z) < b.d / 2 + 4) {
+            bad = true;
+            break;
+          }
+        }
+      if (bad) continue;
+      out.push({ x, z, s: 0.8 + r() * 0.7 });
+    }
+    return out;
+  }, []);
+  const trunks = useRef<THREE.InstancedMesh>(null!);
+  const crowns = useRef<THREE.InstancedMesh>(null!);
+  useEffect(() => {
+    const m = new THREE.Matrix4();
+    const c = new THREE.Color();
+    spots.forEach((t, i) => {
+      m.makeScale(t.s, t.s, t.s);
+      m.setPosition(t.x, t.s * 3.2, t.z);
+      trunks.current.setMatrixAt(i, m);
+      m.makeScale(t.s, t.s, t.s);
+      m.setPosition(t.x, t.s * 7.6, t.z);
+      crowns.current.setMatrixAt(i, m);
+      crowns.current.setColorAt(i, c.set(i % 3 === 0 ? "#5a7046" : i % 3 === 1 ? "#4c6240" : "#6a7a4a"));
+    });
+    trunks.current.instanceMatrix.needsUpdate = true;
+    crowns.current.instanceMatrix.needsUpdate = true;
+    if (crowns.current.instanceColor) crowns.current.instanceColor.needsUpdate = true;
+  }, [spots]);
+  return (
+    <group>
+      <instancedMesh ref={trunks} args={[undefined, undefined, spots.length]} frustumCulled={false}>
+        <cylinderGeometry args={[0.35, 0.5, 6.4, 6]} />
+        <meshLambertMaterial color="#5a4632" />
+      </instancedMesh>
+      <instancedMesh ref={crowns} args={[undefined, undefined, spots.length]} frustumCulled={false}>
+        <icosahedronGeometry args={[3.4, 0]} />
+        <meshLambertMaterial />
+      </instancedMesh>
+    </group>
+  );
+}
+
+/** street furniture at intersections: hydrants, cans, benches */
+function StreetProps() {
+  const spots = useMemo(() => {
+    const r = mulberrySky(777001);
+    const hyd: [number, number][] = [];
+    const can: [number, number][] = [];
+    const bench: [number, number, number][] = [];
+    for (const x of ROADS_X)
+      for (const z of ROADS_Z) {
+        const o = ROAD / 2 + 3;
+        if (r() < 0.4) hyd.push([x + o, z + o + 6]);
+        if (r() < 0.4) can.push([x - o, z - o - 8]);
+        if (r() < 0.25) bench.push([x + o + 1, z - o - 16, Math.PI / 2]);
+      }
+    return { hyd, can, bench };
+  }, []);
+  return (
+    <group>
+      {spots.hyd.map(([x, z], i) => (
+        <group key={"h" + i} position={[x, 0, z]}>
+          <mesh position={[0, 0.75, 0]}>
+            <cylinderGeometry args={[0.28, 0.34, 1.5, 8]} />
+            <meshLambertMaterial color="#a83a32" />
+          </mesh>
+          <mesh position={[0, 1.55, 0]}>
+            <sphereGeometry args={[0.26, 8, 6]} />
+            <meshLambertMaterial color="#a83a32" />
+          </mesh>
+        </group>
+      ))}
+      {spots.can.map(([x, z], i) => (
+        <mesh key={"c" + i} position={[x, 1.1, z]}>
+          <cylinderGeometry args={[0.7, 0.6, 2.2, 10]} />
+          <meshLambertMaterial color="#4a4e54" />
+        </mesh>
+      ))}
+      {spots.bench.map(([x, z, ry], i) => (
+        <group key={"b" + i} position={[x, 0, z]} rotation={[0, ry, 0]}>
+          <mesh position={[0, 1.15, 0]}>
+            <boxGeometry args={[4.4, 0.18, 1.3]} />
+            <meshLambertMaterial color="#7a6248" />
+          </mesh>
+          <mesh position={[0, 1.85, -0.55]} rotation={[-0.18, 0, 0]}>
+            <boxGeometry args={[4.4, 1.1, 0.14]} />
+            <meshLambertMaterial color="#7a6248" />
+          </mesh>
+          {[-1.8, 1.8].map((bx) => (
+            <mesh key={bx} position={[bx, 0.55, 0]}>
+              <boxGeometry args={[0.24, 1.1, 1.2]} />
+              <meshLambertMaterial color="#31363e" />
+            </mesh>
+          ))}
         </group>
       ))}
     </group>
@@ -2214,6 +2368,9 @@ export function CityGame() {
           <CarBody />
           <Ground />
           <Sidewalks />
+          <CityBlocks />
+          <Trees />
+          <StreetProps />
           <Skyline />
           <Buildings />
           <Palms />

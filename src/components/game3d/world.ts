@@ -110,7 +110,7 @@ function scatterDistrict(
 }
 
 /* landmark clearings [x, z, half-size] — declared before scatter uses them */
-const LANDMARK_CLEAR: [number, number, number][] = [
+export const LANDMARK_CLEAR: [number, number, number][] = [
   [-560, -560, 50], // childhood home
   [-240, -400, 55], // high school / career school
   [560, -400, 50], // recruiting office downtown
