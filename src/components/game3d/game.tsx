@@ -108,7 +108,7 @@ const CAR_START = { x: 719, z: 363.5 }; // the driveway, past the porch
 const EYE = 5.2; // 6'1" player, 3 units = 1 m
 
 /** first-person look state — written by pointer-lock mouse, read by Sim */
-const LOOK = { yaw: 0, pitch: -0.04, locked: false };
+const LOOK = { yaw: 0, pitch: -0.04, locked: false, fallback: false };
 
 type Mode = "foot" | "car";
 
@@ -1663,6 +1663,7 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
       caption:
         CAPTION.until > performance.now() ? { title: CAPTION.title, body: CAPTION.body } : null,
       weapon: WEAPON.slot,
+      lockFallback: LOOK.fallback,
       range:
         Math.hypot(G.px - RANGE.x, G.pz - RANGE.z) < 70
           ? { hits: RANGE_SCORE.hits, streak: RANGE_SCORE.streak, best: RANGE_SCORE.best }
@@ -1697,6 +1698,7 @@ type HudState = {
   caption: { title: string; body: string } | null;
   weapon: number;
   range: { hits: number; streak: number; best: number } | null;
+  lockFallback: boolean;
 };
 
 function Minimap({ h }: { h: HudState }) {
@@ -1813,6 +1815,7 @@ export function CityGame() {
     caption: null,
     weapon: 0,
     range: null,
+    lockFallback: false,
   });
 
   useEffect(() => {
@@ -1911,33 +1914,77 @@ export function CityGame() {
     };
   }, [tier]);
 
-  /* pointer-lock mouse look — the core of the feel fix */
+  /* mouse look — pointer lock when the browser allows it, drag-look when
+     it doesn't (webviews and some settings deny lock silently). */
   useEffect(() => {
     if (tier !== "full") return;
-    const el = document.querySelector("[data-game-canvas]") as HTMLElement | null;
+    const el =
+      (document.querySelector("[data-game-canvas]") as HTMLElement | null) ??
+      (document.querySelector("[data-canvas-walk]") as HTMLElement | null);
     if (!el) return;
+    let dragging = false;
+    let dragDist = 0;
+    const tryLock = () => {
+      try {
+        const res = el.requestPointerLock() as unknown;
+        if (res && typeof (res as Promise<void>).catch === "function") {
+          (res as Promise<void>).catch(() => {
+            LOOK.fallback = true;
+            console.warn("[game] pointer lock rejected — drag-look enabled");
+          });
+        }
+      } catch {
+        LOOK.fallback = true;
+      }
+    };
     const onClick = () => {
       startAmbience();
-      if (G.deskMode === "world" && !LOOK.locked) {
-        el.requestPointerLock();
+      if (G.deskMode !== "world") return;
+      if (!LOOK.locked && !LOOK.fallback) {
+        tryLock();
         return;
       }
       if (LOOK.locked && G.mode === "foot" && WEAPON.slot > 0) FIRE.pending = true;
     };
+    const onDown = (ev: MouseEvent) => {
+      if (ev.button !== 0 || LOOK.locked || G.deskMode !== "world") return;
+      dragging = true;
+      dragDist = 0;
+    };
+    const onUp = () => {
+      // in fallback mode a clean tap (no drag) fires the equipped weapon
+      if (dragging && LOOK.fallback && dragDist < 5 && G.mode === "foot" && WEAPON.slot > 0) {
+        FIRE.pending = true;
+      }
+      dragging = false;
+    };
     const onLockChange = () => {
       LOOK.locked = document.pointerLockElement === el;
+      if (LOOK.locked) LOOK.fallback = false;
+    };
+    const onLockError = () => {
+      LOOK.fallback = true;
+      console.warn("[game] pointer lock error — drag-look enabled");
     };
     const onMove = (ev: MouseEvent) => {
-      if (!LOOK.locked) return;
+      const looking = LOOK.locked || (dragging && G.deskMode === "world");
+      if (!looking) return;
+      if (dragging && !LOOK.locked) dragDist += Math.abs(ev.movementX) + Math.abs(ev.movementY);
       LOOK.yaw -= ev.movementX * 0.0021;
       LOOK.pitch = THREE.MathUtils.clamp(LOOK.pitch - ev.movementY * 0.0021, -1.25, 1.25);
     };
     el.addEventListener("click", onClick);
+    el.addEventListener("mousedown", onDown);
+    window.addEventListener("mouseup", onUp);
     document.addEventListener("pointerlockchange", onLockChange);
+    document.addEventListener("pointerlockerror", onLockError);
     document.addEventListener("mousemove", onMove);
     return () => {
       el.removeEventListener("click", onClick);
+      el.removeEventListener("mousedown", onDown);
+      window.removeEventListener("mouseup", onUp);
       document.removeEventListener("pointerlockchange", onLockChange);
+      document.removeEventListener("pointerlockerror", onLockError);
       document.removeEventListener("mousemove", onMove);
     };
   }, [tier]);
@@ -2075,7 +2122,7 @@ export function CityGame() {
       {/* ------------------------------ HUD ------------------------------ */}
       <div className="pointer-events-none absolute inset-0 z-10" style={{ opacity: hud.deskMode === "world" ? 1 : hud.deskMode === "toWorld" ? Math.max(0, (hud.deskT - 0.7) / 0.3) : 0 }}>
         {/* crosshair */}
-        {hud.deskMode === "world" && hud.mode === "foot" && hud.locked && (
+        {hud.deskMode === "world" && hud.mode === "foot" && (hud.locked || hud.lockFallback) && (
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <div className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/70" />
             {hud.weapon > 0 && (
@@ -2090,7 +2137,7 @@ export function CityGame() {
         )}
 
         {/* weapon slots — bottom right, HL-style */}
-        {hud.deskMode === "world" && hud.mode === "foot" && hud.locked && (
+        {hud.deskMode === "world" && hud.mode === "foot" && (
           <div className="absolute bottom-6 right-6 flex gap-2 sm:right-10">
             {[
               [1, "X-ACTO"],
@@ -2128,7 +2175,7 @@ export function CityGame() {
           <div className="absolute inset-x-0 top-[12%] flex justify-center">
             <p className="flex items-center gap-3 rounded-md border border-[#e2c078]/60 bg-black/70 px-6 py-3 font-mono text-[13px] uppercase tracking-[0.25em] text-white shadow-[0_8px_40px_rgba(0,0,0,0.6)]">
               <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[#e2c078]" />
-              Click to look around
+              {hud.lockFallback ? "Drag to look · F to fire" : "Click to look around"}
             </p>
           </div>
         )}

@@ -258,7 +258,7 @@ export function ViewModel() {
       pistol.current.rotation.set(rc * 0.22, 0, 0);
     }
     if (flash.current) flash.current.visible = now < WEAPON.flashUntil;
-  }, 1);
+  });
 
   return (
     <group ref={rig}>
