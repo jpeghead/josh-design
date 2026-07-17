@@ -1489,6 +1489,8 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
   const lastDir = useRef<[number, number]>([0, -1]);
   const lastDistrict = useRef<string | null>(null);
   const districtTimer = useRef(0);
+  const stepKey = useRef("");
+  const stepHitsBase = useRef(0);
   const v3 = useMemo(() => new THREE.Vector3(), []);
 
   useFrame((_, rawDt) => {
@@ -1603,8 +1605,16 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
     } else if (G.phase === "active") {
       const m = MISSIONS[G.mission];
       const st = m.steps[G.step];
+      const key = `${G.mission}:${G.step}`;
+      if (stepKey.current !== key) {
+        stepKey.current = key;
+        stepHitsBase.current = RANGE_SCORE.hits;
+      }
       const okMode = !st.needCar || G.mode === "car";
-      if (okMode && Math.hypot(G.px - st.x, G.pz - st.z) < (st.radius ?? 14)) {
+      const done = st.targets
+        ? RANGE_SCORE.hits - stepHitsBase.current >= st.targets
+        : okMode && Math.hypot(G.px - st.x, G.pz - st.z) < (st.radius ?? 14);
+      if (done) {
         if (G.step + 1 < m.steps.length) {
           G.step++;
         } else {
@@ -1664,6 +1674,7 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
         CAPTION.until > performance.now() ? { title: CAPTION.title, body: CAPTION.body } : null,
       weapon: WEAPON.slot,
       lockFallback: LOOK.fallback,
+      stepHits: Math.max(0, RANGE_SCORE.hits - stepHitsBase.current),
       range:
         Math.hypot(G.px - RANGE.x, G.pz - RANGE.z) < 70
           ? { hits: RANGE_SCORE.hits, streak: RANGE_SCORE.streak, best: RANGE_SCORE.best }
@@ -1699,6 +1710,7 @@ type HudState = {
   weapon: number;
   range: { hits: number; streak: number; best: number } | null;
   lockFallback: boolean;
+  stepHits: number;
 };
 
 function Minimap({ h }: { h: HudState }) {
@@ -1816,6 +1828,7 @@ export function CityGame() {
     weapon: 0,
     range: null,
     lockFallback: false,
+    stepHits: 0,
   });
 
   useEffect(() => {
@@ -2272,6 +2285,7 @@ export function CityGame() {
             <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-[#e2c078]">{m.title}</p>
             <p className="mt-1 text-lg font-medium text-white" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>
               {m.steps[hud.step].text}
+              {m.steps[hud.step].targets ? ` — ${Math.min(hud.stepHits, m.steps[hud.step].targets!)}/${m.steps[hud.step].targets}` : ""}
             </p>
             {m.steps[hud.step].needCar && hud.mode === "foot" && (
               <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-[#ff9a6a]">You'll need the car — E to get in</p>
@@ -2338,6 +2352,15 @@ export function CityGame() {
               Starring: Samantha · Gunner · Nolan
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3 font-mono text-xs uppercase tracking-widest">
+              <button
+                onClick={() => {
+                  G.phase = "roam";
+                  G.phaseT = 0;
+                }}
+                className="border border-white/25 px-5 py-2.5 text-white transition-colors hover:border-gold hover:text-gold"
+              >
+                Keep exploring
+              </button>
               <Link href="/work" className="border border-white/25 px-5 py-2.5 text-white transition-colors hover:border-gold hover:text-gold">
                 The work
               </Link>

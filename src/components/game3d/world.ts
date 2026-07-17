@@ -167,6 +167,8 @@ export type MissionStep = {
   z: number;
   radius?: number;
   needCar?: boolean;
+  /** step completes after this many range plates instead of arrival */
+  targets?: number;
 };
 
 export type Mission = {
@@ -213,6 +215,7 @@ export const MISSIONS: Mission[] = [
     startZ: -480 + 26,
     steps: [
       { text: "Report to USMC RECRUITING", x: lm("recruiter").x, z: lm("recruiter").z, radius: 18 },
+      { text: "Qualify at the RIFLE RANGE", x: 580, z: 736, radius: 16, targets: 5 },
       { text: "Drive to THE BASE gate", x: lm("basegate").x, z: lm("basegate").z - 40, radius: 24, needCar: true },
     ],
     passed: "Parris Island → Camp Geiger → Fort Meade → MCAS New River.",

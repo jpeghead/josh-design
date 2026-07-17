@@ -8,10 +8,16 @@ let filter: BiquadFilterNode | null = null;
 let started = false;
 
 export function startAmbience() {
-  if (started || typeof window === "undefined") return;
+  if (typeof window === "undefined") return;
+  if (started) {
+    // autoplay policy can park the context — user gestures un-park it
+    if (ctx && ctx.state === "suspended") void ctx.resume();
+    return;
+  }
   try {
     started = true;
     ctx = new AudioContext();
+    if (ctx.state === "suspended") void ctx.resume();
     const master = ctx.createGain();
     master.gain.value = 0.14;
     filter = ctx.createBiquadFilter();
@@ -87,6 +93,7 @@ function noise(): AudioBuffer | null {
 /** short filtered noise burst — the workhorse behind steps and thuds */
 function burst(freq: number, q: number, gain: number, dur: number, type: BiquadFilterType = "bandpass") {
   if (!ctx) return;
+  if (ctx.state === "suspended") void ctx.resume();
   const buf = noise();
   if (!buf) return;
   const src = ctx.createBufferSource();
@@ -146,6 +153,7 @@ export function sfxSwing() {
 /** steel plate ping — decaying ring + click */
 export function sfxPlate() {
   if (!ctx) return;
+  if (ctx.state === "suspended") void ctx.resume();
   const t = ctx.currentTime;
   for (const [f, g0, dur] of [
     [1180, 0.22, 0.5],
