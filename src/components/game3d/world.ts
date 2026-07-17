@@ -115,6 +115,7 @@ const LANDMARK_CLEAR: [number, number, number][] = [
   [-240, -400, 55], // high school / career school
   [560, -400, 50], // recruiting office downtown
   [520, 640, 70], // base gate + barracks
+  [580, 726, 60], // the rifle range
   [-40, 640, 90], // terminal
   [-560, 240, 60], // strip offices
   [-560, 60, 55], // keynote hall

@@ -34,6 +34,7 @@ import {
 } from "./house";
 import { startAmbience, setAmbienceInside, sfxFootstep, sfxJump, sfxLand } from "./ambience";
 import { retroFacade, retroAsphalt, retroSidewalk, retroConcrete } from "./retro";
+import { WEAPON, FIRE, RANGE, RANGE_SCORE, ViewModel, Shooter, ShotFX, Range } from "./weapons";
 import {
   BUILDINGS,
   DISTRICTS,
@@ -1661,6 +1662,11 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
       })(),
       caption:
         CAPTION.until > performance.now() ? { title: CAPTION.title, body: CAPTION.body } : null,
+      weapon: WEAPON.slot,
+      range:
+        Math.hypot(G.px - RANGE.x, G.pz - RANGE.z) < 70
+          ? { hits: RANGE_SCORE.hits, streak: RANGE_SCORE.streak, best: RANGE_SCORE.best }
+          : null,
     });
   });
 
@@ -1689,6 +1695,8 @@ type HudState = {
   doorPrompt: string | null;
   relicPrompt: string | null;
   caption: { title: string; body: string } | null;
+  weapon: number;
+  range: { hits: number; streak: number; best: number } | null;
 };
 
 function Minimap({ h }: { h: HudState }) {
@@ -1803,6 +1811,8 @@ export function CityGame() {
     doorPrompt: null,
     relicPrompt: null,
     caption: null,
+    weapon: 0,
+    range: null,
   });
 
   useEffect(() => {
@@ -1837,6 +1847,15 @@ export function CityGame() {
         return;
       }
       if (G.deskMode !== "world") return;
+      if (k === "f" && G.mode === "foot" && WEAPON.slot > 0) {
+        FIRE.pending = true;
+        return;
+      }
+      if ((k === "1" || k === "2") && G.mode === "foot") {
+        const slot = (k === "1" ? 1 : 2) as 1 | 2;
+        WEAPON.slot = WEAPON.slot === slot ? 0 : slot;
+        return;
+      }
       if (k === "e" && G.mode === "foot") {
         // doors first — the surprises
         for (const d of DOORS) {
@@ -1856,6 +1875,7 @@ export function CityGame() {
         }
         // sit back down
         if (Math.hypot(G.px - DESK_SPOT.x, G.pz - DESK_SPOT.z) < 3.6) {
+          WEAPON.slot = 0;
           G.deskMode = "toDesk";
           G.px = STAND.x;
           G.pz = STAND.z;
@@ -1865,6 +1885,7 @@ export function CityGame() {
       }
       if (k === "e") {
         if (G.mode === "foot" && Math.hypot(G.px - G.cx, G.pz - G.cz) < 7) {
+          WEAPON.slot = 0;
           G.mode = "car";
         } else if (G.mode === "car" && Math.abs(G.cSpeed) < 6) {
           G.mode = "foot";
@@ -1897,7 +1918,11 @@ export function CityGame() {
     if (!el) return;
     const onClick = () => {
       startAmbience();
-      if (G.deskMode === "world" && !LOOK.locked) el.requestPointerLock();
+      if (G.deskMode === "world" && !LOOK.locked) {
+        el.requestPointerLock();
+        return;
+      }
+      if (LOOK.locked && G.mode === "foot" && WEAPON.slot > 0) FIRE.pending = true;
     };
     const onLockChange = () => {
       LOOK.locked = document.pointerLockElement === el;
@@ -2007,6 +2032,10 @@ export function CityGame() {
           <MissionMarkers tick={hud.mission * 100 + hud.step * 10 + (hud.phase === "active" ? 1 : 0)} />
           <Sim onHud={setHud} />
           <FrameStats />
+          <Range />
+          <Shooter />
+          <ShotFX />
+          <ViewModel />
           </Physics>
           <Preload all />
           <EffectComposer multisampling={2}>
@@ -2047,7 +2076,51 @@ export function CityGame() {
       <div className="pointer-events-none absolute inset-0 z-10" style={{ opacity: hud.deskMode === "world" ? 1 : hud.deskMode === "toWorld" ? Math.max(0, (hud.deskT - 0.7) / 0.3) : 0 }}>
         {/* crosshair */}
         {hud.deskMode === "world" && hud.mode === "foot" && hud.locked && (
-          <div className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/70" />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/70" />
+            {hud.weapon > 0 && (
+              <>
+                <div className="absolute left-1/2 top-1/2 h-[2px] w-2 -translate-x-[14px] -translate-y-1/2 bg-white/70" />
+                <div className="absolute left-1/2 top-1/2 h-[2px] w-2 translate-x-[6px] -translate-y-1/2 bg-white/70" />
+                <div className="absolute left-1/2 top-1/2 h-2 w-[2px] -translate-x-1/2 -translate-y-[14px] bg-white/70" />
+                <div className="absolute left-1/2 top-1/2 h-2 w-[2px] -translate-x-1/2 translate-y-[6px] bg-white/70" />
+              </>
+            )}
+          </div>
+        )}
+
+        {/* weapon slots — bottom right, HL-style */}
+        {hud.deskMode === "world" && hud.mode === "foot" && hud.locked && (
+          <div className="absolute bottom-6 right-6 flex gap-2 sm:right-10">
+            {[
+              [1, "X-ACTO"],
+              [2, "PISTOL"],
+            ].map(([n, label]) => (
+              <div
+                key={n}
+                className={`flex items-center gap-2 rounded-md border px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.18em] ${
+                  hud.weapon === n
+                    ? "border-[#e2c078] bg-black/70 text-[#e2c078]"
+                    : "border-white/15 bg-black/40 text-white/40"
+                }`}
+              >
+                <kbd className="font-semibold">{n}</kbd> {label}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* range scorecard */}
+        {hud.range && hud.deskMode === "world" && (
+          <div className="absolute left-6 top-32 sm:left-10">
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-[#e2c078]">The Range</p>
+            <p className="mt-1 font-mono text-[13px] uppercase tracking-[0.15em] text-white/85" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.9)" }}>
+              Hits {hud.range.hits} · Streak {hud.range.streak} · Best {hud.range.best}
+            </p>
+            {hud.weapon === 0 && (
+              <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-white/45">Press 2 for the pistol</p>
+            )}
+          </div>
         )}
 
         {/* click to look */}

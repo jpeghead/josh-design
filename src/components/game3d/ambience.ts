@@ -127,3 +127,40 @@ export function sfxLand(intensity: number) {
   burst(95, 0.7, 0.3 * k, 0.13, "lowpass");
   burst(420, 1.1, 0.12 * k, 0.07);
 }
+
+/** pistol report — low thump + mid crack + bright snap */
+export function sfxShot() {
+  if (!ctx) return;
+  burst(110, 0.6, 0.5, 0.16, "lowpass");
+  burst(900, 0.9, 0.3, 0.07);
+  burst(2600, 1.2, 0.16, 0.045, "highpass");
+}
+
+/** blade swing — quick air whoosh */
+export function sfxSwing() {
+  if (!ctx) return;
+  burst(700, 2.2, 0.1, 0.1);
+  burst(1400, 2.0, 0.07, 0.08);
+}
+
+/** steel plate ping — decaying ring + click */
+export function sfxPlate() {
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  for (const [f, g0, dur] of [
+    [1180, 0.22, 0.5],
+    [1770, 0.12, 0.34],
+    [2660, 0.07, 0.22],
+  ] as const) {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "sine";
+    o.frequency.value = f * (0.98 + Math.random() * 0.04);
+    g.gain.setValueAtTime(g0, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g).connect(ctx.destination);
+    o.start(t);
+    o.stop(t + dur + 0.02);
+  }
+  burst(500, 1, 0.12, 0.05);
+}
