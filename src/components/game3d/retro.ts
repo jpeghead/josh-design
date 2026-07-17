@@ -18,7 +18,7 @@ const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(
 
 const LEVELS = 5;
 const STEP = 255 / (LEVELS - 1);
-const DITHER = 7; // dither amplitude in 0..255 space
+const DITHER = 5; // dither amplitude in 0..255 space
 
 /** posterize + dither + warm desaturate, in place */
 export function quantizeCanvas(c: HTMLCanvasElement | OffscreenCanvas) {
@@ -126,13 +126,13 @@ export function retroFloor(rx = 1, ry = 1) {
       const rows = 8;
       const rowH = s / rows;
       for (let row = 0; row < rows; row++) {
-        const base = 104 + r() * 14;
-        g.fillStyle = `rgb(${base},${base * 0.78},${base * 0.6})`;
+        const base = 118 + r() * 12;
+        g.fillStyle = `rgb(${base},${base * 0.84},${base * 0.66})`;
         g.fillRect(0, row * rowH, s, rowH);
         // grain
         for (let k = 0; k < 26; k++) {
-          const v = base * (0.85 + r() * 0.24);
-          g.fillStyle = `rgba(${v},${v * 0.76},${v * 0.58},0.4)`;
+          const v = base * (0.88 + r() * 0.2);
+          g.fillStyle = `rgba(${v},${v * 0.82},${v * 0.64},0.4)`;
           g.fillRect(r() * s, row * rowH + r() * rowH, 10 + r() * 60, 1);
         }
         // board seams with offset joints
@@ -253,20 +253,21 @@ export function retroRug(rx = 1, ry = 1, a = "#7a5a4a", b = "#5a4034") {
 
 /** building facade — wall bands, window grid with sills, lit variation.
  *  Instance color tints the wall; windows stay dark/lit. */
-export function retroFacade(rx = 1, ry = 1) {
-  return cached("facade", rx, ry, () =>
+export function retroFacade(rx = 1, ry = 1, rows = 8) {
+  return cached(`facade:${rows}`, rx, ry, () =>
     make(256, (g, s) => {
-      const r = prng(97);
+      const r = prng(97 + rows);
       // wall base — light so instance tint owns the hue
       g.fillStyle = "#b8b2a6";
       g.fillRect(0, 0, s, s);
       // panel seams
       g.fillStyle = "rgba(60,54,46,0.35)";
       for (let y = 0; y < s; y += 32) g.fillRect(0, y, s, 2);
-      // window grid: 6 columns x 8 floors
+      // window grid: 6 columns x `rows` floors — floor count matches
+      // building height bucket so windows stay human-sized
       const cw = s / 6;
-      const ch = s / 8;
-      for (let fy = 0; fy < 8; fy++) {
+      const ch = s / rows;
+      for (let fy = 0; fy < rows; fy++) {
         for (let fx = 0; fx < 6; fx++) {
           const wx = fx * cw + cw * 0.22;
           const wy = fy * ch + ch * 0.2;

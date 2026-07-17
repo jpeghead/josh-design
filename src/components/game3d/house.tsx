@@ -121,6 +121,7 @@ export const HOUSE_WALLS: [number, number, number, number][] = (() => {
 export const FURNITURE: [number, number, number, number][] = [
   // office
   [692.3, 326.7, 697.7, 329.1], // desk
+  [694.2, 329.7, 695.8, 331.3], // task chair
   [686.25, 326.7, 687.45, 332.3], // bookshelf (west wall)
   [686.9, 336.9, 688.3, 338.3], // poster tubes corner
   // kitchen — counter split around the freestanding range
@@ -220,11 +221,12 @@ function OpeningTrim({ cx, cz, w, along }: { cx: number; cz: number; w: number; 
   const headerArgs: [number, number, number] =
     along === "x" ? [w + 0.8, headerH, HOUSE.t + 0.2] : [HOUSE.t + 0.2, headerH, w + 0.8];
   const jambArgs: [number, number, number] =
-    along === "x" ? [0.4, HOUSE.wallH, HOUSE.t + 0.2] : [HOUSE.t + 0.2, HOUSE.wallH, 0.4];
+    along === "x" ? [0.6, HOUSE.wallH, HOUSE.t + 0.2] : [HOUSE.t + 0.2, HOUSE.wallH, 0.6];
+  // jambs sit half-in the wall ends so no face is coplanar with a wall face
   const j1: [number, number, number] =
-    along === "x" ? [cx - w / 2 - 0.2, HOUSE.wallH / 2, cz] : [cx, HOUSE.wallH / 2, cz - w / 2 - 0.2];
+    along === "x" ? [cx - w / 2 - 0.1, HOUSE.wallH / 2, cz] : [cx, HOUSE.wallH / 2, cz - w / 2 - 0.1];
   const j2: [number, number, number] =
-    along === "x" ? [cx + w / 2 + 0.2, HOUSE.wallH / 2, cz] : [cx, HOUSE.wallH / 2, cz + w / 2 + 0.2];
+    along === "x" ? [cx + w / 2 + 0.1, HOUSE.wallH / 2, cz] : [cx, HOUSE.wallH / 2, cz + w / 2 + 0.1];
   return (
     <group>
       <mesh position={[cx, headerY, cz]} castShadow>
@@ -248,7 +250,7 @@ function Frosted({ x, z, w, axis, bright = 1 }: { x: number; z: number; w: numbe
   return (
     <group position={[x, 4.8, z]} rotation={[0, axis === "x" ? 0 : Math.PI / 2, 0]}>
       <mesh>
-        <boxGeometry args={[w + 0.6, 4.4, 0.5]} />
+        <boxGeometry args={[w + 0.6, 4.4, 0.56]} />
         <meshStandardMaterial color="#2c2620" roughness={0.7} />
       </mesh>
       {/* pane sits proud of the frame box on BOTH faces — visible in and out */}
@@ -272,9 +274,9 @@ function Frosted({ x, z, w, axis, bright = 1 }: { x: number; z: number; w: numbe
         <boxGeometry args={[w, 0.12, 0.08]} />
         <meshStandardMaterial color="#2c2620" />
       </mesh>
-      {/* sill */}
-      <mesh position={[0, -2.05, 0.3]}>
-        <boxGeometry args={[w + 0.8, 0.2, 0.6]} />
+      {/* sill — a slight interior ledge only */}
+      <mesh position={[0, -2.28, 0.18]}>
+        <boxGeometry args={[w + 0.8, 0.14, 0.5]} />
         <meshStandardMaterial color={TRIM} roughness={0.6} />
       </mesh>
     </group>
@@ -500,6 +502,37 @@ function CoatRack({ x, z }: { x: number; z: number }) {
         </mesh>
       ))}
     </group>
+  );
+}
+
+/** retro SMPTE-style bars, original — the TV is on, nothing is on */
+function tvBarsTexture(): THREE.CanvasTexture {
+  const c = document.createElement("canvas");
+  c.width = 128;
+  c.height = 72;
+  const g = c.getContext("2d")!;
+  const cols = ["#b8b8b0", "#b8b04a", "#4ab8b0", "#4ab84a", "#b04ab0", "#b04a4a", "#4a4ab8"];
+  cols.forEach((col, i) => {
+    g.fillStyle = col;
+    g.fillRect((i * 128) / 7, 0, 128 / 7 + 1, 54);
+  });
+  g.fillStyle = "#1a1d24";
+  g.fillRect(0, 54, 128, 18);
+  g.fillStyle = "#e8dcc4";
+  g.font = "700 9px monospace";
+  g.fillText("NO SIGNAL", 44, 66);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function TVScreen() {
+  const bars = useMemo(tvBarsTexture, []);
+  return (
+    <mesh position={[721.52, 3.7, 347.5]} rotation={[0, -Math.PI / 2, 0]}>
+      <planeGeometry args={[4.15, 2.3]} />
+      <meshBasicMaterial map={bars} toneMapped={false} />
+    </mesh>
   );
 }
 
@@ -744,12 +777,12 @@ export function House() {
       <OpeningTrim cx={713.42} cz={356} w={3.15} along="x" /> {/* front door */}
 
       {/* frosted windows — the city is a sound, not a view */}
-      <Frosted x={695} z={HOUSE.z1 + 0.28} w={4.2} axis="x" /> {/* office, behind the monitor */}
-      <Frosted x={HOUSE.x1 + 0.28} z={334.5} w={3.3} axis="z" />
-      <Frosted x={HOUSE.x1 + 0.28} z={343.5} w={4.2} axis="z" bright={0.8} />
-      <Frosted x={717.5} z={HOUSE.z1 + 0.28} w={4.2} axis="x" bright={0.9} /> {/* kitchen, over the sink */}
-      <Frosted x={HOUSE.x2 - 0.28} z={353} w={3.6} axis="z" bright={1.1} /> {/* living */}
-      <Frosted x={718} z={HOUSE.z2 - 0.28} w={4.2} axis="x" bright={0.9} /> {/* living, south */}
+      <Frosted x={695} z={HOUSE.z1 - 0.25} w={4.2} axis="x" /> {/* office, behind the monitor */}
+      <Frosted x={HOUSE.x1 - 0.25} z={334.5} w={3.3} axis="z" />
+      <Frosted x={HOUSE.x1 - 0.25} z={343.5} w={4.2} axis="z" bright={0.8} />
+      <Frosted x={717.5} z={HOUSE.z1 - 0.25} w={4.2} axis="x" bright={0.9} /> {/* kitchen, over the sink */}
+      <Frosted x={HOUSE.x2 + 0.25} z={353} w={3.6} axis="z" bright={1.1} /> {/* living */}
+      <Frosted x={718} z={HOUSE.z2 + 0.25} w={4.2} axis="x" bright={0.9} /> {/* living, south */}
 
       {/* doors — panels exactly fill their gaps */}
       <DoorMesh d={DOORS[0]} />
@@ -905,10 +938,7 @@ export function House() {
         <boxGeometry args={[0.15, 2.5, 4.35]} />
         <meshStandardMaterial color="#0c0e12" roughness={0.2} />
       </mesh>
-      <mesh position={[721.52, 3.7, 347.5]} rotation={[0, -Math.PI / 2, 0]}>
-        <planeGeometry args={[4.15, 2.3]} />
-        <meshStandardMaterial color="#131824" emissive="#22344a" emissiveIntensity={0.5} roughness={0.4} />
-      </mesh>
+      <TVScreen />
       {/* soundbar */}
       <mesh position={[720.85, 1.62, 347.5]}>
         <boxGeometry args={[0.35, 0.22, 3.4]} />
@@ -935,7 +965,7 @@ export function House() {
         <meshStandardMaterial color="#5a3a34" roughness={0.8} />
       </mesh>
       {/* one armchair, angled into the conversation corner */}
-      <Model slug="ArmChair_01" position={[717.2, 0.08, 342.6]} rotation={[0, 2.75, 0]} scale={3.2} />
+      <Model slug="ArmChair_01" position={[717.2, 0.08, 342.6]} rotation={[0, 0.72, 0]} scale={3.2} />
       {/* the photo wall — on the arch wall, facing the living room */}
       <Framed src="/archive/web/RAOF0jiw87qsIU7GR1OeKHsHEs.jpg" x={704.28} y={4.8} z={341.8} w={3.3} h={2.25} ry={Math.PI / 2} />
       <Framed src="/framer/cms/downloads/xenomorph-typeface__image.png" x={704.28} y={4.6} z={352.6} w={2.4} h={2.1} ry={Math.PI / 2} />

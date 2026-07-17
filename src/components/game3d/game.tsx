@@ -162,7 +162,7 @@ const CAR_TUNE = {
   engineForce: 2600,
   brakeForce: 6,
   maxSteer: 0.52,
-  suspensionRest: 1.0,
+  suspensionRest: 0.85,
   suspensionStiffness: 34,
   wheelRadius: 0.95,
   wheelFriction: 2.2,
@@ -335,7 +335,7 @@ function Ground() {
     <group>
       {/* ground base — worn lot concrete, tinted dark */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
-        <planeGeometry args={[1620, 1620]} />
+        <planeGeometry args={[3800, 3800]} />
         <meshLambertMaterial map={lot} color="#7a7c80" />
       </mesh>
       {/* water frame */}
@@ -374,48 +374,70 @@ function Ground() {
 }
 
 function Buildings() {
-  const winTex = useMemo(() => retroFacade(1, 1), []);
-  const { normal, neon } = useMemo(() => {
-    const normal: typeof BUILDINGS = [];
+  const texLow = useMemo(() => retroFacade(1, 1, 2), []);
+  const texMid = useMemo(() => retroFacade(1, 1, 4), []);
+  const texHigh = useMemo(() => retroFacade(1, 1, 8), []);
+  const { low, mid, high, neon } = useMemo(() => {
+    const low: typeof BUILDINGS = [];
+    const mid: typeof BUILDINGS = [];
+    const high: typeof BUILDINGS = [];
     const neon: typeof BUILDINGS = [];
-    for (const b of BUILDINGS) (b.neon ? neon : normal).push(b);
-    return { normal, neon };
+    for (const b of BUILDINGS) {
+      if (b.neon) neon.push(b);
+      else if (b.h < 26) low.push(b);
+      else if (b.h < 70) mid.push(b);
+      else high.push(b);
+    }
+    return { low, mid, high, neon };
   }, []);
 
-  const normalRef = useRef<THREE.InstancedMesh>(null!);
+  const lowRef = useRef<THREE.InstancedMesh>(null!);
+  const midRef = useRef<THREE.InstancedMesh>(null!);
+  const highRef = useRef<THREE.InstancedMesh>(null!);
   const neonRef = useRef<THREE.InstancedMesh>(null!);
 
   useEffect(() => {
     const m = new THREE.Matrix4();
     const c = new THREE.Color();
-    normal.forEach((b, i) => {
-      m.makeScale(b.w, b.h, b.d);
-      m.setPosition(b.x, b.h / 2, b.z);
-      normalRef.current.setMatrixAt(i, m);
-      normalRef.current.setColorAt(i, c.setRGB(...b.color));
-    });
-    normalRef.current.instanceMatrix.needsUpdate = true;
-    if (normalRef.current.instanceColor) normalRef.current.instanceColor.needsUpdate = true;
-    neon.forEach((b, i) => {
-      m.makeScale(b.w, b.h, b.d);
-      m.setPosition(b.x, b.h / 2, b.z);
-      neonRef.current.setMatrixAt(i, m);
-      const hues = ["#ff5f9e", "#37d3d3", "#c884ff", "#ffb84d"];
-      neonRef.current.setColorAt(i, c.set(hues[i % hues.length]));
-    });
-    neonRef.current.instanceMatrix.needsUpdate = true;
-    if (neonRef.current.instanceColor) neonRef.current.instanceColor.needsUpdate = true;
-  }, [normal, neon]);
+    const fill = (ref: React.RefObject<THREE.InstancedMesh>, list: typeof BUILDINGS, neonTint = false) => {
+      if (!ref.current) return;
+      list.forEach((b, i) => {
+        m.makeScale(b.w, b.h, b.d);
+        m.setPosition(b.x, b.h / 2, b.z);
+        ref.current!.setMatrixAt(i, m);
+        if (neonTint) {
+          const hues = ["#ff5f9e", "#37d3d3", "#c884ff", "#ffb84d"];
+          ref.current!.setColorAt(i, c.set(hues[i % hues.length]));
+        } else {
+          ref.current!.setColorAt(i, c.setRGB(...b.color));
+        }
+      });
+      ref.current.instanceMatrix.needsUpdate = true;
+      if (ref.current.instanceColor) ref.current.instanceColor.needsUpdate = true;
+    };
+    fill(lowRef, low);
+    fill(midRef, mid);
+    fill(highRef, high);
+    fill(neonRef, neon, true);
+  }, [low, mid, high, neon]);
 
   return (
     <group>
-      <instancedMesh ref={normalRef} args={[undefined, undefined, normal.length]} frustumCulled={false}>
+      <instancedMesh ref={lowRef} args={[undefined, undefined, low.length]} frustumCulled={false}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshLambertMaterial map={winTex} />
+        <meshLambertMaterial map={texLow} />
+      </instancedMesh>
+      <instancedMesh ref={midRef} args={[undefined, undefined, mid.length]} frustumCulled={false}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshLambertMaterial map={texMid} />
+      </instancedMesh>
+      <instancedMesh ref={highRef} args={[undefined, undefined, high.length]} frustumCulled={false}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshLambertMaterial map={texHigh} />
       </instancedMesh>
       <instancedMesh ref={neonRef} args={[undefined, undefined, neon.length]} frustumCulled={false}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshLambertMaterial map={winTex} emissive="#ffffff" emissiveIntensity={0.12} />
+        <meshLambertMaterial map={texMid} emissive="#ffffff" emissiveIntensity={0.12} />
       </instancedMesh>
     </group>
   );
@@ -462,7 +484,7 @@ function Skyline() {
     const r = mulberrySky(777);
     for (let i = 0; i < 64; i++) {
       const a = (i / 64) * Math.PI * 2 + r() * 0.06;
-      const rad = 1050 + r() * 320;
+      const rad = 1500 + r() * 350;
       out.push({ x: Math.cos(a) * rad, z: Math.sin(a) * rad, w: 40 + r() * 90, h: 60 + r() * 220 });
     }
     return out;
@@ -1225,7 +1247,7 @@ function CarBody() {
 
     if (!vehicle.current) {
       const v = world.createVehicleController(rb);
-      const h = -0.6; // wheel mount height on chassis
+      const h = -0.4; // wheel mount height on chassis
       const pts: [number, number, boolean][] = [
         [-2.4, -4.05, true], // front left (steered)
         [2.4, -4.05, true], // front right
@@ -1260,6 +1282,7 @@ function CarBody() {
     }
 
     const driving = G.mode === "car" && G.deskMode === "world";
+    if (driving) rb.wakeUp();
     const up = keys["w"] || keys["arrowup"];
     const down = keys["s"] || keys["arrowdown"];
     const left = keys["a"] || keys["arrowleft"];
@@ -1299,7 +1322,7 @@ function CarBody() {
       angularDamping={2}
       linearDamping={0.05}
     >
-      <CuboidCollider args={[2.7, 0.75, 6.6]} position={[0, 0.2, 0]} mass={26} />
+      <CuboidCollider args={[2.7, 0.75, 6.6]} position={[0, 0, 0]} mass={26} />
     </RigidBody>
   );
 }
@@ -1464,16 +1487,29 @@ function MissionMarkers({ tick }: { tick: number }) {
   return (
     <group>
       {showStart && next && (
-        <mesh position={[next.startX, 6, next.startZ]}>
-          <cylinderGeometry args={[3.4, 3.4, 12, 18, 1, true]} />
-          <meshBasicMaterial color="#e2c078" transparent opacity={0.45} side={THREE.DoubleSide} toneMapped={false} />
-        </mesh>
+        <group position={[next.startX, 0, next.startZ]}>
+          <mesh position={[0, 6, 0]}>
+            <cylinderGeometry args={[3.4, 3.4, 12, 18, 1, true]} />
+            <meshBasicMaterial color="#e2c078" transparent opacity={0.5} side={THREE.DoubleSide} toneMapped={false} />
+          </mesh>
+          {/* sky beam — visible across the map, GTA-school wayfinding */}
+          <mesh position={[0, 150, 0]}>
+            <cylinderGeometry args={[1.2, 2.6, 300, 10, 1, true]} />
+            <meshBasicMaterial color="#e2c078" transparent opacity={0.16} side={THREE.DoubleSide} toneMapped={false} depthWrite={false} />
+          </mesh>
+        </group>
       )}
       {step && (
-        <mesh position={[step.x, 6, step.z]}>
-          <cylinderGeometry args={[step.radius ? step.radius * 0.5 : 4, step.radius ? step.radius * 0.5 : 4, 12, 18, 1, true]} />
-          <meshBasicMaterial color="#7fd3ff" transparent opacity={0.45} side={THREE.DoubleSide} toneMapped={false} />
-        </mesh>
+        <group position={[step.x, 0, step.z]}>
+          <mesh position={[0, 6, 0]}>
+            <cylinderGeometry args={[step.radius ? step.radius * 0.5 : 4, step.radius ? step.radius * 0.5 : 4, 12, 18, 1, true]} />
+            <meshBasicMaterial color="#7fd3ff" transparent opacity={0.5} side={THREE.DoubleSide} toneMapped={false} />
+          </mesh>
+          <mesh position={[0, 150, 0]}>
+            <cylinderGeometry args={[1.2, 2.6, 300, 10, 1, true]} />
+            <meshBasicMaterial color="#7fd3ff" transparent opacity={0.14} side={THREE.DoubleSide} toneMapped={false} depthWrite={false} />
+          </mesh>
+        </group>
       )}
     </group>
   );
@@ -1620,6 +1656,12 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
         } else {
           G.phase = G.mission === MISSIONS.length - 1 ? "credits" : "passed";
           G.phaseT = 0;
+          try {
+            localStorage.setItem(
+              "wc-save",
+              JSON.stringify({ mission: G.mission, hits: RANGE_SCORE.hits, best: RANGE_SCORE.best })
+            );
+          } catch {}
         }
       }
     } else if (G.phase === "passed") {
@@ -1675,6 +1717,38 @@ function Sim({ onHud }: { onHud: (h: HudState) => void }) {
       weapon: WEAPON.slot,
       lockFallback: LOOK.fallback,
       stepHits: Math.max(0, RANGE_SCORE.hits - stepHitsBase.current),
+      objective: (() => {
+        if (G.deskMode !== "world") return null;
+        let tx = 0,
+          tz = 0,
+          label = "",
+          color = "#e2c078";
+        if (G.phase === "roam") {
+          const nx = G.mission + 1 < MISSIONS.length ? MISSIONS[G.mission + 1] : null;
+          if (!nx) return null;
+          tx = nx.startX;
+          tz = nx.startZ;
+          label = `MISSION: ${nx.title}`;
+        } else if (G.phase === "active") {
+          const mm = MISSIONS[G.mission];
+          const st = mm.steps[G.step];
+          tx = st.x;
+          tz = st.z;
+          label = st.text.toUpperCase();
+          color = "#7fd3ff";
+        } else {
+          return null;
+        }
+        const dx = tx - G.px;
+        const dz = tz - G.pz;
+        const heading = G.mode === "car" ? G.cHeading : LOOK.yaw;
+        // bearing relative to facing: 0 = ahead
+        const world = Math.atan2(-dx, -dz);
+        let rel = world - heading;
+        while (rel > Math.PI) rel -= Math.PI * 2;
+        while (rel < -Math.PI) rel += Math.PI * 2;
+        return { label, dist: Math.round(Math.hypot(dx, dz) / 3), bearing: rel, color };
+      })(),
       range:
         Math.hypot(G.px - RANGE.x, G.pz - RANGE.z) < 70
           ? { hits: RANGE_SCORE.hits, streak: RANGE_SCORE.streak, best: RANGE_SCORE.best }
@@ -1711,6 +1785,7 @@ type HudState = {
   range: { hits: number; streak: number; best: number } | null;
   lockFallback: boolean;
   stepHits: number;
+  objective: { label: string; dist: number; bearing: number; color: string } | null;
 };
 
 function Minimap({ h }: { h: HudState }) {
@@ -1720,34 +1795,42 @@ function Minimap({ h }: { h: HudState }) {
     if (!c) return;
     const g = c.getContext("2d")!;
     const S = 150;
+    const WIN = 380; // world units across the radar — zoomed to street level
     c.width = S * 2;
     c.height = S * 2;
     g.scale(2, 2);
-    const w2m = (v: number) => ((v + 800) / 1600) * S;
-    // bg water + land
-    g.fillStyle = "#141c33";
+    const mx = (v: number) => ((v - h.px) / WIN) * S + S / 2;
+    const mz = (v: number) => ((v - h.pz) / WIN) * S + S / 2;
+    g.save();
+    g.beginPath();
+    g.arc(S / 2, S / 2, S / 2, 0, Math.PI * 2);
+    g.clip();
+    // ground
+    g.fillStyle = "#20242c";
     g.fillRect(0, 0, S, S);
-    g.fillStyle = "#242a31";
-    g.fillRect(w2m(-790), w2m(-790), w2m(790) - w2m(-790), w2m(790) - w2m(-790));
     for (const d of DISTRICTS) {
-      g.fillStyle = d.hue + "55";
-      g.fillRect(w2m(d.x1), w2m(d.z1), w2m(d.x2) - w2m(d.x1), w2m(d.z2) - w2m(d.z1));
+      g.fillStyle = d.hue + "44";
+      g.fillRect(mx(d.x1), mz(d.z1), ((d.x2 - d.x1) / WIN) * S, ((d.z2 - d.z1) / WIN) * S);
     }
-    g.strokeStyle = "#3a414b";
-    g.lineWidth = 1.4;
+    // roads at radar scale
+    g.strokeStyle = "#4a505a";
+    g.lineWidth = (ROAD / WIN) * S;
     for (const x of ROADS_X) {
       g.beginPath();
-      g.moveTo(w2m(x), 0);
-      g.lineTo(w2m(x), S);
+      g.moveTo(mx(x), 0);
+      g.lineTo(mx(x), S);
       g.stroke();
     }
     for (const z of ROADS_Z) {
       g.beginPath();
-      g.moveTo(0, w2m(z));
-      g.lineTo(S, w2m(z));
+      g.moveTo(0, mz(z));
+      g.lineTo(S, mz(z));
       g.stroke();
     }
-    // target
+    // the house — home marker
+    g.fillStyle = "#c8a24b";
+    g.fillRect(mx(704) - 2, mz(341) - 2, 4, 4);
+    // objective blip, clamped to the rim like GTA
     const m = h.mission >= 0 ? MISSIONS[h.mission] : null;
     const next = h.mission + 1 < MISSIONS.length ? MISSIONS[h.mission + 1] : null;
     let bx: number | null = null,
@@ -1762,22 +1845,34 @@ function Minimap({ h }: { h: HudState }) {
       bz = next.startZ;
     }
     if (bx !== null && bz !== null) {
+      let px = mx(bx) - S / 2;
+      let pz = mz(bz) - S / 2;
+      const len = Math.hypot(px, pz);
+      const rim = S / 2 - 8;
+      if (len > rim) {
+        px = (px / len) * rim;
+        pz = (pz / len) * rim;
+      }
       g.fillStyle = bc;
       g.beginPath();
-      g.arc(w2m(bx), w2m(bz), 4, 0, Math.PI * 2);
+      g.arc(S / 2 + px, S / 2 + pz, 4.5, 0, Math.PI * 2);
       g.fill();
+      g.strokeStyle = "#00000088";
+      g.lineWidth = 1;
+      g.stroke();
     }
-    // player arrow
+    // player arrow, center
     g.save();
-    g.translate(w2m(h.px), w2m(h.pz));
+    g.translate(S / 2, S / 2);
     g.rotate(-h.heading);
     g.fillStyle = "#ffffff";
     g.beginPath();
-    g.moveTo(0, -5);
-    g.lineTo(3.4, 4);
-    g.lineTo(-3.4, 4);
+    g.moveTo(0, -6);
+    g.lineTo(4, 5);
+    g.lineTo(-4, 5);
     g.closePath();
     g.fill();
+    g.restore();
     g.restore();
   });
   return (
@@ -1801,6 +1896,33 @@ export function CityGame() {
       return () => clearTimeout(id);
     }
   }, [progress, booted]);
+  const [crash, setCrash] = useState<string | null>(null);
+  useEffect(() => {
+    const report = (msg: string) => {
+      try {
+        localStorage.setItem("wc-crash", `${new Date().toISOString()} ${msg}`.slice(0, 500));
+      } catch {}
+      setCrash(msg.slice(0, 200));
+    };
+    const onErr = (e: ErrorEvent) => report(e.error?.stack ?? e.message);
+    const onRej = (e: PromiseRejectionEvent) => report(String(e.reason?.stack ?? e.reason));
+    window.addEventListener("error", onErr);
+    window.addEventListener("unhandledrejection", onRej);
+    const canvas = document.querySelector("[data-game-canvas] canvas, canvas");
+    const onLost = (ev: Event) => {
+      ev.preventDefault();
+      report("WebGL context lost (GPU reset) — reloading");
+      setTimeout(() => window.location.reload(), 1200);
+    };
+    canvas?.addEventListener("webglcontextlost", onLost);
+    const prev = localStorage.getItem("wc-crash");
+    if (prev) console.warn("[game] previous session crash:", prev);
+    return () => {
+      window.removeEventListener("error", onErr);
+      window.removeEventListener("unhandledrejection", onRej);
+      canvas?.removeEventListener("webglcontextlost", onLost);
+    };
+  }, []);
   const [fpsOn, setFpsOn] = useState(false);
   useEffect(() => {
     setFpsOn(new URLSearchParams(window.location.search).get("fps") === "1");
@@ -1829,6 +1951,7 @@ export function CityGame() {
     range: null,
     lockFallback: false,
     stepHits: 0,
+    objective: null,
   });
 
   useEffect(() => {
@@ -2002,6 +2125,19 @@ export function CityGame() {
     };
   }, [tier]);
 
+  /* saved progress — missions survive a reload */
+  useEffect(() => {
+    if (tier !== "full") return;
+    try {
+      const raw = localStorage.getItem("wc-save");
+      if (!raw) return;
+      const sv = JSON.parse(raw) as { mission?: number; hits?: number; best?: number };
+      if (typeof sv.mission === "number" && sv.mission > G.mission) G.mission = sv.mission;
+      if (typeof sv.hits === "number") RANGE_SCORE.hits = sv.hits;
+      if (typeof sv.best === "number") RANGE_SCORE.best = sv.best;
+    } catch {}
+  }, [tier]);
+
   /* QA deep link: /?room=1 stand in the office */
   useEffect(() => {
     if (tier !== "full") return;
@@ -2071,7 +2207,7 @@ export function CityGame() {
           <hemisphereLight args={["#ffb98a", "#3a2f4d", 1.15]} />
           <ambientLight color="#ffd9b0" intensity={0.22} />
           <ShadowSun />
-          <fog attach="fog" args={["#5a3a55", 220, 1500]} />
+          <fog attach="fog" args={["#5a3a55", 260, 2300]} />
           <Physics gravity={[0, -32, 0]}>
           <StaticColliders />
           <PlayerBody />
@@ -2105,6 +2241,15 @@ export function CityGame() {
           </EffectComposer>
         </Suspense>
       </Canvas>
+
+      {/* crash banner — the flight recorder speaks */}
+      {crash && (
+        <div className="absolute inset-x-0 top-10 z-[60] flex justify-center">
+          <p className="max-w-2xl border border-red-400/60 bg-black/85 px-4 py-2 font-mono text-[11px] text-red-300">
+            CRASH · {crash} — copy this to Josh&rsquo;s next report
+          </p>
+        </div>
+      )}
 
       {/* loading gate — everything preloads behind this, so nothing pops in */}
       {!booted && (
@@ -2250,6 +2395,26 @@ export function CityGame() {
                 </kbd>
                 <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60">the car is in the driveway</span>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* waypoint — objective, distance, bearing arrow */}
+        {hud.objective && hud.phase !== "passed" && hud.phase !== "credits" && hud.phase !== "brief" && (
+          <div className="absolute inset-x-0 top-8 flex justify-center">
+            <div className="flex items-center gap-3 rounded-md border border-white/15 bg-black/60 px-4 py-2">
+              <span
+                className="inline-block font-mono text-[15px]"
+                style={{ color: hud.objective.color, transform: `rotate(${hud.objective.bearing}rad)` }}
+              >
+                ↑
+              </span>
+              <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/85">
+                {hud.objective.label}
+              </span>
+              <span className="font-mono text-[11px] tabular-nums" style={{ color: hud.objective.color }}>
+                {hud.objective.dist}m
+              </span>
             </div>
           </div>
         )}
