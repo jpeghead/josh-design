@@ -85,6 +85,62 @@ your asset to its portfolio list.
 
 ---
 
+## 3b. The PORTFOLIO layer — where the real site content lives
+
+The game is only half the repo. The other half is the actual josh.design
+portfolio: normal Next.js pages + typed content modules. **This is where
+you edit copy, projects, writing, products — the real résumé content.**
+It's entirely separate from `game3d/`.
+
+### Content / data (edit these to change what the site *says*)
+`src/content/` — one typed module per section, hand-authored:
+- `archive.ts` — **the spine of the site**: the career timeline, era by
+  era (light → dark). Start here to understand the content model.
+- `about.ts` — approved about/bio copy. First-person, factual, do not
+  embellish (there's a note in the file: the story is about refusing to
+  quit; no former employer portrayed badly).
+- `products.ts` — things Josh is building at Boneyard.
+- `books.ts` — the books, presented on-site.
+- `writing.ts` — the essays/books hand-triaged for the site.
+- `uses.generated.ts`, `writing.generated.ts` — **AUTO-GENERATED** from
+  Framer CMS/blog exports by `scripts/gen-*.mjs`. **Do not hand-edit
+  these**; change the source data or the generator and re-run.
+
+`src/lib/data.ts` — the master career data, **locked to a real timeline
+with factual ground rules in its header comment.** Read those rules
+before changing anything here. Dates/facts are real — do not invent or
+"improve" them.
+
+### Routes (Next.js App Router)
+`src/app/` — one folder per route:
+- `page.tsx` (home) · `about/` · `products/` · `uses/` · `contact/`
+- `work/page.tsx` + `work/[slug]/page.tsx` (project index + detail)
+- `writing/page.tsx` + `writing/[slug]/page.tsx` (essays)
+- `layout.tsx`, `not-found.tsx`, `sitemap.ts`, `robots.ts`, `icon.tsx`
+- Pages read from `src/content/*` and `src/lib/data.ts` — content is data,
+  not hardcoded in JSX. To add/change a project or essay, edit the content
+  module; the route renders it.
+
+### Portfolio UI components (non-game)
+`src/components/` top level (everything **except** `game3d/`):
+`portfolio-home.tsx`, `site-header.tsx`, `site-footer.tsx`,
+`contact-form.tsx`, `command-palette.tsx`, `artifact-tile.tsx`,
+`uses-index.tsx`, plus `canvas/`, `line/`, `room/` subfolders.
+
+### Real image assets
+`public/framer/` and `public/archive/` hold the real portfolio imagery
+(screenshots, photos, book covers) referenced by the content modules and
+also framed on the walls inside the game's house.
+
+### Rule of thumb
+- Changing **what the portfolio says or shows** → `src/content/*`,
+  `src/lib/data.ts`, `src/app/*`, `src/components/*` (not `game3d/`).
+- Changing **the game world** → `src/components/game3d/*`.
+- The game's monitor renders the real site, so the two do touch — but you
+  almost never need to edit both for one task. Know which layer you're in.
+
+---
+
 ## 4. The two mental models that make the code make sense
 
 ### (a) Game state is module-level mutable, NOT React state
