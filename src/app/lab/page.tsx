@@ -5,7 +5,7 @@ import { Reveal } from "@/components/motion";
 import { lab, REPO } from "@/content/lab";
 
 export const metadata: Metadata = {
-  title: "Lab",
+  title: "Builds",
   description: "Things built to see if they could be built: a playable 3D city, agent UI patterns, a live Claude grounded in this site, and more. All running, all in one repo.",
 };
 
@@ -15,10 +15,10 @@ export default function LabPage() {
   return (
     <Container wide>
       <PageHeader
-        label="Lab"
+        label="Builds"
         serif
-        title="Built to see if it could be built."
-        dek="Every entry runs. Most were made with an agent in the loop, in days not quarters. They're here because the fastest way to learn what AI can ship is to ship with it."
+        title="Things I built with AI, that you can run."
+        dek="A model on your GPU, agent interfaces that work, a 3D city built in sixteen days with an agent, a live Claude grounded in this site. Every entry runs in the browser you're holding."
       />
 
       <ul className="grid gap-x-6 gap-y-14 pb-20 sm:grid-cols-2">

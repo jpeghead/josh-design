@@ -5,12 +5,12 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const NAV = [
+  { href: "/lab", label: "Builds" },
+  { href: "/process", label: "Process" },
   { href: "/work", label: "Work" },
-  { href: "/lab", label: "Lab" },
   { href: "/products", label: "Products" },
   { href: "/writing", label: "Writing" },
   { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
 ];
 
 export function SiteHeader() {

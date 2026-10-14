@@ -18,6 +18,31 @@ export type LabEntry = {
 
 export const lab: LabEntry[] = [
   {
+    slug: "local",
+    title: "A model in your browser",
+    kind: "Live model",
+    blurb:
+      "A language model running on your GPU through WebGPU. No server, no key, nothing leaves your machine. Weights stream once and cache; it's grounded on this site's text, trimmed for a small context window.",
+    built: "WebLLM · WebGPU · Qwen 2.5 0.5B / Llama 3.2 1B · streaming",
+    when: "October 2026",
+    href: "/lab/local",
+    image: "/img/lab/local.jpg",
+    aspect: "16 / 10",
+    live: true,
+  },
+  {
+    slug: "particles",
+    title: "A life in particles",
+    kind: "Interactive",
+    blurb:
+      "The hero of this site: four photographs of my life sampled into 65,536 GPU particles that morph from the school photo to the Marine to the shipped product to the city built with an agent. Two custom shaders, one draw call, pointer physics.",
+    built: "Three.js · GLSL · React Three Fiber · no library effects",
+    when: "October 2026",
+    href: "/#top",
+    image: "/img/lab/particles.jpg",
+    aspect: "16 / 10",
+  },
+  {
     slug: "city",
     title: "Whitehead City",
     kind: "Playable",

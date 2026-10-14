@@ -4,7 +4,7 @@ import { Container, PageHeader } from "@/components/ui";
 import { Ask } from "@/components/lab/ask";
 
 export const metadata: Metadata = {
-  title: "Ask my portfolio — Lab",
+  title: "Ask my portfolio — Builds",
   description: "A live Claude, grounded in the text of this site, that answers questions about Josh's work.",
 };
 
@@ -13,7 +13,7 @@ export default function Page() {
   return (
     <Container>
       <Link href="/lab" className="mt-24 inline-block text-sm text-fg-2 transition-colors hover:text-fg sm:mt-32">
-        ‹ Lab
+        ‹ Builds
       </Link>
       <div className="-mt-20 sm:-mt-28">
         <PageHeader

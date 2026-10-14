@@ -1,184 +1,55 @@
 import Link from "next/link";
 import { Container, Label, Arrow } from "@/components/ui";
 import { Reveal, Words } from "@/components/motion";
-import { WorkCover } from "@/components/work-cover";
-import { StoryVideo } from "@/components/story-video";
-import { products } from "@/content/products";
+import { Hero } from "@/components/builds/hero";
 import { lab } from "@/content/lab";
-import { story } from "@/content/work-media";
 import { portedEssays } from "@/content/writing";
+import { workMedia } from "@/content/work-media";
 import { projects } from "@/lib/data";
+
+const SKILLS: { title: string; body: string; href: string; proof: string }[] = [
+  { title: "Models on the edge", body: "Inference in the browser on WebGPU: weights streamed, cached, grounded, streamed back token by token. No server in the loop.", href: "/lab/local", proof: "A model in your browser" },
+  { title: "Grounding and streaming", body: "A route handler that builds its system prompt from the same files that render the pages, streams from the Anthropic SDK, and rate-limits per visitor.", href: "/lab/ask", proof: "Ask my portfolio" },
+  { title: "Agent interaction design", body: "Progress you can trust, permissions with real scope, failure that recovers, confidence that's graded. Built, not mocked.", href: "/lab/agents", proof: "Agent UI patterns" },
+  { title: "Agentic workflow", body: "Claude Code and Codex read the repo, build, verify in a browser, and commit. I set direction and the bar. Whole directions get built and killed in a day.", href: "/process", proof: "Process, with the artifacts" },
+  { title: "Real-time 3D and shaders", body: "A 65k-particle GLSL hero, a physics-driven 3D city, a scroll-conducted studio. Custom shaders, procedural textures, no asset downloads.", href: "/lab/city", proof: "Whitehead City" },
+  { title: "Product, end to end", body: "First designer to Head of Design twice, both companies acquired. Apple and Google partnerships shipped. The foundation under all of the above.", href: "/work", proof: "Fifteen years of work" },
+];
 
 export default function Home() {
   const featured = projects.filter((p) => p.tier === "case-study");
-  const building = products.filter((p) => p.status !== "Released").slice(0, 4);
+  const builds = lab.filter((l) => ["local", "agents", "city", "ask", "particles", "studio"].includes(l.slug));
   const essay = portedEssays[0];
 
   return (
     <>
-      {/* 01 — the opening frame */}
-      <section className="relative isolate min-h-[100svh] overflow-hidden">
-        <div className="gutter mx-auto grid w-full max-w-[1440px] items-end gap-12 pb-16 pt-32 sm:pt-40 lg:min-h-[100svh] lg:grid-cols-12 lg:items-center lg:pb-24">
-          <div className="lg:col-span-7">
-            <p className="text-sm text-fg-2">Josh Whitehead · Designer who builds AI products · Los Angeles</p>
-            <h1 className="serif mt-6 max-w-[14ch] text-[3rem] leading-[0.98] text-balance sm:text-[4.75rem] lg:text-[5.75rem]">
-              <Words text="I've been making things since before I knew it was a job." />
-            </h1>
-            <Reveal delay={0.5}>
-              <p className="mt-8 max-w-xl text-xl leading-snug text-fg-2 text-pretty sm:text-2xl">
-                A kid who drew all day. A Marine with a camera. The first designer at two companies that got acquired. Now I
-                design and build AI products end to end, with an agent in the loop: the interface, the system, and the thing
-                that ships.
-              </p>
-              <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
-                <Link href="#work" className="group inline-flex items-center gap-2 rounded-full bg-fg px-5 py-2.5 text-[15px] font-medium text-bg transition-opacity hover:opacity-85">
-                  See the work
-                  <span aria-hidden className="transition-transform duration-300 group-hover:translate-y-0.5">
-                    ↓
-                  </span>
-                </Link>
-                <Arrow href="/lab" className="text-fg-2">
-                  Things I built with AI
-                </Arrow>
-              </div>
-            </Reveal>
-          </div>
-          <div className="lg:col-span-4 lg:col-start-9">
-            <Reveal delay={0.25}>
-              <div className="frame mx-auto w-[min(100%,360px)] rounded-xl lg:w-full" style={{ aspectRatio: story.montage.aspect }}>
-                <StoryVideo src={story.montage.src} poster={story.montage.poster} />
-              </div>
-              <p className="mt-3 text-center text-xs text-fg-3 lg:text-left">1993 → now, in one stack of photographs.</p>
-            </Reveal>
-          </div>
-        </div>
-      </section>
+      <Hero />
 
-      {/* 02–04 — the work, each as its own cover */}
-      <div id="work" className="scroll-mt-16">
-        <Container wide className="pb-6 pt-24">
-          <Label>Selected work</Label>
-        </Container>
-        {featured.map((p, i) => (
-          <WorkCover key={p.slug} project={p} index={i} flip={i % 2 === 1} />
-        ))}
-        <Container wide className="py-10">
-          <Arrow href="/work">All seven projects, and the client list</Arrow>
-        </Container>
-      </div>
-
-      {/* 05 — the lab: proof of building with AI */}
-      <section className="border-t border-line" aria-labelledby="h-lab">
+      {/* builds — first, because they're the point */}
+      <section id="builds" className="scroll-mt-16 border-t border-line" aria-labelledby="h-builds">
         <Container wide className="py-24 sm:py-32">
-          <div className="grid gap-10 lg:grid-cols-12">
-            <div className="lg:col-span-4">
-              <Label>
-                <span id="h-lab">The Lab</span>
-              </Label>
-              <h2 className="serif mt-4 text-[2.5rem] leading-[1] text-balance sm:text-[3.5rem]">
-                <Words text="Built to see if it could be built." />
-              </h2>
-              <Reveal delay={0.3}>
-                <p className="mt-6 max-w-md text-lg text-fg-2 text-pretty">
-                  Things made with an agent in the loop, in days: a playable 3D city of my life, working agent-interface
-                  patterns, a live Claude grounded in this site. Every one runs.
-                </p>
-                <Arrow href="/lab" className="mt-6">
-                  Open the lab
-                </Arrow>
-              </Reveal>
-            </div>
-            <ul className="grid gap-6 sm:grid-cols-3 lg:col-span-8">
-              {lab
-                .filter((l) => ["city", "agents", "ask"].includes(l.slug))
-                .map((l, i) => (
-                  <Reveal key={l.slug} as="li" delay={0.06 * i}>
-                    <Link href={l.href} className="group block">
-                      <div className="frame frame-hover rounded-lg" style={{ aspectRatio: "4 / 3" }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        {l.image && <img src={l.image} alt="" loading="lazy" decoding="async" />}
-                      </div>
-                      <p className="mt-3 flex items-baseline justify-between gap-3">
-                        <span className="tight text-[1.0625rem] font-medium">{l.title}</span>
-                        <span className="text-xs text-fg-3">{l.kind}</span>
-                      </p>
-                      <p className="mt-1 text-sm text-fg-2">{l.built.split(" · ").slice(0, 2).join(" · ")}</p>
-                    </Link>
-                  </Reveal>
-                ))}
-            </ul>
-          </div>
-        </Container>
-      </section>
-
-      {/* 05 — the story, in three photographs */}
-      <section className="border-t border-line" aria-labelledby="h-story">
-        <Container wide className="py-24 sm:py-32">
-          <div className="grid gap-12 lg:grid-cols-12">
-            <div className="lg:col-span-5">
-              <Label>
-                <span id="h-story">Where it comes from</span>
-              </Label>
-              <h2 className="serif mt-4 text-[2.5rem] leading-[1] text-balance sm:text-[3.5rem]">
-                <Words text="Five years behind a camera in places that didn't ask for one." />
-              </h2>
-              <Reveal delay={0.3}>
-                <p className="mt-6 max-w-md text-lg text-fg-2 text-pretty">
-                  The Marine Corps is where it clicked. I edited my own photographs, kept asking how things were made, and
-                  taught myself off YouTube one video at a time. Everything since is the same question, asked at scale.
-                </p>
-                <Arrow href="/about" className="mt-6">
-                  Read the whole story
-                </Arrow>
-              </Reveal>
-            </div>
-            <div className="grid grid-cols-6 gap-3 lg:col-span-7">
-              <Reveal className="col-span-6" delay={0.05}>
-                <div className="frame rounded-lg" style={{ aspectRatio: story.runway.aspect }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={story.runway.src} alt={story.runway.alt} loading="lazy" decoding="async" />
-                </div>
-              </Reveal>
-              <Reveal className="col-span-2" delay={0.15}>
-                <div className="frame rounded-lg" style={{ aspectRatio: "3 / 4" }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={story.marine.src} alt={story.marine.alt} loading="lazy" decoding="async" />
-                </div>
-              </Reveal>
-              <Reveal className="col-span-4" delay={0.2}>
-                <div className="frame h-full rounded-lg" style={{ aspectRatio: "2 / 1" }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={story.range.src} alt={story.range.alt} loading="lazy" decoding="async" />
-                </div>
-              </Reveal>
-            </div>
-          </div>
-        </Container>
-      </section>
-
-      {/* 06 — building now */}
-      <section className="border-t border-line" aria-labelledby="h-building">
-        <Container wide className="py-24 sm:py-32">
-          <div className="flex items-baseline justify-between">
+          <div className="flex items-baseline justify-between gap-6">
             <Label>
-              <span id="h-building">Building now, at Boneyard</span>
+              <span id="h-builds">Builds · every one runs</span>
             </Label>
-            <Arrow href="/products" className="text-sm text-fg-2">
-              All products
+            <Arrow href="/lab" className="text-sm text-fg-2">
+              All builds
             </Arrow>
           </div>
-          <ul className="mt-6 grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2">
-            {building.map((p, i) => (
-              <Reveal key={p.slug} as="li" delay={0.05 * i} className="bg-bg">
-                <Link href={`/products/${p.slug}`} className="group flex h-full flex-col justify-between p-7 transition-colors hover:bg-fill sm:p-9">
-                  <div className="flex items-baseline justify-between">
-                    <span className="tighter text-[2rem] font-semibold leading-none">{p.name}</span>
-                    <span className="text-xs text-fg-3">{p.status}</span>
+          <ul className="mt-6 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+            {builds.map((l, i) => (
+              <Reveal key={l.slug} as="li" delay={0.05 * (i % 3)}>
+                <Link href={l.href} className="group block">
+                  <div className="frame frame-hover rounded-lg" style={{ aspectRatio: "16 / 10" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {l.image && <img src={l.image} alt="" loading={i < 3 ? "eager" : "lazy"} decoding="async" />}
                   </div>
-                  <p className="serif mt-10 text-[1.75rem] leading-tight text-fg-2 sm:text-[2rem]">{p.tagline}</p>
-                  <span className="mt-6 text-sm text-fg-3 transition-colors group-hover:text-fg">
-                    Open <span aria-hidden>›</span>
-                  </span>
+                  <p className="mt-3 flex items-baseline justify-between gap-3">
+                    <span className="tight text-[1.125rem] font-medium">{l.title}</span>
+                    <span className="shrink-0 text-xs text-fg-3">{l.kind}</span>
+                  </p>
+                  <p className="mt-1 text-sm text-fg-2 text-pretty">{l.blurb.split(". ")[0]}.</p>
+                  <p className="mt-2 text-xs text-fg-3">{l.built}</p>
                 </Link>
               </Reveal>
             ))}
@@ -186,28 +57,120 @@ export default function Home() {
         </Container>
       </section>
 
-      {/* 07 — one essay */}
+      {/* what I do with models — each claim links to the proof */}
+      <section className="border-t border-line" aria-labelledby="h-skills">
+        <Container wide className="py-24 sm:py-32">
+          <div className="grid gap-10 lg:grid-cols-12">
+            <div className="lg:col-span-4">
+              <Label>
+                <span id="h-skills">What I do with models</span>
+              </Label>
+              <h2 className="serif mt-4 text-[2.5rem] leading-[1] text-balance sm:text-[3.5rem]">
+                <Words text="Every claim here links to the thing that proves it." />
+              </h2>
+            </div>
+            <ol className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:col-span-8">
+              {SKILLS.map((s, i) => (
+                <Reveal key={s.title} as="li" delay={0.04 * i} className="border-t border-line pt-5">
+                  <h3 className="tight text-[1.125rem] font-medium">{s.title}</h3>
+                  <p className="mt-2 text-[15px] text-fg-2 text-pretty">{s.body}</p>
+                  <Arrow href={s.href} className="mt-3 text-sm">
+                    {s.proof}
+                  </Arrow>
+                </Reveal>
+              ))}
+            </ol>
+          </div>
+        </Container>
+      </section>
+
+      {/* process — the loop, briefly */}
+      <section className="border-t border-line" aria-labelledby="h-process">
+        <Container wide className="py-24 sm:py-32">
+          <div className="grid gap-10 lg:grid-cols-12 lg:items-end">
+            <div className="lg:col-span-7">
+              <Label>
+                <span id="h-process">How I work</span>
+              </Label>
+              <h2 className="serif mt-4 text-[2.5rem] leading-[1] text-balance sm:text-[3.5rem]">
+                <Words text="An agent in the loop, a person at the wheel." />
+              </h2>
+              <Reveal delay={0.3}>
+                <p className="mt-6 max-w-2xl text-lg text-fg-2 text-pretty">
+                  Thirty-five commits in sixteen days built a playable city. A subagent cataloged 128 images by project while I did
+                  something else. A 299-line handoff document lets a second agent pick the repo up cold. The process page shows the
+                  real artifacts, not a diagram.
+                </p>
+                <Arrow href="/process" className="mt-6">
+                  See the process
+                </Arrow>
+              </Reveal>
+            </div>
+            <dl className="grid grid-cols-3 gap-6 lg:col-span-5">
+              {[
+                ["35", "commits, Jul 6–22"],
+                ["10,217", "lines across four experiments"],
+                ["128", "images cataloged by a subagent"],
+              ].map(([n, l]) => (
+                <div key={l} className="border-t border-line pt-4">
+                  <dt className="tighter text-[2.25rem] font-semibold leading-none sm:text-[3rem]">{n}</dt>
+                  <dd className="mt-2 text-sm text-fg-3">{l}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </Container>
+      </section>
+
+      {/* the foundation — product design, compact */}
+      <section className="border-t border-line" aria-labelledby="h-work">
+        <Container wide className="py-24 sm:py-32">
+          <div className="flex items-baseline justify-between gap-6">
+            <Label>
+              <span id="h-work">The foundation · fifteen years of product design</span>
+            </Label>
+            <Arrow href="/work" className="text-sm text-fg-2">
+              All work
+            </Arrow>
+          </div>
+          <ul className="mt-6 grid gap-x-5 gap-y-10 sm:grid-cols-3">
+            {featured.map((p, i) => {
+              const m = workMedia[p.slug];
+              return (
+                <Reveal key={p.slug} as="li" delay={0.05 * i}>
+                  <Link href={`/work/${p.slug}`} className="group block">
+                    <div className="frame frame-hover rounded-lg" style={{ aspectRatio: "1 / 1", background: m?.field }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {m?.cover.src && <img src={m.cover.src} alt={m.cover.alt} loading="lazy" decoding="async" />}
+                    </div>
+                    <p className="mt-3 flex items-baseline justify-between gap-3">
+                      <span className="tight text-[1.125rem] font-medium">{p.title}</span>
+                      <span className="shrink-0 text-xs text-fg-3">{p.timeline.replace(/[A-Za-z]{3} /g, "")}</span>
+                    </p>
+                    <p className="mt-1 text-sm text-fg-2 text-pretty">{p.summary}</p>
+                  </Link>
+                </Reveal>
+              );
+            })}
+          </ul>
+        </Container>
+      </section>
+
       {essay && (
         <section className="border-t border-line" aria-labelledby="h-essay">
-          <Container wide className="py-24 sm:py-32">
-            <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
-              <div className="lg:col-span-5">
-                <Reveal>
-                  <div className="frame rounded-lg" style={{ aspectRatio: "4 / 3" }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {essay.image && <img src={essay.image} alt="" loading="lazy" decoding="async" />}
-                  </div>
-                </Reveal>
-              </div>
-              <div className="lg:col-span-6 lg:col-start-7">
+          <Container wide className="py-20 sm:py-24">
+            <div className="grid gap-8 lg:grid-cols-12 lg:items-center">
+              <div className="lg:col-span-4">
                 <Label>
-                  <span id="h-essay">Writing</span>
+                  <span id="h-essay">Latest writing</span>
                 </Label>
+              </div>
+              <div className="lg:col-span-8">
                 <Reveal>
-                  <h2 className="serif mt-4 text-[2.5rem] leading-[1] sm:text-[3.5rem]">{essay.title}</h2>
-                  <p className="mt-5 max-w-lg text-lg text-fg-2 text-pretty">{essay.description}</p>
-                  <Arrow href={`/writing/${essay.slug}`} className="mt-6">
-                    Read the essay
+                  <h2 className="serif text-[2rem] leading-[1.05] sm:text-[2.75rem]">{essay.title}</h2>
+                  <p className="mt-3 max-w-2xl text-fg-2 text-pretty">{essay.description}</p>
+                  <Arrow href={`/writing/${essay.slug}`} className="mt-4">
+                    Read it
                   </Arrow>
                 </Reveal>
               </div>

@@ -29,3 +29,19 @@ export function groundingText(): string {
   out.push(`## Elsewhere\n${socials.map((s) => `- ${s.label}: ${s.href}`).join("\n")}`);
   return out.join("\n\n");
 }
+
+/** A compact grounding for small on-device models: one fact per line, dates first. */
+export function groundingSummary(): string {
+  const out: string[] = [];
+  out.push(`Josh Whitehead is a product designer who builds AI products, based in Los Angeles. Email: josh@josh.design.`);
+  out.push(`CAREER, in order (years are exact):`);
+  career.forEach((c) => out.push(`- ${c.span}: ${c.org}. Role: ${c.role}.`));
+  out.push(`PROJECTS (years are exact):`);
+  projects.forEach((p) => out.push(`- ${p.title}, ${p.timeline}. Role: ${p.role}. ${p.summary} Outcome: ${p.outcome.join(" ")}`));
+  out.push(`PRODUCTS Josh is building at his studio Boneyard (none shipped yet unless marked Released):`);
+  products.forEach((p) => out.push(`- ${p.name}: ${p.tagline} Status: ${p.status}.`));
+  out.push(`BUILDS made with AI agents:`);
+  lab.forEach((l) => out.push(`- ${l.title} (${l.when}): ${l.blurb.split(". ")[0]}.`));
+  out.push(`BACKGROUND: ${aboutParagraphs[0]}`);
+  return out.join("\n");
+}

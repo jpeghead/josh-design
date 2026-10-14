@@ -19,7 +19,7 @@ export function LabFrame({ children, title }: { children: React.ReactNode; title
         href="/lab"
         className="fixed left-4 top-4 z-[200] rounded-full border border-white/20 bg-black/50 px-3 py-1.5 text-xs text-white/85 backdrop-blur transition-colors hover:bg-black/70 hover:text-white"
       >
-        ‹ Lab · {title}
+        ‹ Builds · {title}
       </Link>
       {children}
     </div>

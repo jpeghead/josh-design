@@ -20,8 +20,8 @@ export default function WorkPage() {
         <PageHeader
           label="Work"
           serif
-          title="Fifteen years of designing things that ship."
-          dek="What I actually did, stated plainly. First designer to Head of Design, twice. A principal seat on the Flutter side of Google's world. Now my own studio."
+          title="The foundation: fifteen years of product design."
+          dek="What I actually did, stated plainly. First designer to Head of Design, twice. A principal seat on the Flutter side of Google's world. It's the judgment underneath everything I now build with agents."
         />
       </Container>
 

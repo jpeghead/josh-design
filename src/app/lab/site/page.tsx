@@ -4,7 +4,7 @@ import { Container, PageHeader, Label, Arrow } from "@/components/ui";
 import { REPO } from "@/content/lab";
 
 export const metadata: Metadata = {
-  title: "How this site is built — Lab",
+  title: "How this site is built — Builds",
   description: "The stack, the workflow, and the decisions behind josh.design.",
 };
 
@@ -22,7 +22,7 @@ export default function Page() {
   return (
     <Container>
       <Link href="/lab" className="mt-24 inline-block text-sm text-fg-2 transition-colors hover:text-fg sm:mt-32">
-        ‹ Lab
+        ‹ Builds
       </Link>
       <div className="-mt-20 sm:-mt-28">
         <PageHeader label="This site" serif title="How this site is built." dek="The stack, the workflow, and the decisions. The repo holds every experiment in the Lab, including the ones that didn't make it." />
