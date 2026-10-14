@@ -1,69 +1,59 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, Geist, Geist_Mono } from "next/font/google";
+import { Geist } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { CommandPalette } from "@/components/command-palette";
-import { DevelopEasterEgg } from "@/components/develop-easter-egg";
+import { identityLine } from "@/content/about";
 import "./globals.css";
 
-// High-contrast serif display + clean grotesque sans, self-hosted by next/font.
-const display = Playfair_Display({
-  variable: "--font-display",
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-  display: "swap",
-});
-const sans = Geist({ variable: "--font-sans", subsets: ["latin"], display: "swap" });
-const mono = Geist_Mono({ variable: "--font-mono", subsets: ["latin"], display: "swap" });
+// One typeface. SF on Apple devices, Geist everywhere else.
+const geist = Geist({ variable: "--font-geist", subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://josh.design"),
   title: {
-    default: "Josh Whitehead — The Archive",
-    template: "%s · Josh Whitehead",
+    default: "Josh Whitehead",
+    template: "%s — Josh Whitehead",
   },
-  description:
-    "Josh Whitehead — designer and builder. A continuous walk through a life's work, from a kid who drew all day to a Marine combat photographer to leading design and building his own studio, Boneyard.",
+  description: identityLine,
   authors: [{ name: "Josh Whitehead" }],
   creator: "Josh Whitehead",
   openGraph: {
     type: "website",
     siteName: "Josh Whitehead",
-    title: "Josh Whitehead — The Archive",
-    description:
-      "Designer and builder. I make the interface, the system, and the thing that ships.",
+    title: "Josh Whitehead",
+    description: identityLine,
   },
   twitter: {
-    card: "summary_large_image",
-    title: "Josh Whitehead — The Archive",
-    description:
-      "Designer and builder. I make the interface, the system, and the thing that ships.",
+    card: "summary",
+    title: "Josh Whitehead",
+    description: identityLine,
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f4eee2",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable} ${display.variable}`}>
-      <body className="antialiased">
+    <html lang="en" className={geist.variable}>
+      <body className="flex min-h-dvh flex-col antialiased">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:bg-ink focus:px-4 focus:py-2 focus:font-mono focus:text-xs focus:text-bone"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-fg focus:px-3 focus:py-2 focus:text-sm focus:text-bg"
         >
           Skip to content
         </a>
         <SiteHeader />
-        <main id="main">{children}</main>
+        <main id="main" className="flex-1">
+          {children}
+        </main>
         <SiteFooter />
-        <CommandPalette />
-        <DevelopEasterEgg />
       </body>
     </html>
   );

@@ -1,5 +1,14 @@
 # AGENTS.md — read this before you touch anything
 
+> **Status, October 2026: the 3D work is on the back burner.** The live site
+> is now a plain monochrome portfolio: `src/app/*` routes, `src/components/ui.tsx`
+> primitives, `src/app/globals.css` tokens (white/black, four greys, one
+> hairline, system font with Geist fallback, automatic dark mode). Nothing
+> under `src/components/{game3d,archive3d,canvas,line,room}` is mounted; it is
+> kept only so it can be revisited. Everything below about the game describes
+> that shelved work — the "Portfolio layer" section (§3b) is the part that
+> still matters day to day.
+
 You're picking up **Whitehead City**: a personal portfolio site for Josh
 Whitehead that is *also* a playable open-world game. This file is the
 handoff. Read it fully — the codebase has hard-won conventions and a few

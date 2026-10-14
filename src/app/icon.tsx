@@ -10,15 +10,15 @@ export default function Icon() {
         style={{
           width: "100%",
           height: "100%",
-          background: "#0a0908",
-          color: "#f4eee0",
+          background: "#1d1d1f",
+          color: "#ffffff",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 22,
-          fontStyle: "italic",
-          fontFamily: "serif",
-          border: "2px solid #e63946",
+          borderRadius: 8,
+          fontSize: 19,
+          fontWeight: 600,
+          fontFamily: "sans-serif",
         }}
       >
         J

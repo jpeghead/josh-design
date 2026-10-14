@@ -1,111 +1,72 @@
 @import "tailwindcss";
 
-@theme {
-  /* ============================================================
-     The Archive — a light → dark arc, one warm gold throughout.
-     Paper at the start of the story, near-black at the end.
-     ============================================================ */
+/* ============================================================
+   josh.design — monochrome.
+   White or black, four greys, one hairline. The type does the work.
+   ============================================================ */
 
-  /* Paper end of the ramp (early eras, light surfaces) */
-  --color-paper: #f4eee2;        /* lightest — the opening */
-  --color-paper-2: #e7dcc8;      /* printed cream */
-  --color-paper-3: #d8cdb8;      /* aged board */
-  --color-paper-line: #d9cdb6;   /* hairline on paper */
-
-  /* Ink end of the ramp (late eras, dark surfaces) */
-  --color-ink: #0a0a0a;          /* darkest — the finale */
-  --color-ink-2: #171716;        /* lifted black */
-  --color-ink-3: #232322;        /* app-era graphite */
-  --color-ink-line: #2c2b28;     /* hairline on ink */
-
-  /* Text on light */
-  --color-graphite: #26221b;     /* primary on paper */
-  --color-graphite-dim: #5c554a; /* secondary on paper */
-  --color-graphite-muted: #8a8172;
-
-  /* Text on dark */
-  --color-bone: #f1ece2;         /* primary on ink */
-  --color-bone-dim: #b7b0a4;     /* secondary on ink */
-  --color-bone-muted: #7d7a74;   /* tertiary on ink */
-
-  /* The single accent — warm gold (tunable) */
-  --color-gold: #c8a24b;
-  --color-gold-bright: #e2c078;
-  --color-gold-dim: #a3823a;
-
-  /* === Typography (bound by next/font in layout) === */
-  --font-display: var(--font-display);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
-
-  /* === Motion === */
-  --ease-cinematic: cubic-bezier(0.22, 1, 0.36, 1);
-  --animate-marquee: marquee 60s linear infinite;
-  --animate-rise: rise 0.9s var(--ease-cinematic) both;
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #1d1d1f;
+  --fg-2: #6e6e73;
+  --fg-3: #a1a1a6;
+  --line: rgba(0, 0, 0, 0.1);
+  --fill: rgba(0, 0, 0, 0.035);
 }
 
-@keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --fg: #f5f5f7;
+    --fg-2: #a1a1a6;
+    --fg-3: #6e6e73;
+    --line: rgba(255, 255, 255, 0.14);
+    --fill: rgba(255, 255, 255, 0.06);
+  }
 }
-@keyframes rise {
-  0% { opacity: 0; transform: translateY(14px); }
-  100% { opacity: 1; transform: translateY(0); }
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-line: var(--line);
+  --color-fill: var(--fill);
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", var(--font-geist), system-ui, sans-serif;
 }
 
 @layer base {
-  :root {
-    color-scheme: light;
-  }
-
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    background: var(--color-paper);
-    color: var(--color-graphite);
-    scroll-behavior: smooth;
+    background: var(--bg);
+    color: var(--fg);
   }
-
   body {
-    background: var(--color-paper);
-    color: var(--color-graphite);
-    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-    overflow-x: hidden;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-size: 17px;
+    line-height: 1.5;
     min-height: 100dvh;
   }
-
-  /* Lenis smooth-scroll hooks (used only when JS + motion are on) */
-  html.lenis, html.lenis body { height: auto; }
-  .lenis.lenis-smooth { scroll-behavior: auto !important; }
-  .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
-  .lenis.lenis-stopped { overflow: hidden; }
-
   ::selection {
-    background: var(--color-gold);
-    color: var(--color-ink);
+    background: var(--fg);
+    color: var(--bg);
   }
-
-  ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--color-graphite-muted); border-radius: 0; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--color-graphite-dim); }
-
   a:focus-visible,
   button:focus-visible,
   input:focus-visible,
-  textarea:focus-visible,
-  [tabindex]:focus-visible {
-    outline: 2px solid var(--color-gold);
-    outline-offset: 2px;
-    border-radius: 1px;
+  textarea:focus-visible {
+    outline: 2px solid var(--fg);
+    outline-offset: 3px;
+    border-radius: 4px;
   }
-
-  /* Respect reduced motion everywhere. */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.001ms !important;
-      animation-iteration-count: 1 !important;
       transition-duration: 0.001ms !important;
       scroll-behavior: auto !important;
     }
@@ -113,105 +74,30 @@
 }
 
 @layer utilities {
-  /* Era surfaces — sections carry their own place on the ramp via inline
-     bg/fg from the manifest, but these help dark/light contexts. */
-  .on-ink { background: var(--color-ink); color: var(--color-bone); }
-  .on-paper { background: var(--color-paper); color: var(--color-graphite); }
-
-  .hairline-b { border-bottom: 1px solid currentColor; border-color: color-mix(in srgb, currentColor 14%, transparent); }
-  .hairline-t { border-top: 1px solid currentColor; border-color: color-mix(in srgb, currentColor 14%, transparent); }
-
-  .tight { letter-spacing: -0.03em; }
+  .tight { letter-spacing: -0.022em; }
+  .tighter { letter-spacing: -0.035em; }
   .text-balance { text-wrap: balance; }
   .text-pretty { text-wrap: pretty; }
 
-  /* Mono eyebrow / caption — the quiet engraved label */
-  .eyebrow {
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    font-size: 0.6875rem;
-    letter-spacing: 0.2em;
-    color: color-mix(in srgb, currentColor 55%, transparent);
+  /* Essay body — one set of rules for ported HTML. */
+  .prose-mono > * + * { margin-top: 1.25em; }
+  .prose-mono h1, .prose-mono h2, .prose-mono h3 {
+    margin-top: 2.2em;
+    font-size: 1.375rem;
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    line-height: 1.25;
   }
-  .smcaps {
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    font-size: 0.625rem;
-    letter-spacing: 0.28em;
-  }
-
-  /* Placeholder tile for artifacts awaiting a real scan. Clearly labeled,
-     era-styled, correct aspect ratio — never a fake image. */
-  .awaiting-scan {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    border: 1px dashed color-mix(in srgb, currentColor 28%, transparent);
-    background:
-      repeating-linear-gradient(
-        45deg,
-        color-mix(in srgb, currentColor 5%, transparent) 0 10px,
-        transparent 10px 20px
-      );
-  }
-
-  .develop-flash { animation: develop-flash 1200ms var(--ease-cinematic); }
-  @keyframes develop-flash {
-    0% { background-color: var(--color-gold); }
-    100% { background-color: transparent; }
-  }
+  .prose-mono a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--fg-3); }
+  .prose-mono a:hover { text-decoration-color: var(--fg); }
+  .prose-mono ul, .prose-mono ol { padding-left: 1.4em; }
+  .prose-mono ul { list-style: disc; }
+  .prose-mono ol { list-style: decimal; }
+  .prose-mono li + li { margin-top: 0.4em; }
+  .prose-mono li > p { margin: 0; }
+  .prose-mono img { display: block; width: 100%; height: auto; margin-top: 1.5em; border-radius: 12px; background: var(--fill); }
+  .prose-mono img + img { margin-top: 0.75em; }
+  .prose-mono strong { font-weight: 600; }
+  .prose-mono em { font-style: italic; }
+  .prose-mono br + br { display: none; }
 }
-
-/* ============================================================
-   Canvas mode — the cinematic walk is active. The DOM walk stays
-   in the document (screen readers, search, find-in-page) but is
-   visually replaced by the canvas. The header floats above it.
-   ============================================================ */
-html.canvas-mode [data-dom-walk] {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
-}
-html.canvas-mode header {
-  background: transparent;
-  border-color: transparent;
-  backdrop-filter: none;
-}
-
-/* Darkroom mode — chrome adapts to the near-black world. */
-html.darkroom-mode header a,
-html.darkroom-mode header button,
-html.darkroom-mode header nav a {
-  color: var(--color-bone);
-}
-html.darkroom-mode header nav a:not([aria-current]) {
-  color: color-mix(in srgb, var(--color-bone) 55%, transparent);
-}
-html.darkroom-mode header nav a:hover {
-  color: var(--color-bone);
-}
-html.darkroom-mode header button {
-  border-color: color-mix(in srgb, var(--color-bone) 25%, transparent);
-}
-
-/* Chapter HUD ink — flips with the chapter's world. */
-.hud-ink { color: var(--color-graphite); }
-.hud-tick { background: var(--color-graphite); }
-html.chapter-dark .hud-ink { color: var(--color-bone); }
-html.chapter-dark .hud-tick { background: var(--color-bone); }
-html.chapter-dark header a,
-html.chapter-dark header button,
-html.chapter-dark header nav a { color: var(--color-bone); }
-html.chapter-dark header nav a:not([aria-current]) {
-  color: color-mix(in srgb, var(--color-bone) 55%, transparent);
-}
-
-/* Game mode — the world owns the chrome; the site lives inside the monitor. */
-html.game-mode header { display: none; }
