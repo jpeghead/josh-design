@@ -130,4 +130,4 @@ export const lab: LabEntry[] = [
 ];
 
 /** Flip to true once github.com/jpeghead/josh-design is public. */
-export const REPO = { url: "https://github.com/jpeghead/josh-design", isPublic: false };
+export const REPO = { url: "https://github.com/jpeghead/josh-design", isPublic: true };

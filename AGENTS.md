@@ -12,8 +12,8 @@
 > `src/content/work-media.ts`, web-sized copies in `public/img` (regenerate
 > with `node scripts/optimize-images.mjs`; full-res export in
 > `public/framer/canvas/images`, cataloged in `scripts/framer-catalog.json`).
-> `src/content/lab.ts` holds `REPO.isPublic` — flip it when the GitHub repo
-> goes public. Everything below about the game describes the Lab's city entry
+> `src/content/lab.ts` holds `REPO.isPublic` (true: the repo is public, links on).
+> Everything below about the game describes the Lab's city entry
 > — the "Portfolio layer" section (§3b) is the part that still matters day
 > to day.
 
