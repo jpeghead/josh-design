@@ -52,8 +52,3 @@ fabricated. Presentation (which image, which color field) lives in
 
 Read `AGENTS.md` first. It is the handoff: conventions, traps, the licensing
 rule (original or CC0 only), and how to verify in a browser before committing.
-
-## License
-
-Code: MIT. Photographs, writing, and brand assets of Josh Whitehead and of
-the companies shown remain their owners' and are not licensed for reuse.
