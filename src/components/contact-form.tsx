@@ -22,7 +22,7 @@ export function ContactForm({ email }: { email: string }) {
     "mt-1.5 w-full rounded-lg border border-line bg-transparent px-3.5 py-2.5 text-[17px] text-fg placeholder:text-fg-3 focus:border-fg focus:outline-none";
 
   return (
-    <form onSubmit={onSubmit} className="mt-10 space-y-5">
+    <form onSubmit={onSubmit} className="space-y-5">
       <div className="grid gap-5 sm:grid-cols-2">
         <label className="block text-sm text-fg-2">
           Name

@@ -22,7 +22,7 @@ export default async function EssayPage({ params }: { params: Promise<{ slug: st
 
   return (
     <Container>
-      <article className="max-w-2xl pb-28 pt-24 sm:pt-32">
+      <article className="max-w-2xl pb-28 pt-28 sm:pt-40">
         <Link href="/writing" className="text-sm text-fg-2 transition-colors hover:text-fg">
           ‹ Writing
         </Link>
@@ -33,7 +33,7 @@ export default async function EssayPage({ params }: { params: Promise<{ slug: st
               .filter(Boolean)
               .join(" · ")}
           </p>
-          <h1 className="tighter mt-2 text-[2.25rem] font-semibold leading-[1.08] text-balance sm:text-[3rem]">{essay.title}</h1>
+          <h1 className="serif mt-3 text-[2.75rem] leading-[1.02] text-balance sm:text-[4rem]">{essay.title}</h1>
           {essay.description && <p className="mt-5 text-xl leading-snug text-fg-2 text-pretty">{essay.description}</p>}
         </header>
 

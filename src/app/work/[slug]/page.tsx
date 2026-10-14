@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container, Label, Arrow } from "@/components/ui";
+import { Reveal, Drift } from "@/components/motion";
+import { workMedia } from "@/content/work-media";
 import { projects } from "@/lib/data";
 
 export function generateStaticParams() {
@@ -19,79 +21,113 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const p = projects.find((x) => x.slug === slug);
   if (!p) notFound();
-
+  const media = workMedia[p.slug];
   const idx = projects.findIndex((x) => x.slug === slug);
   const next = projects[(idx + 1) % projects.length];
+  const years = p.timeline.replace(/[A-Za-z]{3} /g, "");
 
   return (
-    <Container>
-      <article className="max-w-3xl pb-28 pt-24 sm:pt-32">
-        <Link href="/work" className="text-sm text-fg-2 transition-colors hover:text-fg">
-          ‹ Work
-        </Link>
-
-        <header className="mt-8">
-          <p className="text-sm font-medium text-fg-2">{p.context}</p>
-          <h1 className="tighter mt-2 text-[2.5rem] font-semibold leading-[1.05] sm:text-[3.5rem]">{p.title}</h1>
-          <p className="mt-6 text-xl leading-snug text-fg-2 text-pretty sm:text-[1.375rem]">{p.summary}</p>
-        </header>
-
-        <dl className="mt-10 grid grid-cols-2 gap-6 border-y border-line py-6 text-sm sm:grid-cols-4">
-          {[
-            ["Role", p.role],
-            ["Timeline", p.timeline],
-            ["Status", p.status],
-            ["Scope", p.scope.join(", ")],
-          ].map(([k, v]) => (
-            <div key={k}>
-              <dt className="text-fg-3">{k}</dt>
-              <dd className="mt-1">{v}</dd>
+    <article>
+      {/* the cover — the project's field, title, and image */}
+      <header className="relative isolate overflow-hidden" style={{ background: media?.field ?? "#111" }}>
+        <div className="gutter mx-auto w-full max-w-[1440px] pb-16 pt-28 sm:pt-40">
+          <Link href="/work" className="text-sm text-fg-2 transition-colors hover:text-fg">
+            ‹ Work
+          </Link>
+          <div className="mt-10 grid gap-10 lg:grid-cols-12 lg:items-end">
+            <div className="lg:col-span-8">
+              <p className="text-sm text-fg-2">{p.context}</p>
+              <h1 className="tighter mt-4 text-[3.5rem] font-semibold leading-[0.95] sm:text-[6rem] lg:text-[7.5rem]">{p.title}</h1>
+              <p className="mt-6 max-w-2xl text-xl leading-snug text-fg-2 text-pretty sm:text-2xl">{p.summary}</p>
             </div>
-          ))}
-        </dl>
+            <dl className="grid grid-cols-2 gap-6 text-sm lg:col-span-4 lg:grid-cols-1">
+              {[
+                ["Role", p.role],
+                ["Years", years],
+                ["Scope", p.scope.join(", ")],
+                ["Status", p.status],
+              ].map(([k, v]) => (
+                <div key={k} className="border-t border-line pt-3">
+                  <dt className="text-fg-3">{k}</dt>
+                  <dd className="mt-1">{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+          {media?.cover.src && (
+            <Reveal className="mt-14" delay={0.1}>
+              <Drift amount={5} aspect={media.cover.aspect === "1 / 1" ? "16 / 10" : media.cover.aspect} className="rounded-lg">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={media.cover.src} alt={media.cover.alt} loading="eager" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
+              </Drift>
+            </Reveal>
+          )}
+        </div>
+      </header>
 
-        <section className="mt-14">
-          <Label>The brief</Label>
-          <p className="mt-3 text-lg leading-relaxed text-pretty">{p.brief}</p>
+      <Container>
+        <section className="grid gap-8 py-20 sm:py-28 lg:grid-cols-12">
+          <Label className="lg:col-span-3">The brief</Label>
+          <p className="serif text-[1.75rem] leading-tight text-pretty sm:text-[2.25rem] lg:col-span-9">{p.brief}</p>
         </section>
 
-        <section className="mt-14">
-          <Label>What I did</Label>
-          <ol className="mt-3 border-t border-line">
+        <section className="grid gap-8 border-t border-line py-20 lg:grid-cols-12">
+          <Label className="lg:col-span-3">What I did</Label>
+          <ol className="lg:col-span-9">
             {p.contribution.map((c, i) => (
-              <li key={i} className="flex gap-5 border-b border-line py-4">
+              <Reveal key={i} as="li" className="flex gap-6 border-b border-line py-5 first:border-t" delay={0.04 * i}>
                 <span className="w-6 shrink-0 text-sm tabular-nums text-fg-3">{String(i + 1).padStart(2, "0")}</span>
-                <span className="leading-relaxed text-pretty">{c}</span>
-              </li>
+                <span className="text-lg leading-relaxed text-pretty">{c}</span>
+              </Reveal>
             ))}
           </ol>
         </section>
 
-        <section className="mt-14">
-          <Label>Outcome</Label>
-          <ul className="mt-3 space-y-3">
+        <section className="grid gap-8 border-t border-line py-20 lg:grid-cols-12">
+          <Label className="lg:col-span-3">Outcome</Label>
+          <ul className="space-y-4 lg:col-span-9">
             {p.outcome.map((o, i) => (
-              <li key={i} className="leading-relaxed text-pretty">
+              <li key={i} className="text-lg leading-relaxed text-pretty">
                 {o}
               </li>
             ))}
           </ul>
         </section>
+      </Container>
 
+      {media && media.gallery.length > 0 && (
+        <Container wide>
+          <section className="border-t border-line py-20 sm:py-28" aria-label="Gallery">
+            <Label>The work</Label>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              {media.gallery.map((m, i) => (
+                <Reveal key={m.src} as="figure" className={m.span === 2 ? "sm:col-span-2" : ""} delay={0.03 * (i % 2)}>
+                  <div className="frame rounded-lg" style={{ aspectRatio: m.aspect }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={m.src} alt={m.alt} loading="lazy" decoding="async" />
+                  </div>
+                  {m.caption && <figcaption className="mt-3 text-sm text-fg-2">{m.caption}</figcaption>}
+                </Reveal>
+              ))}
+            </div>
+          </section>
+        </Container>
+      )}
+
+      <Container>
         {p.tools && p.tools.length > 0 && (
-          <section className="mt-14">
-            <Label>Tools</Label>
-            <p className="mt-3 text-fg-2">{p.tools.join(", ")}</p>
+          <section className="grid gap-8 border-t border-line py-12 lg:grid-cols-12">
+            <Label className="lg:col-span-3">Tools</Label>
+            <p className="text-fg-2 lg:col-span-9">{p.tools.join(", ")}</p>
           </section>
         )}
-
-        <nav className="mt-20 flex items-baseline justify-between border-t border-line pt-6">
+        <nav className="flex items-baseline justify-between border-t border-line py-10">
           <span className="text-sm text-fg-3">Next</span>
-          <Arrow href={next.internalLink ?? `/work/${next.slug}`} className="text-lg">
+          <Arrow href={next.internalLink ?? `/work/${next.slug}`} className="serif text-[2rem] sm:text-[2.5rem]">
             {next.title}
           </Arrow>
         </nav>
-      </article>
-    </Container>
+      </Container>
+    </article>
   );
 }

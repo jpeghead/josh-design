@@ -14,6 +14,10 @@ export type Product = {
   image: string | null;
   awaitingAsset?: boolean;
   aspect: string;
+  /** Where the product lives, if it's out in the world. */
+  link?: { label: string; href: string };
+  /** Images shown on the product page, in order. */
+  gallery?: string[];
 };
 
 export const products: Product[] = [
@@ -86,5 +90,11 @@ export const products: Product[] = [
     detail: ["A made thing, offered as a free resource."],
     image: "/framer/cms/downloads/xenomorph-typeface__image.png",
     aspect: "4/3",
+    link: { label: "Get it on Gumroad", href: "https://jpeghead.gumroad.com/l/xenomorphtypefacebyjoshwhitehead" },
+    gallery: [
+      "/framer/cms/downloads/xenomorph-typeface__image.png",
+      "/framer/cms/downloads/xenomorph-typeface__image-2.png",
+      "/framer/cms/downloads/xenomorph-typeface__image-3.png",
+    ],
   },
 ];

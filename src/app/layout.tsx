@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Instrument_Serif } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { identityLine } from "@/content/about";
 import "./globals.css";
 
-// One typeface. SF on Apple devices, Geist everywhere else.
+// Geist carries the interface and the body. Instrument Serif carries the story.
 const geist = Geist({ variable: "--font-geist", subsets: ["latin"], display: "swap" });
+const serif = Instrument_Serif({ variable: "--font-instrument", subsets: ["latin"], weight: "400", style: ["normal", "italic"], display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://josh.design"),
@@ -31,17 +32,18 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
-  ],
+  themeColor: "#0a0a0a",
   width: "device-width",
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={geist.variable}>
+    <html lang="en" className={`${geist.variable} ${serif.variable}`}>
+      <head>
+        {/* lets CSS gate reveal animations on JavaScript being present, before first paint */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+      </head>
       <body className="flex min-h-dvh flex-col antialiased">
         <a
           href="#main"

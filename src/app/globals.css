@@ -1,29 +1,22 @@
 @import "tailwindcss";
 
 /* ============================================================
-   josh.design — monochrome.
-   White or black, four greys, one hairline. The type does the work.
+   josh.design — a life in chapters.
+   Near-black frame. The photographs and the work carry the color;
+   each case study brings one muted field of its own.
    ============================================================ */
 
 :root {
-  color-scheme: light dark;
-  --bg: #ffffff;
-  --fg: #1d1d1f;
-  --fg-2: #6e6e73;
-  --fg-3: #a1a1a6;
-  --line: rgba(0, 0, 0, 0.1);
-  --fill: rgba(0, 0, 0, 0.035);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #000000;
-    --fg: #f5f5f7;
-    --fg-2: #a1a1a6;
-    --fg-3: #6e6e73;
-    --line: rgba(255, 255, 255, 0.14);
-    --fill: rgba(255, 255, 255, 0.06);
-  }
+  color-scheme: dark;
+  --bg: #0a0a0a;
+  --fg: #f5f5f3;
+  --fg-2: #a3a3a0;
+  --fg-3: #6b6b68;
+  --line: rgba(255, 255, 255, 0.12);
+  --fill: rgba(255, 255, 255, 0.05);
+  --paper: #f4f1ea;
+  --ink: #111110;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 @theme inline {
@@ -33,7 +26,11 @@
   --color-fg-3: var(--fg-3);
   --color-line: var(--line);
   --color-fill: var(--fill);
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", var(--font-geist), system-ui, sans-serif;
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --font-sans: var(--font-geist), -apple-system, BlinkMacSystemFont, "Helvetica Neue", system-ui, sans-serif;
+  --font-serif: var(--font-instrument), "Times New Roman", Georgia, serif;
+  --ease-out: var(--ease);
 }
 
 @layer base {
@@ -51,6 +48,7 @@
     font-size: 17px;
     line-height: 1.5;
     min-height: 100dvh;
+    overflow-x: hidden;
   }
   ::selection {
     background: var(--fg);
@@ -64,6 +62,9 @@
     outline-offset: 3px;
     border-radius: 4px;
   }
+  img {
+    display: block;
+  }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.001ms !important;
@@ -75,18 +76,58 @@
 
 @layer utilities {
   .tight { letter-spacing: -0.022em; }
-  .tighter { letter-spacing: -0.035em; }
+  .tighter { letter-spacing: -0.04em; }
   .text-balance { text-wrap: balance; }
   .text-pretty { text-wrap: pretty; }
+  .serif { font-family: var(--font-serif); font-weight: 400; letter-spacing: -0.01em; }
+
+  /* Page gutter: 20 → 40 → 64px */
+  .gutter { padding-left: 20px; padding-right: 20px; }
+  @media (min-width: 640px) { .gutter { padding-left: 40px; padding-right: 40px; } }
+  @media (min-width: 1280px) { .gutter { padding-left: 64px; padding-right: 64px; } }
+
+  /* Media frames. Reserve the box; the image fills it. */
+  .frame { position: relative; overflow: hidden; background: var(--fill); }
+  .frame > img, .frame > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .frame-hover > img, .frame-hover > video { transition: transform 900ms var(--ease); }
+  .group:hover .frame-hover > img, .group:hover .frame-hover > video, .group:focus-visible .frame-hover > img { transform: scale(1.02); }
+
+  /* Grain — one quiet layer over the dark frame */
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.07;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+  }
+
+  /* Reveal-on-view. Hidden only once `html.js` exists; a fallback animation
+     forces the final state after 3s so nothing can stay invisible. */
+  html.js .reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+    animation: reveal-fallback 0s linear 3s forwards;
+  }
+  html.js .reveal.in { opacity: 1; transform: none; }
+  html.js .words .w {
+    opacity: 0;
+    transform: translateY(0.6em);
+    transition: opacity 0.8s var(--ease), transform 0.8s var(--ease);
+    animation: reveal-fallback 0s linear 3s forwards;
+  }
+  html.js .words.go .w { opacity: 1; transform: none; }
+  @keyframes reveal-fallback { to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    html.js .reveal, html.js .words .w { opacity: 1; transform: none; }
+  }
 
   /* Essay body — one set of rules for ported HTML. */
   .prose-mono > * + * { margin-top: 1.25em; }
   .prose-mono h1, .prose-mono h2, .prose-mono h3 {
-    margin-top: 2.2em;
-    font-size: 1.375rem;
-    font-weight: 600;
-    letter-spacing: -0.022em;
-    line-height: 1.25;
+    margin-top: 2.2em; font-size: 1.375rem; font-weight: 600; letter-spacing: -0.022em; line-height: 1.25;
   }
   .prose-mono a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--fg-3); }
   .prose-mono a:hover { text-decoration-color: var(--fg); }
@@ -95,7 +136,7 @@
   .prose-mono ol { list-style: decimal; }
   .prose-mono li + li { margin-top: 0.4em; }
   .prose-mono li > p { margin: 0; }
-  .prose-mono img { display: block; width: 100%; height: auto; margin-top: 1.5em; border-radius: 12px; background: var(--fill); }
+  .prose-mono img { display: block; width: 100%; height: auto; margin-top: 1.5em; border-radius: 6px; background: var(--fill); }
   .prose-mono img + img { margin-top: 0.75em; }
   .prose-mono strong { font-weight: 600; }
   .prose-mono em { font-style: italic; }

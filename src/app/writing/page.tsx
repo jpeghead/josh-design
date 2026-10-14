@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function WritingPage() {
   return (
     <Container>
-      <PageHeader label="Writing" title="Books, and the notes worth keeping." />
+      <PageHeader label="Writing" serif title="Books, and the notes worth keeping." />
 
       <section className="pb-16" aria-labelledby="h-books">
         <Label>
