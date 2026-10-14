@@ -5,10 +5,13 @@
  * voice of the whole site. PARKED: the generic 2024 AI-listicle posts are kept
  * in the archive but never surfaced — they undercut the voice.
  */
-import { portedEssays } from "./writing.generated";
+import { portedEssays as ported } from "./writing.generated";
+import { authoredEssays } from "./essays";
 import { books } from "./books";
 
-export { portedEssays, books };
+/** Authored first (newest work), then the ported Framer essays. */
+export const portedEssays = [...authoredEssays, ...ported];
+export { books };
 
 /** Kept in the Framer archive, deliberately not surfaced. */
 export const parkedEssaySlugs = [

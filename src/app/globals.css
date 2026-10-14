@@ -142,3 +142,39 @@
   .prose-mono em { font-style: italic; }
   .prose-mono br + br { display: none; }
 }
+
+/* ============================================================
+   Legacy tokens and modes for the Lab experiments (the 3D city, the
+   studio, the line, the room). They were built on the earlier palette
+   and on html.* modes; this keeps them rendering unchanged.
+   ============================================================ */
+@theme inline {
+  --color-paper-2: #e7dcc8;
+  --color-paper-3: #d8cdb8;
+  --color-paper-line: #d9cdb6;
+  --color-ink-2: #171716;
+  --color-ink-3: #232322;
+  --color-ink-line: #2c2b28;
+  --color-graphite: #26221b;
+  --color-graphite-dim: #5c554a;
+  --color-graphite-muted: #8a8172;
+  --color-bone: #f1ece2;
+  --color-bone-dim: #b7b0a4;
+  --color-bone-muted: #7d7a74;
+  --color-gold: #c8a24b;
+  --color-gold-bright: #e2c078;
+  --color-gold-dim: #a3823a;
+  --font-display: var(--font-instrument), Georgia, serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --ease-cinematic: cubic-bezier(0.22, 1, 0.36, 1);
+}
+.eyebrow { font-family: var(--font-mono); text-transform: uppercase; font-size: 0.6875rem; letter-spacing: 0.2em; color: color-mix(in srgb, currentColor 55%, transparent); }
+.smcaps { font-family: var(--font-mono); text-transform: uppercase; font-size: 0.625rem; letter-spacing: 0.28em; }
+.awaiting-scan { display: flex; align-items: center; justify-content: center; text-align: center; border: 1px dashed color-mix(in srgb, currentColor 28%, transparent); }
+html.lab-full body > header, html.lab-full body > footer { display: none; }
+html.lab-full main { min-height: 100dvh; }
+html.canvas-mode [data-dom-walk] { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.hud-ink { color: var(--color-graphite); }
+.hud-tick { background: var(--color-graphite); }
+html.chapter-dark .hud-ink { color: var(--color-bone); }
+html.chapter-dark .hud-tick { background: var(--color-bone); }

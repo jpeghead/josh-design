@@ -6,7 +6,7 @@ const base = "https://josh.design";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
-  const staticRoutes = ["/", "/work", "/products", "/writing", "/about", "/contact"].map(
+  const staticRoutes = ["/", "/work", "/lab", "/lab/agents", "/lab/ask", "/lab/site", "/products", "/writing", "/about", "/contact"].map(
     (route) => ({
       url: `${base}${route}`,
       lastModified: now,

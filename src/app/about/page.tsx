@@ -5,6 +5,7 @@ import { StoryVideo } from "@/components/story-video";
 import { aboutParagraphs } from "@/content/about";
 import { story } from "@/content/work-media";
 import { career, principles } from "@/lib/data";
+import { stack } from "@/content/stack";
 
 export const metadata: Metadata = {
   title: "About",
@@ -66,6 +67,33 @@ export default function AboutPage() {
       </section>
 
       <Container wide>
+        <section className="grid gap-10 border-t border-line py-20 sm:py-28 lg:grid-cols-12" aria-labelledby="h-build">
+          <div className="lg:col-span-4">
+            <Label>
+              <span id="h-build">How I build</span>
+            </Label>
+            <p className="serif mt-4 text-[2rem] leading-tight text-fg-2">An agent in the loop, a person at the wheel.</p>
+          </div>
+          <div className="lg:col-span-8">
+            <p className="max-w-2xl text-lg text-pretty">
+              I work with coding agents the way I used to work with an engineering pair: I set the direction and the bar, the
+              agent reads the repo, proposes, builds, and verifies in a browser, and I judge and cut. Whole directions get
+              built and thrown away in a day. The Lab on this site is that loop, in public.
+            </p>
+            <dl className="mt-8 grid gap-x-10 gap-y-5 sm:grid-cols-2">
+              {stack.map((g) => (
+                <div key={g.label}>
+                  <dt className="text-sm text-fg-3">{g.label}</dt>
+                  <dd className="mt-1 text-[15px]">{g.items.join(" · ")}</dd>
+                </div>
+              ))}
+            </dl>
+            <Arrow href="/lab" className="mt-8">
+              See the Lab
+            </Arrow>
+          </div>
+        </section>
+
         <section className="grid gap-10 border-t border-line py-20 sm:py-28 lg:grid-cols-12" aria-labelledby="h-timeline">
           <div className="lg:col-span-4">
             <Label>

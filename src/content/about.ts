@@ -11,9 +11,9 @@ export const aboutParagraphs: string[] = [
   "I'm still just the kid who won't stop making things.",
 ];
 
-/** Short first-person line for the hero — builder-first, not "AI advocate." */
+/** Short first-person line for the hero. */
 export const identityLine =
-  "Designer and builder. I make the interface, the system, and the thing that ships.";
+  "Designer who builds. I make AI products end to end: the interface, the system, and the thing that ships.";
 
 export const socials = [
   { label: "LinkedIn", handle: "/in/byjoshwhitehead", href: "https://www.linkedin.com/in/byjoshwhitehead" },

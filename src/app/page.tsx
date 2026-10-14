@@ -4,6 +4,7 @@ import { Reveal, Words } from "@/components/motion";
 import { WorkCover } from "@/components/work-cover";
 import { StoryVideo } from "@/components/story-video";
 import { products } from "@/content/products";
+import { lab } from "@/content/lab";
 import { story } from "@/content/work-media";
 import { portedEssays } from "@/content/writing";
 import { projects } from "@/lib/data";
@@ -19,14 +20,15 @@ export default function Home() {
       <section className="relative isolate min-h-[100svh] overflow-hidden">
         <div className="gutter mx-auto grid w-full max-w-[1440px] items-end gap-12 pb-16 pt-32 sm:pt-40 lg:min-h-[100svh] lg:grid-cols-12 lg:items-center lg:pb-24">
           <div className="lg:col-span-7">
-            <p className="text-sm text-fg-2">Josh Whitehead · Designer and builder · Los Angeles</p>
+            <p className="text-sm text-fg-2">Josh Whitehead · Designer who builds AI products · Los Angeles</p>
             <h1 className="serif mt-6 max-w-[14ch] text-[3rem] leading-[0.98] text-balance sm:text-[4.75rem] lg:text-[5.75rem]">
               <Words text="I've been making things since before I knew it was a job." />
             </h1>
             <Reveal delay={0.5}>
               <p className="mt-8 max-w-xl text-xl leading-snug text-fg-2 text-pretty sm:text-2xl">
-                A kid who drew all day. A Marine with a camera. The first designer at two companies that got acquired. Now a
-                studio of my own, making the interface, the system, and the thing that ships.
+                A kid who drew all day. A Marine with a camera. The first designer at two companies that got acquired. Now I
+                design and build AI products end to end, with an agent in the loop: the interface, the system, and the thing
+                that ships.
               </p>
               <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
                 <Link href="#work" className="group inline-flex items-center gap-2 rounded-full bg-fg px-5 py-2.5 text-[15px] font-medium text-bg transition-opacity hover:opacity-85">
@@ -35,8 +37,8 @@ export default function Home() {
                     ↓
                   </span>
                 </Link>
-                <Arrow href="/about" className="text-fg-2">
-                  The whole story
+                <Arrow href="/lab" className="text-fg-2">
+                  Things I built with AI
                 </Arrow>
               </div>
             </Reveal>
@@ -64,6 +66,50 @@ export default function Home() {
           <Arrow href="/work">All seven projects, and the client list</Arrow>
         </Container>
       </div>
+
+      {/* 05 — the lab: proof of building with AI */}
+      <section className="border-t border-line" aria-labelledby="h-lab">
+        <Container wide className="py-24 sm:py-32">
+          <div className="grid gap-10 lg:grid-cols-12">
+            <div className="lg:col-span-4">
+              <Label>
+                <span id="h-lab">The Lab</span>
+              </Label>
+              <h2 className="serif mt-4 text-[2.5rem] leading-[1] text-balance sm:text-[3.5rem]">
+                <Words text="Built to see if it could be built." />
+              </h2>
+              <Reveal delay={0.3}>
+                <p className="mt-6 max-w-md text-lg text-fg-2 text-pretty">
+                  Things made with an agent in the loop, in days: a playable 3D city of my life, working agent-interface
+                  patterns, a live Claude grounded in this site. Every one runs.
+                </p>
+                <Arrow href="/lab" className="mt-6">
+                  Open the lab
+                </Arrow>
+              </Reveal>
+            </div>
+            <ul className="grid gap-6 sm:grid-cols-3 lg:col-span-8">
+              {lab
+                .filter((l) => ["city", "agents", "ask"].includes(l.slug))
+                .map((l, i) => (
+                  <Reveal key={l.slug} as="li" delay={0.06 * i}>
+                    <Link href={l.href} className="group block">
+                      <div className="frame frame-hover rounded-lg" style={{ aspectRatio: "4 / 3" }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {l.image && <img src={l.image} alt="" loading="lazy" decoding="async" />}
+                      </div>
+                      <p className="mt-3 flex items-baseline justify-between gap-3">
+                        <span className="tight text-[1.0625rem] font-medium">{l.title}</span>
+                        <span className="text-xs text-fg-3">{l.kind}</span>
+                      </p>
+                      <p className="mt-1 text-sm text-fg-2">{l.built.split(" · ").slice(0, 2).join(" · ")}</p>
+                    </Link>
+                  </Reveal>
+                ))}
+            </ul>
+          </div>
+        </Container>
+      </section>
 
       {/* 05 — the story, in three photographs */}
       <section className="border-t border-line" aria-labelledby="h-story">

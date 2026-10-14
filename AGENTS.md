@@ -1,17 +1,21 @@
 # AGENTS.md — read this before you touch anything
 
-> **Status, October 2026: the 3D work is on the back burner.** The live site
-> is a cinematic, photo-led portfolio: near-black frame, one serif for the
-> story, each case study on its own color field. Routes in `src/app/*`,
-> primitives in `src/components/ui.tsx` + `motion.tsx` (CSS reveals gated on
-> `html.js`), per-project imagery in `src/content/work-media.ts`, web-sized
-> copies in `public/img` (regenerate with `node scripts/optimize-images.mjs`;
-> the full-res export is `public/framer/canvas/images`, cataloged in
-> `scripts/framer-catalog.json`). Nothing under
-> `src/components/{game3d,archive3d,canvas,line,room}` is mounted; it is kept
-> only so it can be revisited. Everything below about the game describes that
-> shelved work — the "Portfolio layer" section (§3b) is the part that
-> still matters day to day.
+> **Status, October 2026: the site targets AI-builder roles.** It is a
+> cinematic, photo-led portfolio (near-black frame, one serif for the story,
+> each case study on its own color field) with a **Lab** (`/lab`) that mounts
+> the shelved experiments as proof of building with agents: the 3D city
+> (`game3d`), the studio (`archive3d`), the line (`line`), the room (`room`),
+> plus `components/lab/agent-patterns.tsx` (simulated agent UI) and a live
+> Claude demo (`app/api/ask`, on only when `ANTHROPIC_API_KEY` is set).
+> Routes in `src/app/*`, primitives in `src/components/ui.tsx` + `motion.tsx`
+> (CSS reveals gated on `html.js`), per-project imagery in
+> `src/content/work-media.ts`, web-sized copies in `public/img` (regenerate
+> with `node scripts/optimize-images.mjs`; full-res export in
+> `public/framer/canvas/images`, cataloged in `scripts/framer-catalog.json`).
+> `src/content/lab.ts` holds `REPO.isPublic` — flip it when the GitHub repo
+> goes public. Everything below about the game describes the Lab's city entry
+> — the "Portfolio layer" section (§3b) is the part that still matters day
+> to day.
 
 You're picking up **Whitehead City**: a personal portfolio site for Josh
 Whitehead that is *also* a playable open-world game. This file is the

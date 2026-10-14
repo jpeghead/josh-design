@@ -12,7 +12,7 @@ const serif = Instrument_Serif({ variable: "--font-instrument", subsets: ["latin
 export const metadata: Metadata = {
   metadataBase: new URL("https://josh.design"),
   title: {
-    default: "Josh Whitehead",
+    default: "Josh Whitehead — designer who builds AI products",
     template: "%s — Josh Whitehead",
   },
   description: identityLine,
@@ -39,7 +39,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable} ${serif.variable}`}>
+    <html lang="en" className={`${geist.variable} ${serif.variable}`} suppressHydrationWarning>
       <head>
         {/* lets CSS gate reveal animations on JavaScript being present, before first paint */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
