@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * OLO v0 — Spotify Wrapped for your brain, in the browser.
+ * Portrait — Spotify Wrapped for your chat history, in the browser.
  * Drop in a ChatGPT or Claude export. Everything is parsed and analyzed in
  * this tab; nothing is uploaded. The portrait is written from the numbers.
  */

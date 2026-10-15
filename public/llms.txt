@@ -4,10 +4,10 @@
 
 ## Start here
 - [Résumé](https://josh.design/resume): titles, years, skills, in plain text.
-- [Builds](https://josh.design/lab): working things — a language model running in the browser on WebGPU, agent UI patterns, a grounded hosted Claude, a playable 3D city built with an agent, this site.
+- [Builds](https://josh.design/lab): working things — Portrait (in-browser analysis of your ChatGPT/Claude export), a language model running in the browser on WebGPU, agent UI patterns, a grounded hosted Claude, a playable 3D city built with an agent, this site.
 - [Process](https://josh.design/process): how the builds get made, with real artifacts.
 - [Work](https://josh.design/work): case studies — Spin, Hush, Very Good Ventures, Saucey, NationBuilder, Differential, Boneyard.
-- [Products](https://josh.design/products): OLO (live beta, runs in the browser), SignalScan, Weaver, StoryMode, Xenomorph typeface.
+- [Products](https://josh.design/products): OLO (olomode.com), Weaver (useweaver.app), StoryMode (playstorymode.app), SignalScan (in development), Xenomorph typeface.
 - [Writing](https://josh.design/writing): build logs and essays.
 - [About](https://josh.design/about): the story and the principles.
 - Contact: josh@josh.design

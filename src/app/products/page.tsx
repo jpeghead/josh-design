@@ -21,7 +21,10 @@ export default function ProductsPage() {
             <Link href={`/products/${p.slug}`} className="group grid gap-x-12 gap-y-5 border-b border-line py-10 sm:grid-cols-[1.1fr_1.4fr_0.9fr] sm:items-center">
               <div>
                 <h2 className="tighter text-[2rem] font-semibold leading-none sm:text-[2.5rem]">{p.name}</h2>
-                <p className="mt-2 text-sm text-fg-3">{p.status}</p>
+                <p className="mt-2 text-sm text-fg-3">
+                  {p.status}
+                  {p.link && p.link.href.startsWith("http") ? ` · ${p.link.label}` : ""}
+                </p>
               </div>
               <div>
                 <p className="serif text-[1.5rem] leading-tight sm:text-[1.75rem]">{p.tagline}</p>

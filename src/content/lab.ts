@@ -18,14 +18,14 @@ export type LabEntry = {
 
 export const lab: LabEntry[] = [
   {
-    slug: "olo",
-    title: "OLO",
+    slug: "portrait",
+    title: "Portrait",
     kind: "Live beta",
     blurb:
-      "Spotify Wrapped for your brain. Drop in the export you can already download from ChatGPT or Claude and get a portrait of how you think: when you write, what you keep asking, how you open. v0 runs entirely in the browser; nothing is uploaded.",
+      "Spotify Wrapped for your chat history. Drop in the export you can already download from ChatGPT or Claude and get a portrait of how you think: when you write, what you keep asking, how you open. Runs entirely in the browser; nothing is uploaded.",
     built: "TypeScript · parsers for ChatGPT and Claude exports · local analysis · no server",
     when: "October 2026",
-    href: "/products/olo/app",
+    href: "/lab/portrait",
     image: "/img/lab/olo.jpg",
     aspect: "16 / 10",
     live: true,

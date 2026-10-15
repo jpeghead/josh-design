@@ -12,6 +12,8 @@ export type Book = {
   blurb: string;
   cover: string | null;
   awaitingAsset?: boolean;
+  link?: { label: string; href: string };
+  site?: string;
 };
 
 export const books: Book[] = [
@@ -21,11 +23,12 @@ export const books: Book[] = [
     subtitle: "The Quiet Collapse of Expertise",
     kind: "Nonfiction",
     year: "2026",
-    status: "Forthcoming",
+    status: "Out now",
     blurb:
-      "On what happens to skill, craft, and expertise when the tools get good enough to fake the output — and what's actually worth mastering now.",
-    cover: null,
-    awaitingAsset: true,
+      "A field manual for the collapse of expertise: how AI is restructuring twenty-five white-collar careers, what survives, what doesn't, and what to do if you work in one. 618 pages, paperback.",
+    cover: "/img/products/mastery-is-dead.png",
+    link: { label: "Paperback on Amazon", href: "https://www.amazon.com/dp/B0H3ZC9FDN" },
+    site: "https://masteryisdead.com",
   },
   {
     slug: "the-harmony-protocol",

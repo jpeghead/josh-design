@@ -23,6 +23,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const idx = products.findIndex((x) => x.slug === slug);
   const next = products[(idx + 1) % products.length];
 
+  const shots = p.gallery && p.gallery.length > 0 ? p.gallery : p.image ? [p.image] : [];
   return (
     <Container>
       <article className="pb-28 pt-28 sm:pt-40">
@@ -38,11 +39,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <p className="serif mt-5 text-[1.75rem] leading-tight text-fg-2 sm:text-[2.25rem]">{p.tagline}</p>
         </header>
 
-        {p.gallery && p.gallery.length > 0 ? (
+        {shots.length > 0 ? (
           <div className="mt-14 grid gap-3 sm:grid-cols-2">
-            {p.gallery.map((src, i) => (
+            {shots.map((src, i) => (
               <Reveal key={src} className={i === 0 ? "sm:col-span-2" : ""} delay={i * 0.05}>
-                <div className="frame rounded-md" style={{ aspectRatio: i === 0 ? "16 / 9" : "4 / 3" }}>
+                <div className="frame rounded-md" style={{ aspectRatio: i === 0 ? (shots.length === 1 ? p.aspect.replace("/", " / ") : "16 / 9") : "4 / 3" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={src} alt={`${p.name}, image ${i + 1}`} loading={i === 0 ? "eager" : "lazy"} decoding="async" />
                 </div>

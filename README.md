@@ -14,6 +14,7 @@ that look like they shouldn't fit in a portfolio:
 | `/lab/local` | A language model on your GPU through WebGPU (WebLLM, Llama 3.2 1B / Qwen 2.5 0.5B), grounded on the site's own text. No server. |
 | `/lab/ask` | A hosted Claude, grounded on the same content files, streaming from a Next.js route handler. Needs `ANTHROPIC_API_KEY`. |
 | `/lab/agents` | Four working agent-interface prototypes: progress, scoped permissions, failure with recovery, graded confidence. |
+| `/lab/portrait` | Portrait — drop in a ChatGPT or Claude export and get a portrait of how you think. Parsing and analysis run in the browser; nothing is uploaded. |
 | `/lab/city` | Whitehead City — a GTA-style open world of the life, built in sixteen days with Claude Code. Desktop only. |
 | `/lab/studio` `/lab/line` `/lab/room` | Earlier experiments: a scroll-conducted 3D room, a scroll-scrubbed drawing, a side-scrolling playable life. |
 | `/process` | How the builds get made, with the real artifacts: the agent handoff doc, the subagent's image catalog, the commit record. |

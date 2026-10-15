@@ -20,6 +20,8 @@ export default function WritingPage() {
           {books.map((b) => (
             <Row
               key={b.slug}
+              href={b.site ?? b.link?.href}
+              external={!!(b.site ?? b.link?.href)}
               title={b.subtitle ? `${b.title}: ${b.subtitle}` : b.title}
               meta={[b.kind, b.status, b.year].filter(Boolean).join(" · ")}
               body={b.blurb}

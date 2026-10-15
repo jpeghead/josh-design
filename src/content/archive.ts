@@ -186,7 +186,7 @@ export const artifacts: Artifact[] = [
   { id: "app-vgv", eraId: "app", title: "Very Good Ventures", caption: "Flutter design system. Google I/O 2023.", year: "2022 – 2023", type: "app", image: null, awaitingScan: true, aspect: "16/10", href: "/work/vgv" },
 
   // Today — products & books (real asset where it exists)
-  { id: "today-olo", eraId: "today", title: "OLO", caption: "Spotify Wrapped for your brain.", type: "product", image: null, awaitingScan: true, aspect: "16/10", href: "/products" },
+  { id: "today-olo", eraId: "today", title: "OLO", caption: "A companion for the work between windows.", type: "product", image: "/img/products/olo.jpg", aspect: "1200/630", href: "/products/olo" },
   { id: "today-weaver", eraId: "today", title: "Weaver", caption: "Map the narrative before you write it.", type: "product", image: null, awaitingScan: true, aspect: "16/10", href: "/products" },
   { id: "today-xeno", eraId: "today", title: "Xenomorph Typeface", caption: "A made thing, offered free.", type: "product", image: "/framer/cms/downloads/xenomorph-typeface__image.png", aspect: "4/3", href: "/products" },
   { id: "today-book", eraId: "today", title: "Mastery is Dead", caption: "The quiet collapse of expertise.", type: "book", image: null, awaitingScan: true, aspect: "2/3", href: "/writing" },

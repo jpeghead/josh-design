@@ -100,9 +100,9 @@ export const workMedia: Record<string, WorkMedia> = {
       { src: img("9vtGAi9uzNeni1YIY1hfdj6lk"), alt: "The Very Good Ventures homepage on an iMac: We're Very Good at Flutter", caption: "verygood.ventures — the studio's own site.", aspect: "4 / 3", span: 2 },
       { src: img("q7PGLtBl14XNmc9ncsnxPXmULUM"), alt: "The Very Good Ventures blog on a tablet", caption: "The blog, on the tablet.", aspect: "4 / 3" },
       { src: img("Yzs7HIPoKaqDiUuyF2lwrrYCoLQ"), alt: "Three phones showing the Very Good Ventures site, blog, and an article", caption: "The same system, on the phone.", aspect: "4 / 3" },
-      { src: img("KDfTFMmxKAXExgbvS33Golp168"), alt: "Admin interface for a Flutter show app: brand colors with a live phone preview", caption: "A Flutter show app — brand colors with a live preview.", aspect: "4 / 3" },
+      { src: img("KDfTFMmxKAXExgbvS33Golp168"), alt: "Admin interface for a Flutter show app: brand colors with a live phone preview", caption: "No Guarantees Theatrical Productions — show-app admin, brand colors with a live preview.", aspect: "4 / 3" },
       { src: img("WhOeojpBw94susWJGCIM0ckyfA"), alt: "Cast and creative admin table for a show app, with a phone preview", caption: "Admin for cast, creative, and showtimes.", aspect: "4 / 3" },
-      { src: img("3jsKbwyIfMWfkW3f8CbzBn1H9U"), alt: "Three phones fanned on red showing a Broadway show app: showtimes, today, and gallery", caption: "The show app, themed per production.", aspect: "4 / 3" },
+      { src: img("3jsKbwyIfMWfkW3f8CbzBn1H9U"), alt: "Three phones fanned on red showing a Broadway show app: showtimes, today, and gallery", caption: "No Guarantees — the show app, themed per production (Bad Cinderella).", aspect: "4 / 3" },
       { src: img("vJ1DLjtkb8TgVsXD7ylsPWmblg"), alt: "A theatre app on two phones: a red splash screen and an account screen", caption: "Splash and account.", aspect: "4 / 3" },
     ],
   },
@@ -115,7 +115,7 @@ export const workMedia: Record<string, WorkMedia> = {
 /** More screens from contract work, shown without client claims. */
 export const moreScreens: MediaItem[] = [
   { src: img("rshomcDKWzmXV5NR863J6tyxRw"), alt: "A vocal-effects editing screen on a phone, teal controls on black", caption: "Auto-Tune — vocal effects on the phone (contract, 2024).", aspect: "1 / 1" },
-  { src: img("1QJ8b1heLYKmfftGtf5RmGoazU"), alt: "A business-finance app showing revenue and credit scores, purple", caption: "Fintech — revenue and credit at a glance.", aspect: "1 / 1" },
+  { src: img("1QJ8b1heLYKmfftGtf5RmGoazU"), alt: "A business-finance app showing revenue and credit scores, purple", caption: "Nav — revenue and business credit at a glance.", aspect: "1 / 1" },
 ];
 
 /** The life, in photographs. */

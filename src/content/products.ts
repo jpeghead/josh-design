@@ -8,7 +8,7 @@ export type Product = {
   slug: string;
   name: string;
   tagline: string;
-  status: "Live" | "Live beta" | "In development" | "Released";
+  status: "Live" | "Live beta" | "Site live" | "In development" | "Released";
   blurb: string;
   detail: string[];
   image: string | null;
@@ -24,18 +24,40 @@ export const products: Product[] = [
   {
     slug: "olo",
     name: "OLO",
-    tagline: "Spotify Wrapped for your brain.",
-    status: "Live beta",
+    tagline: "A companion for the work between windows.",
+    status: "Site live",
     blurb:
-      "Point OLO at your own exported AI conversation history and it shows you the shape of how you actually think.",
+      "OLO is a character that lives on your Mac: ask it, teach it Memory, review Activity, and see which abilities and recording states are actually available.",
     detail: [
-      "You export your chat history yourself and bring it in — there's no account linking and no third-party access to your accounts.",
-      "Privacy-first by design: v0 runs entirely in your browser. The file is parsed and analyzed in the tab; nothing is uploaded.",
-      "The output is a portrait of your own patterns, obsessions, and questions over time: when you write, what you keep asking, how you open.",
+      "A desktop companion, not a chat window: it sits with you across the work and remembers what you teach it.",
+      "Privacy by design: you can see what it can do and what it is recording at any moment.",
     ],
-    image: "/img/lab/olo.jpg",
-    aspect: "16/10",
-    link: { label: "Open the beta", href: "/products/olo/app" },
+    image: "/img/products/olo.jpg",
+    aspect: "1200/630",
+    link: { label: "olomode.com", href: "https://olomode.com" },
+  },
+  {
+    slug: "weaver",
+    name: "Weaver",
+    tagline: "Your channel remembers, and it writes.",
+    status: "Site live",
+    blurb:
+      "Weaver keeps everything your channel has established — subjects, takes, running bits, cast — and writes every new script from all of it.",
+    detail: ["Opening the writers' room: a memory of the channel first, then the writing.", "Built for creators who publish on a schedule and can't start from a blank page every time."],
+    image: "/img/products/weaver.png",
+    aspect: "1200/630",
+    link: { label: "useweaver.app", href: "https://useweaver.app" },
+  },
+  {
+    slug: "storymode",
+    name: "StoryMode",
+    tagline: "Never played it. Still want the story?",
+    status: "Site live",
+    blurb: "The stories of games you never finished. Listen to full game stories — narrated, not played.",
+    detail: ["Video game narratives as audiobooks: the plot without the controller.", "Browse by game, pick today's story, and listen in about fifteen minutes."],
+    image: "/img/products/storymode.jpg",
+    aspect: "1200/630",
+    link: { label: "playstorymode.app", href: "https://playstorymode.app" },
   },
   {
     slug: "signalscan",
@@ -47,35 +69,6 @@ export const products: Product[] = [
     detail: [
       "Aggregates what's already public and organizes it into something you can actually reason about.",
       "Built for the moment before a meeting, a hire, or a deal — when you want context, fast.",
-    ],
-    image: null,
-    awaitingAsset: true,
-    aspect: "16/10",
-  },
-  {
-    slug: "weaver",
-    name: "Weaver",
-    tagline: "Map the narrative before you write it.",
-    status: "In development",
-    blurb:
-      "A visual canvas for laying out a story's threads — characters, beats, arcs — before a single sentence is committed.",
-    detail: [
-      "Think on a canvas, not in a blank document.",
-      "Made for the messy, spatial part of writing that outlines flatten.",
-    ],
-    image: null,
-    awaitingAsset: true,
-    aspect: "16/10",
-  },
-  {
-    slug: "storymode",
-    name: "StoryMode",
-    tagline: "Game narratives, as audio stories.",
-    status: "In development",
-    blurb:
-      "Turns the narrative of a game into an audio story you can listen to — the plot without the controller.",
-    detail: [
-      "For the stories inside games that deserve to be heard on their own.",
     ],
     image: null,
     awaitingAsset: true,

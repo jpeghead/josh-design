@@ -59,11 +59,11 @@ function RowInner({ r }: { r: Row }) {
 
 export default async function Home() {
   const [stars, commit] = await Promise.all([Promise.all(OSS.map((o) => repoStars(o.repo))), lastCommit("jpeghead/josh-design")]);
-  const live = products.filter((p) => p.status === "Live beta" || p.status === "Live");
+  const live = products.filter((p) => p.status === "Site live" || p.status === "Live" || p.status === "Live beta");
   const building: Row[] = [
-    ...live.map((p) => ({ href: p.link?.href ?? `/products/${p.slug}`, title: p.name, line: `${p.tagline} ${p.status === "Live beta" ? "Runs in your browser; nothing uploaded." : ""}`.trim(), meta: p.status })),
+    ...live.map((p) => ({ href: p.link?.href ?? `/products/${p.slug}`, title: p.name, line: p.tagline, meta: p.link?.label ?? p.status, external: !!p.link?.href.startsWith("http") })),
     ...lab
-      .filter((l) => ["local", "agents", "ask", "city"].includes(l.slug))
+      .filter((l) => ["portrait", "local", "agents", "ask", "city"].includes(l.slug))
       .map((l) => ({ href: l.href, title: l.title, line: l.blurb.split(". ")[0] + ".", meta: l.kind })),
   ];
   const oss: Row[] = OSS.map((o, i) => ({ href: `https://github.com/${o.repo}`, title: o.title, line: o.line, meta: stars[i] ? `★ ${stars[i]}` : undefined, external: true }));
@@ -153,7 +153,7 @@ export default async function Home() {
           </div>
           <ul className="mt-6 grid gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-6">
             {lab
-              .filter((l) => ["olo", "local", "agents", "particles", "city", "ask"].includes(l.slug))
+              .filter((l) => ["portrait", "local", "agents", "particles", "city", "ask"].includes(l.slug))
               .map((l, i) => (
                 <Reveal key={l.slug} as="li" delay={0.04 * i}>
                   <Link href={l.href} className="group block">
