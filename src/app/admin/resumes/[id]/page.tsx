@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { anthropicConfigured } from "@/lib/anthropic";
 import { getResume, listResumes } from "@/lib/admin/resume/store";
 import { estimatePages } from "@/lib/admin/resume/render";
 import { readJson } from "@/lib/admin/store";
@@ -17,5 +18,5 @@ export default async function Editor({ params }: { params: Promise<{ id: string 
     .slice(0, 60)
     .map((j) => ({ id: j.id, label: `${j.company} — ${j.title}` }));
   const job = r.jobId ? readJson<Posting[]>("jobs", []).find((j) => j.id === r.jobId) : undefined;
-  return <ResumeEditor resume={r} pages={estimatePages(r.data)} versions={versions} jobs={jobs} job={job ? { id: job.id, label: `${job.company} — ${job.title}`, url: job.url } : undefined} hasKey={!!process.env.ANTHROPIC_API_KEY} />;
+  return <ResumeEditor resume={r} pages={estimatePages(r.data)} versions={versions} jobs={jobs} job={job ? { id: job.id, label: `${job.company} — ${job.title}`, url: job.url } : undefined} hasKey={anthropicConfigured()} />;
 }

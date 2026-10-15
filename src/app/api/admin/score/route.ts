@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { anthropicClient, anthropicConfigured } from "@/lib/anthropic";
 import { readJson, writeJson } from "@/lib/admin/store";
 import type { Posting } from "@/lib/admin/types";
 import { profileSummary } from "@/lib/admin/resume/profile";
@@ -14,12 +14,11 @@ const MODEL = process.env.ASK_MODEL ?? "claude-sonnet-5-5";
  * Josh come from the profile; the model never sees anything else about him.
  */
 export async function POST() {
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) return Response.json({ error: "No ANTHROPIC_API_KEY in .env.local, so scoring stays on rules. Add the key and try again." }, { status: 200 });
+  if (!anthropicConfigured()) return Response.json({ error: "No model credentials (federation variables or ANTHROPIC_API_KEY in .env.local), so scoring stays on rules." }, { status: 200 });
   const jobs = readJson<Posting[]>("jobs", []);
   const todo = jobs.filter((p) => p.scoredBy === "rules" && p.status !== "hidden" && p.score >= 35).slice(0, 40);
   if (!todo.length) return Response.json({ scored: 0 });
-  const client = new Anthropic({ apiKey: key });
+  const client = anthropicClient();
   const profile = profileSummary();
   let scored = 0;
   for (const p of todo) {

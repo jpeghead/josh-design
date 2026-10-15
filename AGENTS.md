@@ -284,9 +284,14 @@ that cadence.
 - **Vercel:** project `josh-design` (team `jpeghead-8439s-projects`), Git
   integration on `jpeghead/josh-design`. Production: https://josh-design.vercel.app.
   `.vercelignore` keeps the 184 MB full-res Framer export out of deploys; the
-  site serves `public/img`. `ANTHROPIC_API_KEY` is not set on Vercel, so
-  `/lab/ask` shows its "off" state; add it in the project's environment
-  variables to turn the hosted demo on. josh.design and www.josh.design are
+  site serves `public/img`. Claude is reached through Workload Identity
+  Federation, not a key: Vercel's OIDC token is exchanged by `src/lib/anthropic.ts`
+  (rule `fdrl_01JQuVdxrEnaXcQXmHXCPbn7`, issuer `vercel-jpeghead`, service account
+  `josh-design-vercel`, all in the Claude Console). The three IDs are Vercel env
+  vars for every environment and sit in `.env.local`; locally the token is
+  `VERCEL_OIDC_TOKEN`, refreshed by `vercel env pull` (12-hour tokens). Every
+  caller, site and admin, goes through `anthropicClient()`; `ANTHROPIC_API_KEY`
+  still works as a fallback but nothing needs it. josh.design and www.josh.design are
   attached to the project but unverified until Namecheap serves Vercel's
   A/CNAME/TXT records (as of 2026-10-15 it still serves the Framer records).
 - The repo is public.

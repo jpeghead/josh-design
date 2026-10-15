@@ -1,5 +1,5 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { groundingText } from "@/content/grounding";
+import { anthropicClient, anthropicConfigured } from "@/lib/anthropic";
 
 export const runtime = "nodejs";
 
@@ -29,8 +29,7 @@ SITE TEXT:
 ${groundingText()}`;
 
 export async function POST(req: Request) {
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) return new Response("The live model is not configured on this deployment.", { status: 503 });
+  if (!anthropicConfigured()) return new Response("The live model is not configured on this deployment.", { status: 503 });
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
   if (limited(ip)) return new Response("Rate limit: try again in a few minutes.", { status: 429 });
 
@@ -44,7 +43,7 @@ export async function POST(req: Request) {
   if (!q) return new Response("Ask something.", { status: 400 });
   const history = (body.history ?? []).slice(-6).map((m) => ({ role: m.role, content: String(m.content).slice(0, 1200) }));
 
-  const client = new Anthropic({ apiKey: key });
+  const client = anthropicClient(req);
   const stream = client.messages.stream({
     model: MODEL,
     max_tokens: 500,

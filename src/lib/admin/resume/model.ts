@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { anthropicClient, anthropicConfigured } from "@/lib/anthropic";
 import type { Profile } from "./profile";
 import type { ResumeData } from "./types";
 import type { Posting } from "../types";
@@ -6,9 +6,8 @@ import type { Posting } from "../types";
 const MODEL = process.env.ASK_MODEL ?? "claude-sonnet-5-5";
 
 function client() {
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) throw new Error("No ANTHROPIC_API_KEY in .env.local. Editing with instructions and tailoring need it; building, previewing, and exporting do not.");
-  return new Anthropic({ apiKey: key });
+  if (!anthropicConfigured()) throw new Error("No model credentials (federation variables or ANTHROPIC_API_KEY in .env.local). Editing with instructions and tailoring need them; building, previewing, and exporting do not.");
+  return anthropicClient();
 }
 
 const RULES = `You edit a résumé as structured JSON. Hard rules:

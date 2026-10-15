@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { mkdirSync } from "node:fs";
 import { execSync } from "node:child_process";
 import type { Browser, BrowserContext, Page } from "playwright";
-import Anthropic from "@anthropic-ai/sdk";
+import { anthropicClient, anthropicConfigured } from "@/lib/anthropic";
 import { DATA_DIR } from "../store";
 import { getProfile, type Profile } from "../resume/profile";
 import { toPdf } from "../resume/export";
@@ -193,9 +193,8 @@ function decide(f: Field, profile: Profile, resume: Resume): { value?: string; s
 
 /** Claude writes answers to free-text questions, from the profile only, in Josh's register. */
 async function answerWithClaude(questions: { key: string; label: string }[], job: Posting, profile: Profile, resume: Resume): Promise<Record<string, string>> {
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key || !questions.length) return {};
-  const client = new Anthropic({ apiKey: key });
+  if (!anthropicConfigured() || !questions.length) return {};
+  const client = anthropicClient();
   const res = await client.messages.create({
     model: process.env.ASK_MODEL ?? "claude-sonnet-5-5",
     max_tokens: 2500,
@@ -368,7 +367,7 @@ export async function startApplication(app: Application, job: Posting, resume: R
     a.fields = fields;
     saveApplication(a);
     if (toAsk.length) {
-      log(a, process.env.ANTHROPIC_API_KEY ? `Drafting ${toAsk.length} written answer${toAsk.length === 1 ? "" : "s"} with Claude.` : `${toAsk.length} written question${toAsk.length === 1 ? "" : "s"} left for you (no model key).`);
+      log(a, anthropicConfigured() ? `Drafting ${toAsk.length} written answer${toAsk.length === 1 ? "" : "s"} with Claude.` : `${toAsk.length} written question${toAsk.length === 1 ? "" : "s"} left for you (no model key).`);
       const answers = await answerWithClaude(toAsk, job, profile, resume);
       for (const f of fields) {
         const ans = answers[f.key];

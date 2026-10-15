@@ -4,6 +4,7 @@ import { Container, PageHeader } from "@/components/ui";
 import { Ask } from "@/components/lab/ask";
 import { LocalLLM } from "@/components/lab/local-llm";
 import { localSystemPrompt } from "@/content/grounding";
+import { anthropicConfigured } from "@/lib/anthropic";
 
 export const metadata: Metadata = {
   title: "Ask my portfolio — Builds",
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  const live = !!process.env.ANTHROPIC_API_KEY;
+  const live = !!anthropicConfigured();
   return (
     <Container>
       <Link href="/lab" className="mt-24 inline-block text-sm text-fg-2 transition-colors hover:text-fg sm:mt-32">

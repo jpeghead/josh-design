@@ -1,4 +1,5 @@
 import { getProfile } from "@/lib/admin/resume/profile";
+import { anthropicConfigured } from "@/lib/anthropic";
 import { postingKeywords, roughKeywords, tailorResume } from "@/lib/admin/resume/model";
 import { buildResume } from "@/lib/admin/resume/build";
 import { getResume, newResume, coverage } from "@/lib/admin/resume/store";
@@ -20,7 +21,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const job = readJson<Posting[]>("jobs", []).find((j) => j.id === jobId);
   if (!job) return new Response("Posting not found", { status: 404 });
   const profile = getProfile();
-  const hasKey = !!process.env.ANTHROPIC_API_KEY;
+  const hasKey = anthropicConfigured();
   try {
     const keywords = hasKey ? await postingKeywords(job) : roughKeywords(job);
     const data = hasKey ? await tailorResume(r.data, job, keywords, profile) : buildResume(profile, r.persona, keywords);

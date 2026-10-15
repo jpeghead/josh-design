@@ -31,7 +31,7 @@ npm run build        # must stay green
 npx tsc --noEmit     # must stay green
 ```
 
-Optional: `ANTHROPIC_API_KEY` in `.env.local` turns on `/lab/ask`.
+Claude access is federated: the deployment's Vercel OIDC token is exchanged for a short-lived Anthropic token (`src/lib/anthropic.ts`), so no API key exists anywhere. Locally, `vercel env pull` writes a development token to `.env.local`; `ANTHROPIC_API_KEY` is only a fallback.
 
 ## How it's built
 

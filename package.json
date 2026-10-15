@@ -17,6 +17,7 @@
     "@react-three/fiber": "^9.6.1",
     "@react-three/postprocessing": "^3.0.4",
     "@react-three/rapier": "^2.2.0",
+    "@vercel/oidc": "^4.0.1",
     "clsx": "^2.1.1",
     "docx": "^9.11.0",
     "framer-api": "^0.1.18",
