@@ -7,8 +7,12 @@
 > (`game3d`), the studio (`archive3d`), the line (`line`), the room (`room`),
 > plus `components/lab/agent-patterns.tsx` (simulated agent UI) and a live
 > Claude demo (`app/api/ask`, on only when `ANTHROPIC_API_KEY` is set), a
-> WebGPU on-device model (`app/lab/local`), and **OLO v0** — a browser-only
-> product beta at `app/products/olo/app` (`src/lib/olo/{parse,analyze}.ts`).
+> WebGPU on-device model (`app/lab/local`), and **Portrait** — browser-only
+> analysis of a ChatGPT/Claude export at `app/lab/portrait`
+> (`src/lib/olo/{parse,analyze}.ts`; `/products/olo/app` redirects there).
+> The real products (OLO, Weaver, StoryMode, the Mastery is Dead book) have
+> live sites; `src/content/products.ts` and `books.ts` mirror their own copy
+> and link out. Re-read the live sites before changing those entries.
 > Machine layer: `/resume`, JSON-LD in `components/json-ld.tsx`,
 > `app/opengraph-image.tsx`, `public/llms.txt`, AI-open `robots.ts`.
 > Open-source spin-offs live in `jpeghead/agent-ui-patterns` and
@@ -259,8 +263,9 @@ that cadence.
   `.vercelignore` keeps the 184 MB full-res Framer export out of deploys; the
   site serves `public/img`. `ANTHROPIC_API_KEY` is not set on Vercel, so
   `/lab/ask` shows its "off" state; add it in the project's environment
-  variables to turn the hosted demo on. The custom domain josh.design is not
-  attached yet.
+  variables to turn the hosted demo on. josh.design and www.josh.design are
+  attached to the project but unverified until Namecheap serves Vercel's
+  A/CNAME/TXT records (as of 2026-10-15 it still serves the Framer records).
 - The repo is public.
 
 ## 8. Current state & the open punch list
