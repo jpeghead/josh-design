@@ -1,6 +1,7 @@
 import { readJson } from "../store";
 import type { Posting } from "../types";
 import { currentBase, listResumes } from "../resume/store";
+import { tailoredFor } from "../resume/tailor";
 import { getApplication, listApplications, newApplication, saveApplication } from "./store";
 import { isLive, startApplication } from "./agent";
 
@@ -25,9 +26,8 @@ export function enqueue(jobIds: string[]): string[] {
       ids.push(open.id);
       continue;
     }
-    const tailored = listResumes().find((r) => r.jobId === id);
-    const resume = tailored ?? currentBase(job.persona);
-    const app = newApplication({ jobId: job.id, company: job.company, title: job.title, url: job.applyUrl, resumeId: resume.id, autoSubmit: false, headless: true });
+    // the résumé is chosen when the run starts (tailored then, from the current base); until then the base stands in
+    const app = newApplication({ jobId: job.id, company: job.company, title: job.title, url: job.applyUrl, resumeId: currentBase(job.persona).id, autoSubmit: false, headless: true });
     app.status = "queued";
     saveApplication(app);
     ids.push(app.id);
@@ -47,14 +47,26 @@ export async function kick(): Promise<void> {
       const next = all.filter((a) => a.status === "queued").sort((x, y) => x.startedAt.localeCompare(y.startedAt))[0];
       if (!next || waiting >= LIVE_MAX) break;
       const job = readJson<Posting[]>("jobs", []).find((j) => j.id === next.jobId);
-      const resume = listResumes().find((r) => r.id === next.resumeId);
-      if (!job || !resume) {
+      if (!job) {
         next.status = "failed";
-        next.message = "The posting or résumé is gone.";
+        next.message = "The posting is gone.";
         saveApplication(next);
         continue;
       }
       next.status = "starting";
+      next.steps.push({ at: new Date().toISOString(), text: "Tailoring the résumé to this posting from the approved base." });
+      saveApplication(next);
+      let resume;
+      try {
+        resume = await tailoredFor(job);
+        const k = resume.keywords;
+        next.resumeNote = `Tailored for ${job.company}${k ? ` · ${k.covered.length}/${k.covered.length + k.missing.length} of the posting's terms` : ""}`;
+      } catch (e) {
+        resume = listResumes().find((r) => r.id === next.resumeId) ?? currentBase(job.persona);
+        next.resumeNote = `Base résumé (tailoring failed: ${(e as Error).message.slice(0, 80)})`;
+      }
+      next.resumeId = resume.id;
+      next.steps.push({ at: new Date().toISOString(), text: next.resumeNote });
       saveApplication(next);
       await startApplication(next, job, resume, { headless: true });
     }

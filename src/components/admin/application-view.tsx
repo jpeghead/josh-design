@@ -42,6 +42,11 @@ export function ApplicationView({ initial }: { initial: Application }) {
         <h1 className="serif mt-1 text-[1.75rem] leading-tight">
           {a.title} <span className="text-fg-2">· {a.company}</span>
         </h1>
+        {a.resumeNote && (
+          <p className="mt-2 text-xs text-fg-3">
+            {a.resumeNote} · <Link href={`/admin/resumes/${a.resumeId}`} className="underline decoration-fg-3 underline-offset-2 hover:text-fg">see it</Link>
+          </p>
+        )}
         <p className={`mt-2 text-sm ${tone}`}>
           <span className="uppercase tracking-[0.14em]">{a.status}</span>
           {ACTIVE.has(a.status) && <span className="ml-2 inline-block h-2 w-2 animate-pulse rounded-full bg-fg align-middle" />}

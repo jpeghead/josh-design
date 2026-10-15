@@ -128,6 +128,11 @@ export function Queue({ initial, snapshot }: { initial: Application[]; snapshot:
               <Link href={`/admin/jobs/${encodeURIComponent(a.jobId)}`} className="text-xs text-fg-3 hover:text-fg">{a.company}</Link>
               <h2 className="serif text-[1.6rem] leading-tight">{a.title}</h2>
               <p className={`mt-1 text-sm ${tone(a.status)}`}>{a.message ?? a.status}</p>
+              {a.resumeNote && (
+                <p className="mt-1 text-xs text-fg-3">
+                  {a.resumeNote} · <Link href={`/admin/resumes/${a.resumeId}`} className="underline decoration-fg-3 underline-offset-2 hover:text-fg">see it</Link>
+                </p>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <button type="button" disabled={!!busy || !READY.has(a.status) || Object.keys(edits).length > 0} onClick={() => act("submit")} title={Object.keys(edits).length ? "Save your edits first" : needs ? "Fields still need you" : "Send this application"} className="rounded-full bg-fg px-4 py-1.5 text-[13px] font-medium text-bg disabled:opacity-50">

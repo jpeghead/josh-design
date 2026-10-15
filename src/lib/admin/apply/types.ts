@@ -20,6 +20,8 @@ export type Application = {
   title: string;
   url: string;
   resumeId: string;
+  /** "Tailored for Render · 12/20 terms", so the queue says what went in. */
+  resumeNote?: string;
   autoSubmit: boolean;
   status: "queued" | "starting" | "filling" | "review" | "needs-you" | "submitting" | "submitted" | "failed" | "stopped";
   /** Prepared in the background without a window; the queue shows the screenshot and fields instead. */

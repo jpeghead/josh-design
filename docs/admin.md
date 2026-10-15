@@ -176,8 +176,15 @@ editable, "Set on the form" pushes edits to the live page
 (`PATCH /api/admin/apply/[id]/fields`), Submit sends, Drop stops, and
 "Open visibly" starts the same job again in a window for anything the
 queue cannot reach (a CAPTCHA, a sign-in). At most six wait live at once.
-The tailored résumé for the posting is used when one exists, otherwise the
-persona's base. Cover letters are named
+The résumé is tailored for every application, at the moment the run
+starts: `lib/admin/resume/tailor.ts` derives a version from the current
+approved base for the posting's persona (the posting's words where they are
+true of the record, bullets reordered, nothing added), measures the real
+PDF, and trims from the oldest roles until it holds two pages. The run's
+card says "Tailored for X · 16/20 of the posting's terms" with a link. A
+version already made for that posting from the current base is reused;
+edit the base and the next run re-tailors from the new one. The headed
+flow (Apply) does the same. Cover letters are named
 `Josh-Whitehead-Cover-Letter-Company.pdf`.
 
 ## Learning, practice, numbers
