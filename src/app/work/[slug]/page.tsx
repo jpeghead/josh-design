@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container, Label, Arrow } from "@/components/ui";
+import { ShareRow } from "@/components/share-row";
 import { Reveal, Drift } from "@/components/motion";
 import { workMedia } from "@/content/work-media";
 import { projects } from "@/lib/data";
@@ -171,6 +172,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
             <p className="text-fg-2 lg:col-span-9">{p.tools.join(", ")}</p>
           </section>
         )}
+        <div className="border-t border-line py-8">
+          <ShareRow title={`${p.title} — Josh Whitehead`} path={`/work/${p.slug}`} />
+        </div>
         <nav className="flex items-baseline justify-between border-t border-line py-10">
           <span className="text-sm text-fg-3">Next</span>
           <Arrow href={next.internalLink ?? `/work/${next.slug}`} className="serif text-[2rem] sm:text-[2.5rem]">

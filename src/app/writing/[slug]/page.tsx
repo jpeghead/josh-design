@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/ui";
+import { ShareRow } from "@/components/share-row";
 import { portedEssays, essayBySlug } from "@/content/writing";
 
 export function generateStaticParams() {
@@ -40,6 +41,7 @@ export default async function EssayPage({ params }: { params: Promise<{ slug: st
 
   return (
     <Container>
+      <div aria-hidden className="reading-progress" />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
       <article className="max-w-2xl pb-28 pt-28 sm:pt-40">
         <Link href="/writing" className="text-sm text-fg-2 transition-colors hover:text-fg">
@@ -57,6 +59,10 @@ export default async function EssayPage({ params }: { params: Promise<{ slug: st
         </header>
 
         <div className="prose-mono mt-12 text-[1.0625rem] leading-relaxed text-pretty" dangerouslySetInnerHTML={{ __html: essay.html }} />
+
+        <div className="mt-10">
+          <ShareRow title={essay.title} path={`/writing/${essay.slug}`} />
+        </div>
 
         <nav aria-label="More writing" className="mt-16 grid gap-6 border-t border-line pt-8 sm:grid-cols-2">
           {older && (
