@@ -55,7 +55,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
             </dl>
           </div>
           {media?.cover.src && (
-            <Reveal className="mt-14" delay={0.1}>
+            <Reveal className="mt-14" delay={0.1} eager>
               <Drift amount={5} aspect={media.cover.aspect === "1 / 1" ? "16 / 10" : media.cover.aspect} className="rounded-lg">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={media.cover.src} alt={media.cover.alt} loading="eager" decoding="async" className="absolute inset-0 h-full w-full object-cover" />

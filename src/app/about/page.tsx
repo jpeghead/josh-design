@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Container, Label, Arrow } from "@/components/ui";
 import { Reveal, Words } from "@/components/motion";
+import { preload } from "react-dom";
 import { StoryVideo } from "@/components/story-video";
 import { aboutParagraphs } from "@/content/about";
 import { story } from "@/content/work-media";
@@ -15,6 +16,8 @@ export const metadata: Metadata = {
 const photos = [story.osprey, story.flightline, story.range, story.runway, story.doorway, story.crawl, story.ammo, story.flag, story.convoy];
 
 export default function AboutPage() {
+  // The montage poster is the largest paint on this page; ask for it first.
+  preload(story.montage.poster, { as: "image", fetchPriority: "high" });
   const body = aboutParagraphs.slice(0, -1);
   const closing = aboutParagraphs[aboutParagraphs.length - 1];
 
@@ -25,11 +28,11 @@ export default function AboutPage() {
           <div className="lg:col-span-7">
             <p className="text-sm text-fg-2">About</p>
             <h1 className="serif mt-4 max-w-[16ch] text-[3rem] leading-[0.98] text-balance sm:text-[4.5rem] lg:text-[5.5rem]">
-              <Words text={closing} />
+              <Words text={closing} eager />
             </h1>
           </div>
           <div className="lg:col-span-4 lg:col-start-9">
-            <Reveal delay={0.2}>
+            <Reveal delay={0.2} eager>
               <div className="frame mx-auto w-[min(100%,340px)] rounded-xl lg:w-full" style={{ aspectRatio: story.montage.aspect }}>
                 <StoryVideo src={story.montage.src} poster={story.montage.poster} />
               </div>

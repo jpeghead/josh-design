@@ -16,16 +16,19 @@ export function Reveal({
   delay = 0,
   className = "",
   as: Tag = "div",
+  eager = false,
 }: {
   children: ReactNode;
   delay?: number;
   className?: string;
   as?: "div" | "section" | "li" | "p" | "figure" | "header";
+  /** First-viewport content: animate in from first paint with CSS alone, never waiting on JavaScript. */
+  eager?: boolean;
 }) {
   const ref = useRef<HTMLElement>(null);
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || eager) return;
     const io = new IntersectionObserver(
       ([e]) => {
         if (e.isIntersecting) {
@@ -37,10 +40,10 @@ export function Reveal({
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [eager]);
   return (
     // @ts-expect-error — the tag is one of a few block elements
-    <Tag ref={ref} className={`reveal ${className}`} style={delay ? { transitionDelay: `${delay}s` } : undefined}>
+    <Tag ref={ref} className={`reveal ${eager ? "eager" : ""} ${className}`} style={delay ? { transitionDelay: `${delay}s`, animationDelay: `${delay}s` } : undefined}>
       {children}
     </Tag>
   );
@@ -51,11 +54,11 @@ export function Reveal({
  * DOM, each word staggered by CSS once `.go` lands. The accessible name is
  * the unsplit text.
  */
-export function Words({ text, className = "", delay = 0 }: { text: string; className?: string; delay?: number }) {
+export function Words({ text, className = "", delay = 0, eager = false }: { text: string; className?: string; delay?: number; eager?: boolean }) {
   const ref = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || eager) return;
     const io = new IntersectionObserver(
       ([e]) => {
         if (e.isIntersecting) {
@@ -67,13 +70,13 @@ export function Words({ text, className = "", delay = 0 }: { text: string; class
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [eager]);
   const parts = text.split(" ");
   return (
-    <span ref={ref} className={`words ${className}`} aria-label={text} role="text">
+    <span ref={ref} className={`words ${eager ? "eager" : ""} ${className}`} aria-label={text} role="text">
       {parts.map((w, i) => (
         <span key={i} aria-hidden className="inline-block overflow-hidden align-bottom">
-          <span className="w inline-block" style={{ transitionDelay: `${delay + i * 0.06}s` }}>
+          <span className="w inline-block" style={{ transitionDelay: `${delay + i * 0.06}s`, animationDelay: `${delay + i * 0.06}s` }}>
             {w}
             {i < parts.length - 1 ? " " : ""}
           </span>

@@ -42,7 +42,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         {shots.length > 0 ? (
           <div className="mt-14 grid gap-3 sm:grid-cols-2">
             {shots.map((src, i) => (
-              <Reveal key={src} className={i === 0 ? "sm:col-span-2" : ""} delay={i * 0.05}>
+              <Reveal key={src} className={i === 0 ? "sm:col-span-2" : ""} delay={i * 0.05} eager={i === 0}>
                 <div className="frame rounded-md" style={{ aspectRatio: i === 0 ? (shots.length === 1 ? p.aspect.replace("/", " / ") : "16 / 9") : "4 / 3" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={src} alt={`${p.name}, image ${i + 1}`} loading={i === 0 ? "eager" : "lazy"} decoding="async" />

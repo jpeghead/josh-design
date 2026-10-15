@@ -11,7 +11,7 @@
   --bg: #0a0a0a;
   --fg: #f5f5f3;
   --fg-2: #a3a3a0;
-  --fg-3: #7f7f7b;
+  --fg-3: #8a8a86;
   --line: rgba(255, 255, 255, 0.12);
   --fill: rgba(255, 255, 255, 0.05);
   --paper: #f4f1ea;
@@ -120,8 +120,12 @@
   }
   html.js .words.go .w { opacity: 1; transform: none; }
   @keyframes reveal-fallback { to { opacity: 1; transform: none; } }
+  /* First-viewport reveals do not wait for JavaScript: a keyframe runs from first paint. */
+  html.js .reveal.eager { animation: reveal-in 0.9s var(--ease) both; }
+  html.js .words.eager .w { animation: reveal-in 0.8s var(--ease) both; }
+  @keyframes reveal-in { from { opacity: 0; transform: translateY(0.4em); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) {
-    html.js .reveal, html.js .words .w { opacity: 1; transform: none; }
+    html.js .reveal, html.js .words .w { opacity: 1; transform: none; animation: none; }
   }
 
   /* Essay body — one set of rules for ported HTML. */

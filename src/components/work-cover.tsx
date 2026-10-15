@@ -22,7 +22,7 @@ export function WorkCover({ project, index, flip = false }: { project: Project; 
     >
       <div className="gutter mx-auto grid w-full max-w-[1440px] items-center gap-12 py-24 lg:min-h-[92vh] lg:grid-cols-12 lg:gap-8 lg:py-28">
         <div className={`lg:col-span-5 ${flip ? "lg:order-2 lg:col-start-8" : ""}`}>
-          <Reveal>
+          <Reveal eager={index === 0}>
             <p className="flex items-baseline gap-4 text-sm text-fg-2">
               <span className="tabular-nums text-fg-3">{String(index + 1).padStart(2, "0")}</span>
               <span>{project.context}</span>
@@ -70,7 +70,7 @@ export function WorkCover({ project, index, flip = false }: { project: Project; 
           </Reveal>
         </div>
         <div className={`lg:col-span-7 ${flip ? "lg:order-1 lg:col-start-1" : "lg:col-start-6"}`}>
-          <Reveal delay={0.08}>
+          <Reveal delay={0.08} eager={index === 0}>
             <Link href={href} className="group block" aria-label={`${project.title} — open case study`} tabIndex={-1}>
               {hasCover ? (
                 <Drift amount={4} aspect={media.cover.aspect} className="frame-hover rounded-lg">

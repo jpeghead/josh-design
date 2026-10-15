@@ -130,7 +130,7 @@ export const moreScreens: MediaItem[] = [
 /** The life, in photographs. */
 export const story = {
   kid: { src: img("aXaAP1v4rnGLSTc80gqrymXOsUU"), alt: "Josh as a small boy in a school photo, blue sweater, big smile", aspect: "1 / 1" },
-  montage: { src: "/framer/canvas/video/TTEZQBrp2KRP4nPshC40gKTJGj0.mp4", poster: img("aXaAP1v4rnGLSTc80gqrymXOsUU"), aspect: "1534 / 1824" },
+  montage: { src: "/framer/canvas/video/TTEZQBrp2KRP4nPshC40gKTJGj0.mp4", poster: "/img/montage-poster.jpg", aspect: "1534 / 1824" },
   marine: { src: img("NL2QLFtqWECtyym1vEYtKiY1Og"), alt: "Josh in Marine Corps service uniform", aspect: "3 / 4" },
   osprey: { src: img("W7mPsHzBhoFAxqcUyTxEIghG10c"), alt: "Looking straight up at an MV-22 Osprey as five Marines hang from a single rope beneath it", aspect: "2 / 3" },
   flightline: { src: img("85TV5oMn3SAOrAoRYC5xnTzPE"), alt: "A line of Marines in flight helmets walking down a hazy flightline toward a CH-53 helicopter", aspect: "3 / 2" },
