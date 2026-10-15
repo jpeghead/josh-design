@@ -90,6 +90,27 @@ export default async function Home() {
               Fifteen years shipping product. First designer to Head of Design twice, both companies acquired. Former Marine Corps combat photographer. Los Angeles.
             </p>
 
+            {/* a plain GET form: works without JavaScript, lands on Ask my portfolio with the question */}
+            <form action="/lab/ask" method="get" role="search" className="mt-6 flex max-w-xl items-center gap-2">
+              <input
+                type="search"
+                name="q"
+                required
+                minLength={3}
+                maxLength={300}
+                placeholder="Ask about the work… e.g. what did he ship at Spin?"
+                aria-label="Ask a question about Josh's work"
+                autoComplete="off"
+                className="h-11 min-w-0 flex-1 rounded-full border border-line bg-transparent px-4 text-[15px] placeholder:text-fg-3 focus:border-fg focus:outline-none"
+              />
+              <button type="submit" className="h-11 shrink-0 rounded-full bg-fg px-4 text-[14px] font-medium text-bg transition-opacity hover:opacity-85">
+                Ask
+              </button>
+            </form>
+            <p className="mt-2 text-xs text-fg-3">
+              A model grounded on this site answers.<span className="hidden sm:inline"> Press ⌘K anywhere to jump or ask.</span>
+            </p>
+
             <dl className="mt-8 space-y-2 border-t border-line pt-5 text-[15px]">
               <div className="flex gap-3">
                 <dt className="w-24 shrink-0 text-xs uppercase tracking-[0.14em] text-fg-3 pt-1">This week</dt>

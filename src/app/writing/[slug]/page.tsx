@@ -20,8 +20,21 @@ export default async function EssayPage({ params }: { params: Promise<{ slug: st
   const essay = essayBySlug(slug);
   if (!essay) notFound();
 
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: essay.title,
+    description: essay.description,
+    datePublished: essay.date ?? undefined,
+    author: { "@type": "Person", name: "Josh Whitehead", url: "https://josh.design" },
+    publisher: { "@type": "Person", name: "Josh Whitehead" },
+    mainEntityOfPage: `https://josh.design/writing/${essay.slug}`,
+    image: `https://josh.design/writing/${essay.slug}/opengraph-image`,
+  };
+
   return (
     <Container>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
       <article className="max-w-2xl pb-28 pt-28 sm:pt-40">
         <Link href="/writing" className="text-sm text-fg-2 transition-colors hover:text-fg">
           ‹ Writing

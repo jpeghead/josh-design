@@ -30,6 +30,9 @@ export function LocalLLM({ system }: { system: string }) {
 
   useEffect(() => {
     setGpu(typeof navigator !== "undefined" && !!(navigator as Navigator & { gpu?: unknown }).gpu);
+    // prefill: a question in the URL waits in the box until the model is loaded
+    const first = new URLSearchParams(window.location.search).get("q");
+    if (first) setQ(first);
   }, []);
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "nearest" });
@@ -45,6 +48,9 @@ export function LocalLLM({ system }: { system: string }) {
       });
       setPhase("ready");
       setProgress("");
+      // a question that arrived in the URL goes first
+      const pending = q.trim();
+      if (pending) void send(pending);
     } catch (e) {
       setPhase("error");
       setProgress((e as Error).message);
@@ -103,6 +109,11 @@ export function LocalLLM({ system }: { system: string }) {
     <div className="rounded-xl border border-line bg-fill/60">
       {phase !== "ready" && (
         <div className="p-6">
+          {q.trim() && (
+            <p className="mb-5 rounded-lg border border-line px-4 py-3 text-[15px] text-fg-2">
+              Waiting to ask: <span className="text-fg">&ldquo;{q.trim()}&rdquo;</span>. Load a model and it goes first.
+            </p>
+          )}
           <fieldset className="grid gap-2 sm:grid-cols-2">
             <legend className="mb-3 text-sm text-fg-2">Pick a model. It downloads once and stays cached in this browser.</legend>
             {MODELS.map((m) => (

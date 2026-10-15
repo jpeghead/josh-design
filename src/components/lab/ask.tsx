@@ -24,6 +24,15 @@ export function Ask() {
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [msgs]);
+  // A question in the URL (from the palette or the home page) is asked right away.
+  const initialAsked = useRef(false);
+  useEffect(() => {
+    if (initialAsked.current) return;
+    initialAsked.current = true;
+    const first = new URLSearchParams(window.location.search).get("q");
+    if (first) void send(first);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function send(text: string) {
     const question = text.trim();

@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Instrument_Serif } from "next/font/google";
+import { CommandPalette } from "@/components/command-palette";
+import { paletteItems } from "@/lib/palette";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { identityLine } from "@/content/about";
@@ -60,6 +62,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           {children}
         </main>
         <SiteFooter />
+        <CommandPalette items={paletteItems()} />
       </body>
     </html>
   );
