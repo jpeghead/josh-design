@@ -22,7 +22,8 @@
 > Routes in `src/app/*`, primitives in `src/components/ui.tsx` + `motion.tsx`
 > (CSS reveals gated on `html.js`), per-project imagery in
 > `src/content/work-media.ts`, web-sized copies in `public/img` (regenerate
-> with `node scripts/optimize-images.mjs`; full-res export in
+> with `node scripts/optimize-images.mjs`, which wants ImageMagick: `sips`
+> makes files three to four times larger; full-res export in
 > `public/framer/canvas/images`, cataloged in `scripts/framer-catalog.json`).
 > `src/content/lab.ts` holds `REPO.isPublic` (true: the repo is public, links on).
 > Everything below about the game describes the Lab's city entry
