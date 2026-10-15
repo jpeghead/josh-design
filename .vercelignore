@@ -1,4 +1,3 @@
 # Full-resolution Framer export: only the optimize script reads it. The site serves public/img.
 public/framer/canvas/images
-scripts/framer-catalog.json
 .claude
