@@ -2895,7 +2895,7 @@ export function CityGame() {
               {m.steps[hud.step].targets ? ` — ${Math.min(hud.stepHits, m.steps[hud.step].targets!)}/${m.steps[hud.step].targets}` : ""}
             </p>
             {m.steps[hud.step].needCar && hud.mode === "foot" && (
-              <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-[#ff9a6a]">You'll need the car — E to get in</p>
+              <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-[#ff9a6a]">You&rsquo;ll need the car — E to get in</p>
             )}
           </div>
         )}

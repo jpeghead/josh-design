@@ -5,7 +5,7 @@ import { AgentPatterns } from "@/components/lab/agent-patterns";
 
 export const metadata: Metadata = {
   title: "Agent UI patterns — Builds",
-  description: "Four working prototypes for the hard parts of agent interfaces: progress, permissions, failure, and confidence.",
+  description: "Five working prototypes for the hard parts of agent interfaces: progress, permissions, failure, and confidence.",
 };
 
 export default function Page() {

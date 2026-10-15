@@ -49,7 +49,7 @@ export function GET() {
     projects: [
       { name: "Portrait", description: "In-browser analysis of a ChatGPT or Claude export; nothing uploaded.", url: `${resume.site}/lab/portrait` },
       { name: "A model in your browser", description: "A language model on the visitor's GPU through WebGPU, grounded on this site.", url: `${resume.site}/lab/local` },
-      { name: "Agent UI patterns", description: "Working prototypes for progress, scoped permissions, failure recovery, and graded confidence.", url: `${resume.site}/lab/agents` },
+      { name: "Agent UI patterns", description: "Working prototypes for progress, scoped permissions, failure recovery, graded confidence, and asking before guessing.", url: `${resume.site}/lab/agents` },
       { name: "Whitehead City", description: "A GTA-style open world of the life, built in sixteen days with a coding agent.", url: `${resume.site}/lab/city` },
     ],
     meta: { canonical: `${resume.site}/resume.json`, lastModified: new Date().toISOString().slice(0, 10), targets: resume.targets },

@@ -73,7 +73,7 @@ export const lab: LabEntry[] = [
     title: "Agent UI patterns",
     kind: "Interactive",
     blurb:
-      "Four working prototypes for the hard parts of agent interfaces: progress you can trust, permissions with real scope, failure that recovers, and answers that say how sure they are. Simulated model, real interface.",
+      "Five working prototypes for the hard parts of agent interfaces: progress you can trust, permissions with real scope, failure that recovers, answers that say how sure they are, and asking before guessing. Simulated model, real interface.",
     built: "React · simulated model · keyboard-first",
     when: "October 2026",
     href: "/lab/agents",

@@ -28,7 +28,7 @@ export default function Page() {
             </div>
             <div>
               <dt className="text-fg-3">Why</dt>
-              <dd className="mt-1">The story of the site in one object you can move through. It also samples from 512px copies so it's on screen in under a second.</dd>
+              <dd className="mt-1">The story of the site in one object you can move through. It also samples from 512px copies so it&rsquo;s on screen in under a second.</dd>
             </div>
           </dl>
         </section>

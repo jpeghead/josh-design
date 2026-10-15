@@ -33,7 +33,8 @@ export function CommandPalette({ items }: { items: PaletteItem[] }) {
       const typing = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        ref.current?.open ? close() : open();
+        if (ref.current?.open) close();
+        else open();
       } else if (e.key === "/" && !typing && !ref.current?.open) {
         e.preventDefault();
         open();
