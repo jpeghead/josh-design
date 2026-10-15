@@ -11,6 +11,7 @@
 - [Writing](https://josh.design/writing): build logs and essays.
 - [Build log](https://josh.design/log): every commit to this site, live from GitHub.
 - [RSS](https://josh.design/feed.xml): the essays, full text.
+- [Résumé as JSON](https://josh.design/resume.json): JSON Resume schema, same data as the résumé page.
 - [About](https://josh.design/about): the story and the principles.
 - Contact: josh@josh.design
 

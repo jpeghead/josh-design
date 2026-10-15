@@ -32,8 +32,11 @@ export default function ResumePage() {
             {resume.summary}
           </p>
           <p className="mt-4 text-sm text-fg-3">Open to: {resume.targets.join(" · ")}</p>
-          <p className="mt-6 print:hidden">
+          <p className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 print:hidden">
             <PrintButton />
+            <a href="/resume.json" className="text-sm text-fg-2 underline decoration-fg-3 underline-offset-4 transition-colors hover:text-fg">
+              Machine-readable (JSON Resume)
+            </a>
           </p>
         </header>
 

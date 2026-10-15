@@ -19,6 +19,12 @@ export default async function EssayPage({ params }: { params: Promise<{ slug: st
   const { slug } = await params;
   const essay = essayBySlug(slug);
   if (!essay) notFound();
+  const words = essay.html.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length;
+  const readingTime = Math.max(1, Math.round(words / 230));
+  const ordered = [...portedEssays].filter((e) => e.date).sort((a, b) => Date.parse(b.date!) - Date.parse(a.date!));
+  const at = ordered.findIndex((e) => e.slug === essay.slug);
+  const newer = at > 0 ? ordered[at - 1] : null;
+  const older = at >= 0 && at < ordered.length - 1 ? ordered[at + 1] : null;
 
   const ld = {
     "@context": "https://schema.org",
@@ -42,7 +48,7 @@ export default async function EssayPage({ params }: { params: Promise<{ slug: st
 
         <header className="mt-8">
           <p className="text-sm font-medium text-fg-2">
-            {[essay.badge, essay.date ? new Date(essay.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : null]
+            {[essay.badge, essay.date ? new Date(essay.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : null, `${readingTime} min read`]
               .filter(Boolean)
               .join(" · ")}
           </p>
@@ -51,6 +57,21 @@ export default async function EssayPage({ params }: { params: Promise<{ slug: st
         </header>
 
         <div className="prose-mono mt-12 text-[1.0625rem] leading-relaxed text-pretty" dangerouslySetInnerHTML={{ __html: essay.html }} />
+
+        <nav aria-label="More writing" className="mt-16 grid gap-6 border-t border-line pt-8 sm:grid-cols-2">
+          {older && (
+            <Link href={`/writing/${older.slug}`} className="group">
+              <p className="text-xs uppercase tracking-[0.14em] text-fg-3">Earlier</p>
+              <p className="serif mt-2 text-[1.5rem] leading-tight group-hover:underline">{older.title}</p>
+            </Link>
+          )}
+          {newer && (
+            <Link href={`/writing/${newer.slug}`} className="group sm:text-right">
+              <p className="text-xs uppercase tracking-[0.14em] text-fg-3">Later</p>
+              <p className="serif mt-2 text-[1.5rem] leading-tight group-hover:underline">{newer.title}</p>
+            </Link>
+          )}
+        </nav>
       </article>
     </Container>
   );
