@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 import path from "node:path";
 
 const nextConfig: NextConfig = {
-  outputFileTracingIncludes: { "/opengraph-image": ["./src/app/fonts/**"], "/writing/[slug]/opengraph-image": ["./src/app/fonts/**"], "/work/[slug]/opengraph-image": ["./src/app/fonts/**"] },
+  outputFileTracingIncludes: { "/**/opengraph-image": ["./src/app/fonts/**"] },
   async headers() {
     return [
       {
