@@ -174,6 +174,7 @@ const RX = {
   salary: /salary|compensation|pay expectation/i,
   start: /start date|when (can|could|would) you (start|begin)|earliest.*start|start working|notice period/i,
   relocate: /relocat/i,
+  workplace: /\b(hybrid|in[- ]?office|on[- ]?site|onsite|remote)\b.*\?|open to (working|coming) (from|to|into) (the|our) office|work from (the|our) office|days? (a|per) week in/i,
   eeo: /gender|race|ethnicit|veteran|disabilit|hispanic|latino|sexual orientation|transgender/i,
   company: /current (company|employer)|^company$|organization/i,
   title: /current (title|role)|^title$|job title/i,
@@ -212,7 +213,7 @@ function decide(f: Field, profile: Profile, resume: Resume): { value?: string; s
   if (RX.last.test(L)) return { value: a.lastName, status: "filled" };
   if (RX.full.test(L)) return { value: `${a.firstName} ${a.lastName}`, status: "filled" };
   if (RX.email.test(L)) return { value: profile.email, status: "filled" };
-  if (RX.phone.test(L)) return profile.phone ? { value: profile.phone, status: "filled" } : { status: "review", note: "no phone in profile.json" };
+  if (RX.phone.test(L)) return profile.phone ? { value: profile.phone, status: "filled" } : { status: "review", note: "phone: add it on Setup" };
   if (RX.linkedin.test(L)) return { value: profile.links.find((l) => /linkedin/i.test(l.url))?.url ?? "", status: "filled" };
   if (RX.twitter.test(L)) {
     const x = socials.find((l) => /x\.com|twitter\.com/i.test(l.href))?.href;
@@ -222,7 +223,16 @@ function decide(f: Field, profile: Profile, resume: Resume): { value?: string; s
   if (RX.github.test(L)) return { value: profile.links.find((l) => /github/i.test(l.url))?.url ?? "", status: "filled" };
   if (RX.resume.test(L) && f.kind === "textarea") return { value: renderResumeText(resume.data), status: "filled", note: "résumé as text" };
   if (RX.portfolio.test(L)) return { value: profile.links[0]?.url ?? "", status: "filled" };
-  if (RX.relocate.test(L)) return a.willingToRelocate ? { value: a.willingToRelocate, status: "filled" } : { status: "review", note: "relocation: you decide" };
+  if (RX.relocate.test(L)) {
+    if (!a.willingToRelocate) return { status: "review", note: "relocation: answer it on Setup" };
+    const v = pickOption(f.options, [new RegExp(`^${a.willingToRelocate.split(" ")[0]}`, "i")]);
+    return { value: v ?? a.willingToRelocate, status: "filled" };
+  }
+  if (RX.workplace.test(L)) {
+    if (!a.workplace) return { status: "review", note: "remote or office: answer it on Setup" };
+    const v = pickOption(f.options, [new RegExp(a.workplace.split(" ")[0], "i"), /^yes/i]);
+    return { value: v ?? a.workplace, status: "filled" };
+  }
   if (RX.country.test(L)) {
     const v = pickOption(f.options, [/^united states/i, /^usa?$/i]);
     return { value: v ?? "United States", status: "filled" };
@@ -247,8 +257,8 @@ function decide(f: Field, profile: Profile, resume: Resume): { value?: string; s
     return v ? { value: v, status: "filled" } : { value: a.howHeard, status: "filled" };
   }
   if (RX.pronoun.test(L)) return a.pronouns ? { value: a.pronouns, status: "filled" } : { status: "left" };
-  if (RX.salary.test(L)) return a.salary ? { value: a.salary, status: "filled" } : { status: "review", note: "salary: you decide" };
-  if (RX.start.test(L)) return a.startDate ? { value: a.startDate, status: "filled" } : { status: "review", note: "start date: you decide" };
+  if (RX.salary.test(L)) return a.salary ? { value: a.salary, status: "filled" } : { status: "review", note: "salary: answer it on Setup" };
+  if (RX.start.test(L)) return a.startDate ? { value: a.startDate, status: "filled" } : { status: "review", note: "start date: answer it on Setup" };
   if (RX.relocate.test(L)) return a.willingToRelocate ? { value: a.willingToRelocate, status: "filled" } : { status: "review", note: "relocation: you decide" };
   if (RX.company.test(L)) return { value: "Boneyard Collective", status: "filled" };
   if (RX.title.test(L)) return { value: "Founder & Design Lead", status: "filled" };

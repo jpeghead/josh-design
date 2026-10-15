@@ -5,7 +5,10 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import type { Posting } from "@/lib/admin/types";
 import type { Grouped } from "@/lib/admin/dedupe";
 
-type Filters = { status: string; tier: string; min: number; q: string; fresh: boolean; ai: boolean };
+/** Score bands, so the long list reads in three parts rather than one. */
+const band = (score: number) => (score >= 70 ? "Strong fit · 70 and up" : score >= 55 ? "Worth a look · 55 to 69" : "The rest · under 55");
+
+type Filters = { status: string; tier: string; min: number; q: string; fresh: boolean; ai: boolean; sort: string };
 
 export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows: Grouped[]; counts: Record<string, number>; filters: Filters; errors: string[]; lastScanAt: string | null }) {
   const router = useRouter();
@@ -25,7 +28,7 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
 
   const setFilter = (patch: Partial<Filters>) => {
     const f = { ...filters, ...patch };
-    const p = new URLSearchParams({ status: f.status, tier: f.tier, min: String(f.min), q: f.q, fresh: f.fresh ? "1" : "0", ai: f.ai ? "1" : "0" });
+    const p = new URLSearchParams({ status: f.status, tier: f.tier, min: String(f.min), q: f.q, fresh: f.fresh ? "1" : "0", ai: f.ai ? "1" : "0", sort: f.sort });
     start(() => router.push(`/admin/jobs?${p}`));
   };
   const scan = async (auto = false) => {
@@ -131,51 +134,71 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const sel = "rounded-full border border-line bg-transparent px-3 py-1 text-[13px] text-fg-2 hover:text-fg";
+  const on = "border-fg bg-fg text-bg";
+  const off = "border-line text-fg-2 hover:text-fg";
+  const chip = (active: boolean) => `rounded-full border px-3 py-1 text-[13px] ${active ? on : off}`;
+  const Group = ({ label, children }: { label: string; children: React.ReactNode }) => (
+    <div className="flex items-center gap-1.5">
+      <span className="mr-1 text-[11px] uppercase tracking-[0.14em] text-fg-3">{label}</span>
+      {children}
+    </div>
+  );
   return (
     <div className="mt-6">
-      <div className="flex flex-wrap items-center gap-2">
-        {(["new", "saved", "applied", "hidden", "all"] as const).map((s) => (
-          <button key={s} type="button" onClick={() => setFilter({ status: s })} className={`${sel} ${filters.status === s ? "border-fg text-fg" : ""}`}>
-            {s} {s !== "all" && <span className="text-fg-3">{counts[s] ?? 0}</span>}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-xl border border-line bg-fill/30 px-4 py-3">
+        <Group label="Show">
+          {(["new", "saved", "applied", "hidden", "all"] as const).map((s) => (
+            <button key={s} type="button" onClick={() => setFilter({ status: s })} aria-pressed={filters.status === s} className={chip(filters.status === s)}>
+              {s} {s !== "all" && <span className={filters.status === s ? "opacity-70" : "text-fg-3"}>{counts[s] ?? 0}</span>}
+            </button>
+          ))}
+        </Group>
+        <Group label="Only">
+          <button type="button" onClick={() => setFilter({ ai: !filters.ai })} aria-pressed={filters.ai} className={chip(filters.ai)} title="Agents, models, prompts, or evals in the title or description, three mentions or more">
+            {filters.ai ? "✓ " : ""}AI is the work <span className={filters.ai ? "opacity-70" : "text-fg-3"}>{counts.ai ?? 0}</span>
           </button>
-        ))}
-        <button type="button" onClick={() => setFilter({ ai: !filters.ai })} className={`${sel} ${filters.ai ? "border-fg text-fg" : ""}`} title="Agents, models, prompts, or evals in the title or description, three mentions or more">
-          AI is the work <span className="text-fg-3">{counts.ai ?? 0}</span>
-        </button>
-        <button type="button" onClick={() => setFilter({ fresh: !filters.fresh })} className={`${sel} ${filters.fresh ? "border-fg text-fg" : ""}`} title="First seen by the scanner in the last seven days">
-          found this week <span className="text-fg-3">{counts.fresh ?? 0}</span>
-        </button>
-        <span className="mx-2 h-4 w-px bg-line" />
-        {(["all", "core", "stretch"] as const).map((t) => (
-          <button key={t} type="button" onClick={() => setFilter({ tier: t })} className={`${sel} ${filters.tier === t ? "border-fg text-fg" : ""}`}>
-            {t}
+          <button type="button" onClick={() => setFilter({ fresh: !filters.fresh })} aria-pressed={filters.fresh} className={chip(filters.fresh)} title="First seen by the scanner in the last seven days">
+            {filters.fresh ? "✓ " : ""}found this week <span className={filters.fresh ? "opacity-70" : "text-fg-3"}>{counts.fresh ?? 0}</span>
           </button>
-        ))}
-        <span className="mx-2 h-4 w-px bg-line" />
-        <label className="text-[13px] text-fg-3">
-          min score{" "}
+          {(["core", "stretch"] as const).map((t) => (
+            <button key={t} type="button" onClick={() => setFilter({ tier: filters.tier === t ? "all" : t })} aria-pressed={filters.tier === t} className={chip(filters.tier === t)} title={t === "core" ? "Design and design-engineering titles" : "Builder titles a step from design: forward deployed, product engineer, DevRel"}>
+              {filters.tier === t ? "✓ " : ""}{t} titles
+            </button>
+          ))}
+        </Group>
+        <Group label="Sort">
+          {(["score", "newest", "pay"] as const).map((o) => (
+            <button key={o} type="button" onClick={() => setFilter({ sort: o })} aria-pressed={filters.sort === o} className={chip(filters.sort === o)}>
+              {o === "score" ? "best fit" : o}
+            </button>
+          ))}
+        </Group>
+        <label className="flex items-center gap-2 text-[13px] text-fg-3">
+          score ≥
           <input type="number" defaultValue={filters.min} min={0} max={100} onBlur={(e) => setFilter({ min: Number(e.target.value) })} className="w-14 rounded border border-line bg-transparent px-2 py-0.5 text-fg" />
         </label>
         <input
           type="search"
           defaultValue={filters.q}
-          placeholder="company, title, place"
+          placeholder="company, title, place ⏎"
           onKeyDown={(e) => e.key === "Enter" && setFilter({ q: (e.target as HTMLInputElement).value })}
-          className="ml-auto w-56 rounded-full border border-line bg-transparent px-3 py-1 text-[13px] text-fg placeholder:text-fg-3 focus:border-fg focus:outline-none"
+          className="w-52 rounded-full border border-line bg-transparent px-3 py-1 text-[13px] text-fg placeholder:text-fg-3 focus:border-fg focus:outline-none"
         />
-        <button type="button" onClick={() => score()} disabled={scanning} className="rounded-full border border-line px-3 py-1 text-[13px] text-fg-2 hover:text-fg disabled:opacity-50">
-          Score with Claude
-        </button>
-        <button type="button" onClick={() => score(true)} disabled={scanning} className="rounded-full border border-line px-3 py-1 text-[13px] text-fg-2 hover:text-fg disabled:opacity-50" title="Re-rank the top of the list with your ↑/↓ calls in Claude's brief">
-          Re-rank with my calls
-        </button>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         <button type="button" onClick={prepare} disabled={scanning || !picked.size} className="rounded-full bg-fg px-4 py-1.5 text-[13px] font-medium text-bg disabled:opacity-50" title="Fill these applications in the background, then review them in the queue">
-          Prepare {picked.size || ""}
+          Prepare {picked.size ? `${picked.size} for the queue` : "(tick roles first)"}
         </button>
         <button type="button" onClick={() => scan()} disabled={scanning} className="rounded-full border border-line px-4 py-1.5 text-[13px] text-fg-2 hover:text-fg disabled:opacity-50">
           {scanning ? "Working…" : "Scan boards"}
         </button>
+        <button type="button" onClick={() => score()} disabled={scanning} className="rounded-full border border-line px-3 py-1.5 text-[13px] text-fg-2 hover:text-fg disabled:opacity-50">
+          Score with Claude
+        </button>
+        <button type="button" onClick={() => score(true)} disabled={scanning} className="rounded-full border border-line px-3 py-1.5 text-[13px] text-fg-2 hover:text-fg disabled:opacity-50" title="Re-rank the top of the list with your ↑/↓ calls in Claude's brief">
+          Re-rank with my calls
+        </button>
+        <span className="text-xs text-fg-3">Score: Claude&rsquo;s read of the chance of a first interview you&rsquo;d want, 0 to 100. ↑/↓ teach it. Press ? for keys.</span>
       </div>
       {msg && <p className="mt-3 text-sm text-fg-2">{msg}</p>}
       {errors.length > 0 && (
@@ -185,10 +208,13 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
         </details>
       )}
 
-      <p className="mt-6 text-xs uppercase tracking-[0.14em] text-fg-3">{rows.length} roles{pending ? " · loading" : ""} <span className="normal-case tracking-normal text-fg-3">· press ? for keys</span></p>
+      <p className="mt-6 text-xs uppercase tracking-[0.14em] text-fg-3">{rows.length} roles{pending ? " · loading" : ""}</p>
       <ul className="mt-2 divide-y divide-line border-y border-line">
         {rows.map((p, i) => (
           <li key={p.id} id={`row-${i}`} onClick={() => setCursor(i)} className={`py-3 ${cursor === i ? "-mx-3 rounded-md bg-fill/60 px-3" : ""}`}>
+            {filters.sort === "score" && (i === 0 || band(rows[i - 1].score) !== band(p.score)) && (
+              <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-fg-3">{band(p.score)}</p>
+            )}
             <div className="grid gap-x-4 gap-y-1 sm:grid-cols-[1.25rem_3rem_1fr_auto] sm:items-baseline">
               <input type="checkbox" checked={picked.has(p.id)} onChange={(e) => setPicked((s) => { const n = new Set(s); if (e.target.checked) n.add(p.id); else n.delete(p.id); return n; })} aria-label={`Pick ${p.title} at ${p.company}`} className="h-3.5 w-3.5 accent-[var(--fg)]" />
               <span className={`tabular-nums text-[15px] font-semibold ${p.score >= 70 ? "text-fg" : p.score >= 50 ? "text-fg-2" : "text-fg-3"}`} title={p.scoreWhy}>

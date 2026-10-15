@@ -20,3 +20,14 @@ export async function POST() {
   saveProfile(p);
   return Response.json(p);
 }
+
+/** PATCH { phone?, location?, answers? } updates the answers forms ask for, without touching the record. */
+export async function PATCH(req: Request) {
+  const body = (await req.json()) as { phone?: string; location?: string; answers?: Partial<Profile["answers"]> };
+  const p = getProfile();
+  if (typeof body.phone === "string") p.phone = body.phone.trim() || undefined;
+  if (typeof body.location === "string" && body.location.trim()) p.location = body.location.trim();
+  if (body.answers) p.answers = { ...p.answers, ...body.answers };
+  saveProfile(p);
+  return Response.json(p);
+}

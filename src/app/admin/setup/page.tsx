@@ -4,6 +4,7 @@ import type { Company } from "@/lib/admin/types";
 import { getProfile } from "@/lib/admin/resume/profile";
 import { ProfileEditor } from "@/components/admin/profile-editor";
 import { AddCompany } from "@/components/admin/add-company";
+import { AnswersForm } from "@/components/admin/answers-form";
 
 export const dynamic = "force-dynamic";
 
@@ -22,12 +23,11 @@ export default function Setup() {
             : "No model credentials. Run `vercel env pull` to get a development token (federation), or set ANTHROPIC_API_KEY. Scanning, building, exporting, and form filling work regardless."}
         </dd>
         <dt className="text-fg-3">Boards</dt>
-        <dd className="text-fg-2">{companies.length} companies across Greenhouse, Ashby, and Lever, plus the Hacker News thread. Edit data/admin/companies.json to add one: {"{ name, source, slug }"}. The slug is the one in the board&rsquo;s URL.</dd>
+        <dd className="text-fg-2">{companies.length} companies across Greenhouse, Ashby, Lever, Workable, and Rippling, plus the Hacker News thread. Add one below by name or careers URL.</dd>
         <dt className="text-fg-3">Data</dt>
         <dd className="text-fg-2">data/admin/ on this Mac, git-ignored. Jobs, résumés, applications, exports, and the browser profile the agent signs in with.</dd>
-        <dt className="text-fg-3">Phone</dt>
-        <dd className="text-fg-2">{profile.phone ? profile.phone : "Not set. Forms that require a phone will wait for you; add it to the profile below."}</dd>
       </dl>
+      <AnswersForm profile={profile} />
       <AddCompany />
       <ProfileEditor initial={profile} />
     </div>

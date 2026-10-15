@@ -19,6 +19,7 @@ export default async function TodayPage() {
   const runs = readJson<ScanRun[]>("scans", []);
   const apps = listApplications();
   const fresh = jobs.filter((p) => p.status === "new" && Date.parse(p.firstSeen) > sinceMs && p.score >= 60).sort((a, b) => b.score - a.score).slice(0, 12);
+  const top = jobs.filter((p) => p.status === "new").sort((a, b) => b.score - a.score).slice(0, 10);
   const watched = companies.filter((c) => c.watch);
   const watchedNames = new Set(watched.map((c) => c.name.toLowerCase()));
   const fromWatched = jobs.filter((p) => watchedNames.has(p.company.toLowerCase()) && p.status === "new" && Date.now() - Date.parse(p.firstSeen) < 14 * 86400000).sort((a, b) => b.score - a.score).slice(0, 12);
@@ -30,6 +31,7 @@ export default async function TodayPage() {
     <Today
       since={since}
       fresh={fresh.map((p) => ({ id: p.id, title: p.title, company: p.company, score: p.score, why: p.scoreWhy, location: p.location, pay: p.pay }))}
+      top={top.map((p) => ({ id: p.id, title: p.title, company: p.company, score: p.score, why: p.scoreWhy, location: p.location, pay: p.pay }))}
       fromWatched={fromWatched.map((p) => ({ id: p.id, title: p.title, company: p.company, score: p.score, location: p.location }))}
       due={due.map((a) => ({ id: a.id, title: a.title, company: a.company, note: a.nextAction?.note ?? "", date: a.nextAction?.date ?? "" }))}
       waiting={waiting.map((a) => ({ id: a.id, title: a.title, company: a.company, headless: !!a.headless, fix: a.fields.filter((f) => f.status === "review").length }))}

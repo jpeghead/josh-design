@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Application } from "@/lib/admin/apply/types";
+import { StageControl } from "@/components/admin/stage-control";
 
 const ACTIVE = new Set(["starting", "filling", "submitting"]);
 
@@ -74,6 +75,9 @@ export function ApplicationView({ initial }: { initial: Application }) {
               Cover letter PDF ↗
             </a>
           )}
+        </div>
+        <div className="mt-6">
+          <StageControl app={a} />
         </div>
         {a.screenshot && (
           <div className="mt-6 overflow-hidden rounded-lg border border-line bg-white">

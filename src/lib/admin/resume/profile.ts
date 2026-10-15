@@ -4,7 +4,7 @@ import { projects } from "@/lib/data";
 import { books } from "@/content/books";
 import { lab } from "@/content/lab";
 import { readJson, writeJson } from "../store";
-import { RECORD, SERVICE_DETAIL } from "./record";
+import { RECORD, SERVICE_DETAIL, SKILLS_EXTRA } from "./record";
 
 /**
  * The one source of truth for every résumé. Seeded from the site's content
@@ -39,6 +39,10 @@ export type Profile = {
     salary?: string;
     startDate?: string;
     willingToRelocate?: string;
+    /** "remote", "hybrid", "in-office", or a sentence; used for "are you open to working from our office" questions. */
+    workplace?: string;
+    /** Cities he would work in or move to, for location questions. */
+    locations?: string;
     coverLetterStance: string;
   };
 };
@@ -124,10 +128,12 @@ export function seedProfile(): Profile {
     builds: lab
       .filter((l) => ["portrait", "local", "agents", "ask", "city"].includes(l.slug))
       .map((l) => ({ title: l.title, line: l.blurb.split(". ")[0] + ".", url: `${resume.site}${l.href}`, tags: ["ai", "engineering"] })),
-    skills: {
-      ...resume.skills,
-      "AI & models": [...resume.skills["AI & models"], "Evals: measuring shipped model output against a spec", "Generative video pipelines (Veo)", "Agent workflows across many projects"],
-    },
+    skills: Object.fromEntries(
+      Object.entries({
+        ...resume.skills,
+        "AI & models": [...resume.skills["AI & models"], "Evals: measuring shipped model output against a spec", "Generative video pipelines (Veo)", "Agent workflows across many projects"],
+      }).map(([k, v]) => [k, [...v, ...(SKILLS_EXTRA[k] ?? [])]])
+    ),
     education: [{ school: "Career school, digital design", detail: "Film, photography, code, music, games. Fine art in college (charcoal and canvas) before enlisting." }],
     publications: books.filter((b) => b.status !== "In progress").map((b) => ({ title: b.subtitle ? `${b.title}: ${b.subtitle}` : b.title, detail: b.blurb, url: b.site ?? b.link?.href })),
     service: { branch: "United States Marine Corps", role: "Combat photographer", years: "2008 – 2013", detail: SERVICE_DETAIL },
@@ -141,6 +147,8 @@ export function seedProfile(): Profile {
       salary: "",
       startDate: "",
       willingToRelocate: "",
+      workplace: "",
+      locations: "",
       coverLetterStance: "Short, specific, no flattery. Name one thing about the company's product that the builds on josh.design relate to, say what I would do in the first ninety days, and stop.",
     },
   };

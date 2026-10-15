@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Application } from "@/lib/admin/apply/types";
+import { StageControl } from "@/components/admin/stage-control";
 
 const STAGES: NonNullable<Application["stage"]>[] = ["applied", "replied", "interviewing", "offer", "rejected", "withdrawn"];
 
@@ -63,6 +64,7 @@ export function Pipeline({ apps }: { apps: Application[] }) {
 
       <section>
         <h2 className="text-xs uppercase tracking-[0.14em] text-fg-3">Submitted · {submitted.length}</h2>
+        <p className="mt-1 text-xs text-fg-3">Stages move by hand: when a recruiter writes back, click Replied on that card; when a call is set, Interviewing; and so on. Each click stamps the date and suggests a next action. Submitting from the queue puts a run in Applied on its own.</p>
         <div className="mt-3 grid gap-3 md:grid-cols-3 xl:grid-cols-6">
           {STAGES.map((st) => (
             <div key={st} className="rounded-lg border border-line bg-fill/40 p-3">
@@ -73,11 +75,9 @@ export function Pipeline({ apps }: { apps: Application[] }) {
                     <Link href={`/admin/applications/${a.id}`} className="text-fg hover:underline">{a.title}</Link>
                     <p className="text-xs text-fg-3">{a.company} · {a.submittedAt ? new Date(a.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}</p>
                     {a.nextAction?.date && <p className="mt-1 text-xs text-fg-2">→ {a.nextAction.note} · {a.nextAction.date}</p>}
+                    <StageControl app={a} compact />
                     <div className="mt-2 flex flex-wrap gap-1">
-                      {STAGES.filter((x) => x !== st).map((x) => (
-                        <button key={x} type="button" onClick={() => patch(a.id, { stage: x })} className="rounded-full border border-line px-2 py-0.5 text-[11px] text-fg-3 hover:text-fg">{x}</button>
-                      ))}
-                      <button type="button" onClick={() => setOpen(open === a.id ? null : a.id)} className="rounded-full border border-line px-2 py-0.5 text-[11px] text-fg-3 hover:text-fg">edit</button>
+                      <button type="button" onClick={() => setOpen(open === a.id ? null : a.id)} className="rounded-full border border-line px-2 py-0.5 text-[11px] text-fg-3 hover:text-fg">notes</button>
                       <button type="button" onClick={() => followUp(a.id)} disabled={drafting === a.id} className="rounded-full border border-line px-2 py-0.5 text-[11px] text-fg-3 hover:text-fg disabled:opacity-50">{drafting === a.id ? "drafting…" : "follow-up"}</button>
                     </div>
                     {draft?.id === a.id && !due.some((d) => d.id === a.id) && (

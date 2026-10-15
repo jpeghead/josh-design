@@ -8,6 +8,7 @@ type Fresh = { id: string; title: string; company: string; score: number; why: s
 type Props = {
   since: string | null;
   fresh: Fresh[];
+  top: Fresh[];
   fromWatched: { id: string; title: string; company: string; score: number; location: string }[];
   due: { id: string; title: string; company: string; note: string; date: string }[];
   waiting: { id: string; title: string; company: string; headless: boolean; fix: number }[];
@@ -92,12 +93,16 @@ export function Today(p: Props) {
         )}
 
         <section>
-          <h2 className="text-xs uppercase tracking-[0.14em] text-fg-3">New since {sinceText} · {p.fresh.length}</h2>
-          {p.fresh.length === 0 ? (
-            <p className="mt-2 text-sm text-fg-3">Nothing new above 60. <Link href="/admin/jobs" className="underline decoration-fg-3 underline-offset-2 hover:text-fg">The full list</Link> is a click away.</p>
+          <h2 className="text-xs uppercase tracking-[0.14em] text-fg-3">{p.fresh.length ? `New since ${sinceText} · ${p.fresh.length}` : "The best fits right now · 10"}</h2>
+          <p className="mt-1 text-xs text-fg-3">
+            {p.fresh.length ? "Ranked by fit score, highest first. " : `Nothing new above 60 since ${sinceText}, so here is the top of the list. `}
+            The score is Claude&rsquo;s read of the chance you get a first interview and would want the job, 0 to 100, from the posting against your record; the line under each is its reason.
+          </p>
+          {(p.fresh.length ? p.fresh : p.top).length === 0 ? (
+            <p className="mt-2 text-sm text-fg-3">No postings yet. Run a scan from <Link href="/admin/jobs" className="underline decoration-fg-3 underline-offset-2 hover:text-fg">Jobs</Link>.</p>
           ) : (
             <ul className="mt-3 divide-y divide-line border-y border-line">
-              {p.fresh.map((j) => (
+              {(p.fresh.length ? p.fresh : p.top).map((j) => (
                 <li key={j.id} className="grid gap-x-4 gap-y-1 py-3 sm:grid-cols-[3rem_1fr]">
                   <span className={`tabular-nums text-[15px] font-semibold ${j.score >= 70 ? "text-fg" : "text-fg-2"}`}>{j.score}</span>
                   <div className="min-w-0">

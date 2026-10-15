@@ -83,4 +83,19 @@ export const RECORD: Record<string, { role?: string; summary?: string; bullets: 
   },
 };
 
+/**
+ * Skills confirmed by Josh on 2026-10-15 that the site's skill list did not
+ * name: user research and usability testing (on the 2026 résumé and at Hush,
+ * Spin, and Saucey), JavaScript (the language under the React and TypeScript
+ * work since Differential), customer and client collaboration (sole design
+ * contact for Differential's clients, Dreaming Spanish and the Boneyard
+ * clients, city governments at Spin), and AI/ML platform work (model APIs,
+ * on-device inference, generative video pipelines).
+ */
+export const SKILLS_EXTRA: Record<string, string[]> = {
+  "Product design": ["User research and usability testing", "Customer and client collaboration"],
+  "AI & models": ["AI/ML platforms (model APIs, inference, on-device, generative video)"],
+  Engineering: ["JavaScript"],
+};
+
 export const SERVICE_DETAIL = "Combat photographer with a Top Secret clearance; documented operations and VIP and presidential visits over five years of service.";
