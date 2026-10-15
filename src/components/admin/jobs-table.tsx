@@ -26,6 +26,11 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
       const j = await r.json();
       setMsg(`Scanned: ${j.fetched} fetched, ${j.kept} kept, ${j.added} new.${j.errors?.length ? ` ${j.errors.length} boards failed.` : ""}`);
       router.refresh();
+      if (auto && j.added > 0) {
+        // New postings arrived on an automatic scan: let Claude rank the top of them too.
+        const s = await fetch("/api/admin/score", { method: "POST" }).then((x) => x.json()).catch(() => null);
+        if (s?.scored) setMsg((m) => `${m} Claude scored ${s.scored} of the new ones.`);
+      }
     } catch (e) {
       setMsg(`Scan failed: ${(e as Error).message}`);
     } finally {
