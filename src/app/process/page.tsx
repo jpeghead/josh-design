@@ -3,6 +3,9 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { Container, PageHeader, Label, Arrow } from "@/components/ui";
 import { Reveal } from "@/components/motion";
+import { lastCommit, recentCommits, ago } from "@/lib/github";
+
+export const revalidate = 900;
 
 export const metadata: Metadata = {
   title: "Process",
@@ -34,7 +37,10 @@ const LOOP = [
   ["Hand off", "A handoff document keeps the conventions and the traps so the next agent, or the next me, starts warm."],
 ];
 
-export default function ProcessPage() {
+export default async function ProcessPage() {
+  const [latest, recent] = await Promise.all([lastCommit("jpeghead/josh-design"), recentCommits("jpeghead/josh-design")]);
+  const days = recent.length ? Math.max(1, Math.round((Date.now() - Date.parse(recent[recent.length - 1].date)) / 86400000)) : 0;
+
   const a = artifacts();
   return (
     <Container wide>
@@ -119,6 +125,11 @@ export default function ProcessPage() {
             </div>
           ))}
         </dl>
+        {latest && (
+          <p className="text-sm text-fg-3 lg:col-span-8 lg:col-start-5">
+            Live from GitHub: the last {recent.length} commits span {days} days; the latest, {ago(latest.date)}, was &ldquo;{latest.message}&rdquo;.
+          </p>
+        )}
       </section>
 
       <section className="flex flex-wrap gap-x-8 gap-y-3 border-t border-line py-16 pb-28">

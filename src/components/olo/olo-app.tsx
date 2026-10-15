@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { parseExport, type Source } from "@/lib/olo/parse";
 import { analyze, portrait, sampleConversations, type Stats } from "@/lib/olo/analyze";
+import { renderPortraitCard } from "@/lib/olo/card";
 
 type State = { kind: "idle" } | { kind: "busy" } | { kind: "error"; msg: string } | { kind: "done"; stats: Stats; source: Source | "sample"; lines: string[] };
 
@@ -138,7 +139,22 @@ export function OloApp() {
         <p className="text-sm text-fg-2">
           {state.source === "sample" ? "Sample data" : state.source === "chatgpt" ? "From your ChatGPT export" : "From your Claude export"} · computed locally
         </p>
-        <div className="flex gap-4 text-sm">
+        <div className="flex flex-wrap gap-4 text-sm">
+          <button
+            type="button"
+            onClick={async () => {
+              const label = state.source === "sample" ? "sample data" : state.source === "chatgpt" ? "from a ChatGPT export" : "from a Claude export";
+              const url = await renderPortraitCard(s, state.lines, label);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "portrait.png";
+              a.click();
+              setTimeout(() => URL.revokeObjectURL(url), 10_000);
+            }}
+            className="text-fg-2 underline decoration-fg-3 underline-offset-4 hover:text-fg"
+          >
+            Download as image
+          </button>
           <button type="button" onClick={() => navigator.clipboard?.writeText(summary)} className="text-fg-2 underline decoration-fg-3 underline-offset-4 hover:text-fg">
             Copy the portrait
           </button>
