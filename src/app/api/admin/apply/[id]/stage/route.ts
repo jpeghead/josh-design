@@ -12,9 +12,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     a.status = "submitted";
     a.stage = a.stage ?? "applied";
     a.submittedAt = a.submittedAt ?? new Date().toISOString();
+    a.stageAt = { ...(a.stageAt ?? {}), applied: a.stageAt?.applied ?? a.submittedAt };
     a.finishedAt = a.finishedAt ?? a.submittedAt;
   }
-  if (body.stage) a.stage = body.stage;
+  if (body.stage) {
+    a.stage = body.stage;
+    a.stageAt = { ...(a.stageAt ?? {}), [body.stage]: a.stageAt?.[body.stage] ?? new Date().toISOString() };
+  }
   if (body.nextAction !== undefined) a.nextAction = body.nextAction;
   if (typeof body.notes === "string") a.notes = body.notes;
   return Response.json(saveApplication(a));

@@ -16,8 +16,15 @@ const MODEL = process.env.ASK_MODEL ?? "claude-sonnet-5-5";
  */
 export async function POST(req: Request) {
   if (!anthropicConfigured()) return Response.json({ error: "No model credentials (federation variables or ANTHROPIC_API_KEY in .env.local), so scoring stays on rules." }, { status: 200 });
-  const n = Math.min(300, Math.max(1, Number(new URL(req.url).searchParams.get("n") ?? 60)));
+  const url = new URL(req.url);
+  const n = Math.min(300, Math.max(1, Number(url.searchParams.get("n") ?? 60)));
   const jobs = readJson<Posting[]>("jobs", []);
+  // relearn: forget Claude's scores above 50 so the top of the list is re-ranked with Josh's judgments in the brief
+  if (url.searchParams.get("relearn") === "1") for (const p of jobs) if (p.scoredBy === "claude" && p.score >= 50 && !p.verdict) p.scoredBy = "rules";
+  const examples = jobs.filter((p) => p.verdict).slice(0, 24);
+  const exampleText = examples.length
+    ? `\n\nJOSH'S OWN CALLS on earlier postings (weigh these heavily; they show his taste better than any rule):\n${examples.map((p) => `- ${p.verdict === "up" ? "WANTS" : "DOES NOT WANT"}: ${p.title} at ${p.company} (${p.location || "location not stated"})${p.notes ? ` — his note: ${p.notes.slice(0, 120)}` : ""}`).join("\n")}`
+    : "";
   // AI-heavy postings first, then the rest of the rule-scored top
   const todo = jobs
     .filter((p) => p.scoredBy === "rules" && p.status !== "hidden" && p.score >= 35)
@@ -37,7 +44,7 @@ export async function POST(req: Request) {
 What he is hunting for, in order: (1) roles at AI-native companies where designing and building AI products is the job itself: agent experience, AI product design, design engineer, founding designer, prototyper, forward-deployed design, product engineer on an AI product; (2) senior design roles at AI-native companies; (3) design-engineer or AI-builder roles at companies where AI is a real product line. A generic product-design role at a company where AI is a feature or a buzzword scores under 50 even if he could get it. Internal-tools, HR, IT, payroll, or admin-surface design roles score under 45 unless the posting is explicitly about agents or AI. Score is the chance he gets a first interview AND would take the job: weight the posting's real requirements against his record, penalize hard requirements he lacks (ML research, a required CS degree, 10+ years of software engineering, deep infra or backend), reward postings that want someone who designs, prototypes in code, and ships with agents. Management-heavy roles (director of a large org, design manager) score lower unless small-team and hands-on. He lives in the US (Los Angeles) and works remote or hybrid US; a role based in or restricted to Europe, the UK, Canada, or elsewhere outside the US scores under 40 unless the posting says remote worldwide. The LOCATION line and the US_OK flag are reliable. persona is which résumé should lead: "ai-builder" when the posting is about building AI products or wants code, "designer-who-builds" when it is a design role.
 
 CANDIDATE:
-${profile}`,
+${profile}${exampleText}`,
       messages: [{ role: "user", content: `COMPANY: ${p.company}\nTITLE: ${p.title}\nLOCATION: ${p.location} ${p.remote ? "(remote)" : ""}\nUS_OK: ${usOrRemote(p.location, p.remote) ? "yes" : "no, outside the US and not marked remote"}\n\n${p.description.slice(0, 6000)}` }],
     });
     const txt = res.content.map((c) => (c.type === "text" ? c.text : "")).join("");

@@ -26,6 +26,8 @@ export type Posting = {
   persona: "designer-who-builds" | "ai-builder";
   status: "new" | "saved" | "hidden" | "applied";
   notes?: string;
+  /** Josh's own call on the score, fed back into Claude's brief as examples. */
+  verdict?: "up" | "down";
 };
 
 export type ScanRun = { at: string; fetched: number; kept: number; added: number; errors: string[] };

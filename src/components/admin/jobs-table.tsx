@@ -47,15 +47,19 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
       setScanning(false);
     }
   };
+  const judge = async (id: string, verdict: "up" | "down" | null) => {
+    await fetch("/api/admin/jobs", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, verdict }) });
+    router.refresh();
+  };
   const update = async (id: string, status: Posting["status"]) => {
     await fetch("/api/admin/jobs", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
     router.refresh();
   };
-  const score = async () => {
+  const score = async (relearn = false) => {
     setScanning(true);
     setMsg(null);
     try {
-      const r = await fetch("/api/admin/score?n=120", { method: "POST" });
+      const r = await fetch(`/api/admin/score?n=${relearn ? 300 : 120}${relearn ? "&relearn=1" : ""}`, { method: "POST" });
       const j = await r.json();
       setMsg(j.error ? j.error : `Claude scored ${j.scored} postings.`);
       router.refresh();
@@ -95,8 +99,14 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
         case "b":
           if (p) router.push(`/admin/jobs/${encodeURIComponent(p.id)}/brief`);
           break;
+        case "u":
+          if (p) judge(p.id, p.verdict === "up" ? null : "up");
+          break;
+        case "d":
+          if (p) judge(p.id, p.verdict === "down" ? null : "down");
+          break;
         case "?":
-          setMsg("Keys: j/k move · s save · h hide · x pick · o open · b brief");
+          setMsg("Keys: j/k move · s save · h hide · x pick · o open · b brief · u/d this score is right/wrong");
           break;
         default:
           return;
@@ -154,8 +164,11 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
           onKeyDown={(e) => e.key === "Enter" && setFilter({ q: (e.target as HTMLInputElement).value })}
           className="ml-auto w-56 rounded-full border border-line bg-transparent px-3 py-1 text-[13px] text-fg placeholder:text-fg-3 focus:border-fg focus:outline-none"
         />
-        <button type="button" onClick={score} disabled={scanning} className="rounded-full border border-line px-3 py-1 text-[13px] text-fg-2 hover:text-fg disabled:opacity-50">
+        <button type="button" onClick={() => score()} disabled={scanning} className="rounded-full border border-line px-3 py-1 text-[13px] text-fg-2 hover:text-fg disabled:opacity-50">
           Score with Claude
+        </button>
+        <button type="button" onClick={() => score(true)} disabled={scanning} className="rounded-full border border-line px-3 py-1 text-[13px] text-fg-2 hover:text-fg disabled:opacity-50" title="Re-rank the top of the list with your ↑/↓ calls in Claude's brief">
+          Re-rank with my calls
         </button>
         <button type="button" onClick={prepare} disabled={scanning || !picked.size} className="rounded-full bg-fg px-4 py-1.5 text-[13px] font-medium text-bg disabled:opacity-50" title="Fill these applications in the background, then review them in the queue">
           Prepare {picked.size || ""}
@@ -206,6 +219,10 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
                 </p>
               </div>
               <div className="flex flex-wrap gap-2 text-[13px]">
+                <span className="flex overflow-hidden rounded-full border border-line" title="Teach the ranking: is this one for you?">
+                  <button type="button" onClick={() => judge(p.id, p.verdict === "up" ? null : "up")} aria-label="Yes, this is the kind of role I want" className={`px-2.5 py-1 ${p.verdict === "up" ? "bg-fg text-bg" : "text-fg-3 hover:text-fg"}`}>↑</button>
+                  <button type="button" onClick={() => judge(p.id, p.verdict === "down" ? null : "down")} aria-label="No, not this kind of role" className={`px-2.5 py-1 ${p.verdict === "down" ? "bg-fg text-bg" : "text-fg-3 hover:text-fg"}`}>↓</button>
+                </span>
                 <a href={p.url} target="_blank" rel="noreferrer" className="rounded-full border border-line px-3 py-1 text-fg-2 hover:text-fg">
                   Open ↗
                 </a>

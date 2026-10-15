@@ -180,6 +180,23 @@ The tailored résumé for the posting is used when one exists, otherwise the
 persona's base. Cover letters are named
 `Josh-Whitehead-Cover-Letter-Company.pdf`.
 
+## Learning, practice, numbers
+
+- **Verdicts.** ↑/↓ on a job row (keys u/d) or the job page stores
+  `verdict` on the posting. Claude's scoring brief carries up to 24 of them
+  as examples ("WANTS / DOES NOT WANT: title at company, his note"), so the
+  ranking drifts toward Josh's taste; "Re-rank with my calls" forgets
+  Claude's scores above 50 for un-judged postings and rescores 300 with the
+  examples in. Verified: a down-voted HRIS posting went 55 → 33 with the
+  reason citing the call.
+- **Practice.** `/admin/jobs/[id]/practice` is a practice interview:
+  one question at a time from the posting and the brief, a three-line
+  critique after each answer that flags claims not in the record, saved per
+  posting in `data/admin/practice.json`.
+- **Numbers.** Applications shows the funnel once anything is submitted:
+  response rate, interviews, median days to a reply, by résumé persona and
+  by board. Stage changes are timestamped in `stageAt`.
+
 ## Pipeline and briefs
 
 - **Applications** is a board by stage (applied, replied, interviewing,

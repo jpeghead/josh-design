@@ -80,6 +80,10 @@ export function JobView({ job, baseId, fit: initialFit, brief, tailored, sameCom
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <span className="flex overflow-hidden rounded-full border border-line" title="Teach the ranking: is this one for you?">
+              <button type="button" onClick={() => patch({ verdict: job.verdict === "up" ? null : "up" })} disabled={!!busy} className={`px-3 py-1 text-[13px] ${job.verdict === "up" ? "bg-fg text-bg" : "text-fg-3 hover:text-fg"}`}>↑ want this</button>
+              <button type="button" onClick={() => patch({ verdict: job.verdict === "down" ? null : "down" })} disabled={!!busy} className={`px-3 py-1 text-[13px] ${job.verdict === "down" ? "bg-fg text-bg" : "text-fg-3 hover:text-fg"}`}>↓ not this</button>
+            </span>
             <button type="button" onClick={() => patch({ status: job.status === "saved" ? "new" : "saved" })} disabled={!!busy} className={pill(job.status === "saved")}>{job.status === "saved" ? "Saved" : "Save"}</button>
             <button type="button" onClick={() => patch({ status: job.status === "hidden" ? "new" : "hidden" })} disabled={!!busy} className={pill(job.status === "hidden")}>{job.status === "hidden" ? "Hidden" : "Hide"}</button>
             <Link href={`/admin/apply?job=${encodeURIComponent(job.id)}`} className="rounded-full bg-fg px-4 py-1.5 text-[13px] font-medium text-bg">Apply</Link>
@@ -137,7 +141,10 @@ export function JobView({ job, baseId, fit: initialFit, brief, tailored, sameCom
         </section>
 
         <section className="mt-10">
-          <h2 className="text-xs uppercase tracking-[0.14em] text-fg-3">Interview brief</h2>
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 className="text-xs uppercase tracking-[0.14em] text-fg-3">Interview brief</h2>
+            <Link href={`/admin/jobs/${encodeURIComponent(job.id)}/practice`} className="text-[13px] text-fg-2 underline decoration-fg-3 underline-offset-2 hover:text-fg">Practice the interview →</Link>
+          </div>
           <BriefView jobId={job.id} initial={brief} />
         </section>
       </div>

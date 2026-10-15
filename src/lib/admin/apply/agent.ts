@@ -675,6 +675,7 @@ export async function submitApplication(id: string): Promise<Application | undef
       a.status = "submitted";
       a.stage = "applied";
       a.submittedAt = new Date().toISOString();
+      a.stageAt = { ...(a.stageAt ?? {}), applied: a.submittedAt };
       a.nextAction = { date: new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10), note: "Follow up if no reply" };
       a.message = "Submitted. The confirmation is in the screenshot.";
     } else {

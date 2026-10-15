@@ -34,6 +34,8 @@ export type Application = {
   /** Where it stands after submission; set by hand in the panel. */
   stage?: "applied" | "replied" | "interviewing" | "offer" | "rejected" | "withdrawn";
   nextAction?: { date: string; note: string } | null;
+  /** When each stage was reached, for the numbers. */
+  stageAt?: Partial<Record<"applied" | "replied" | "interviewing" | "offer" | "rejected" | "withdrawn", string>>;
   notes?: string;
   submittedAt?: string;
 };
