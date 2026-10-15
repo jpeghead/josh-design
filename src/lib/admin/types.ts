@@ -19,6 +19,8 @@ export type Posting = {
   score: number;
   scoreWhy: string;
   scoredBy: "rules" | "claude";
+  /** AI words in the title and description; 3 or more means AI is the job. */
+  ai?: number;
   persona: "designer-who-builds" | "ai-builder";
   status: "new" | "saved" | "hidden" | "applied";
   notes?: string;

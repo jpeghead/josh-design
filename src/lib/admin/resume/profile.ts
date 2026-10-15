@@ -4,6 +4,7 @@ import { projects } from "@/lib/data";
 import { books } from "@/content/books";
 import { lab } from "@/content/lab";
 import { readJson, writeJson } from "../store";
+import { RECORD, SERVICE_DETAIL } from "./record";
 
 /**
  * The one source of truth for every résumé. Seeded from the site's content
@@ -26,7 +27,7 @@ export type Profile = {
   skills: Record<string, string[]>;
   education: { school: string; detail: string; years?: string }[];
   publications: { title: string; detail: string; url?: string }[];
-  service?: { branch: string; role: string; years: string };
+  service?: { branch: string; role: string; years: string; detail?: string };
   /** Standard application answers. Only what is true; anything unknown is left blank for review. */
   answers: {
     firstName: string;
@@ -73,13 +74,14 @@ export function seedProfile(): Profile {
     .filter((p) => !p.internalLink)
     .map((p) => {
       const [start, end] = span(p.timeline);
+      const rec = RECORD[p.context];
       return {
         company: p.context,
-        role: p.role,
+        role: rec?.role ?? p.role,
         start,
         end,
-        summary: p.summary,
-        bullets: [...p.contribution, ...p.outcome].map((text) => ({ text, tags: tagsFor(text) })),
+        summary: rec?.summary ?? p.summary,
+        bullets: rec ? rec.bullets : [...p.contribution, ...p.outcome].map((text) => ({ text, tags: tagsFor(text) })),
         tools: p.tools,
         client: /client/i.test(p.context),
       };
@@ -93,27 +95,22 @@ export function seedProfile(): Profile {
       start,
       end,
       location: "Los Angeles, CA",
-      summary: "Design studio and product lab. Client work by day; our own AI products in between, designed and shipped end to end with coding agents in the loop.",
-      bullets: [
-        { text: "Design and ship AI products end to end: OLO (a desktop companion for the Mac), Weaver (a writing room that remembers a channel), StoryMode (game stories as audio), each with a live site.", tags: ["ai", "shipping", "0-to-1", "engineering"] },
-        { text: "Built josh.design as a working AI-builder portfolio: a language model running in the browser on WebGPU, a grounded hosted Claude demo, five agent-interface prototypes, and a playable 3D city built with a coding agent in sixteen days.", tags: ["ai", "engineering", "shipping"] },
-        { text: "Open-sourced two of the builds (agent-ui-patterns, local-grounded-chat) and run CI, tests, and a public build log on the portfolio repo.", tags: ["engineering", "ai"] },
-        { text: "Wrote Mastery is Dead, a 618-page field manual on how AI is restructuring twenty-five white-collar careers; out in paperback.", tags: ["ai", "writing"] },
-      ],
-      tools: ["Claude Code", "Codex", "TypeScript", "React", "Next.js", "Three.js", "Figma"],
+      summary: RECORD["Boneyard Collective — Founder"].summary ?? "",
+      bullets: RECORD["Boneyard Collective — Founder"].bullets,
+      tools: ["Claude Code", "Codex", "TypeScript", "React", "Next.js", "Three.js", "Veo", "Figma"],
     });
   }
   return {
     name: resume.name,
     headline: {
-      "designer-who-builds": "Product Designer who builds with AI",
-      "ai-builder": "AI Product Builder · Product Design background",
+      "designer-who-builds": "Product Designer who ships AI products, in Figma and in code",
+      "ai-builder": "AI Product Builder · ships daily with coding agents · fifteen years of product design",
     },
     summary: {
       "designer-who-builds":
-        "Product designer with fifteen years shipping consumer and B2B software, twice the first designer who became Head of Design (both companies acquired). Now designs and ships AI products end to end with coding agents in the loop: comfortable in Figma and in the code editor, from prototype to production.",
+        "Product designer with fifteen years shipping consumer and B2B software: first designer to Head of Design twice (both companies acquired), Apple and Google partnerships shipped, design systems built from zero. For the last two years I have designed and shipped AI products end to end with coding agents in the loop, so the prototype and the product are the same artifact.",
       "ai-builder":
-        "Builds AI products end to end: prompts, grounding, streaming interfaces, agent interaction patterns, on-device inference, and the shipping around them, with coding agents in the loop. Fifteen years of product design underneath it, including two runs as first designer to Head of Design at companies that were acquired.",
+        "I design and build AI products end to end: prompts and context, grounding, measuring what the model actually shipped, streaming and agent interfaces, on-device inference, and the product around them, with coding agents in the loop every day. Underneath that is fifteen years of product design: first designer to Head of Design twice, both companies acquired, Apple and Google partnerships shipped. I want a team building AI-native products where designing and building are one job.",
     },
     email: resume.email,
     location: "Los Angeles, CA · remote-friendly",
@@ -127,10 +124,13 @@ export function seedProfile(): Profile {
     builds: lab
       .filter((l) => ["portrait", "local", "agents", "ask", "city"].includes(l.slug))
       .map((l) => ({ title: l.title, line: l.blurb.split(". ")[0] + ".", url: `${resume.site}${l.href}`, tags: ["ai", "engineering"] })),
-    skills: resume.skills,
+    skills: {
+      ...resume.skills,
+      "AI & models": [...resume.skills["AI & models"], "Evals: measuring shipped model output against a spec", "Generative video pipelines (Veo)", "Agent workflows across many projects"],
+    },
     education: [{ school: "Career school, digital design", detail: "Film, photography, code, music, games. Fine art in college (charcoal and canvas) before enlisting." }],
     publications: books.filter((b) => b.status !== "In progress").map((b) => ({ title: b.subtitle ? `${b.title}: ${b.subtitle}` : b.title, detail: b.blurb, url: b.site ?? b.link?.href })),
-    service: { branch: "United States Marine Corps", role: "Combat photographer", years: "2008 – 2013" },
+    service: { branch: "United States Marine Corps", role: "Combat photographer", years: "2008 – 2013", detail: SERVICE_DETAIL },
     answers: {
       firstName: "Josh",
       lastName: "Whitehead",
@@ -186,7 +186,7 @@ export function profileSummary(): string {
     "SKILLS",
     ...Object.entries(p.skills).map(([k, v]) => `- ${k}: ${v.join(", ")}`),
     "",
-    `Service: ${p.service?.role}, ${p.service?.branch}, ${p.service?.years}.`,
+    `Service: ${p.service?.role}, ${p.service?.branch}, ${p.service?.years}. ${p.service?.detail ?? ""}`,
     ...p.publications.map((b) => `Publication: ${b.title}. ${b.detail}`),
   ];
   return lines.join("\n");

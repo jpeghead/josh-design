@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import type { Posting } from "@/lib/admin/types";
 
-type Filters = { status: string; tier: string; min: number; q: string; fresh: boolean };
+type Filters = { status: string; tier: string; min: number; q: string; fresh: boolean; ai: boolean };
 
 export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows: Posting[]; counts: Record<string, number>; filters: Filters; errors: string[]; lastScanAt: string | null }) {
   const router = useRouter();
@@ -15,7 +15,7 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
 
   const setFilter = (patch: Partial<Filters>) => {
     const f = { ...filters, ...patch };
-    const p = new URLSearchParams({ status: f.status, tier: f.tier, min: String(f.min), q: f.q, fresh: f.fresh ? "1" : "0" });
+    const p = new URLSearchParams({ status: f.status, tier: f.tier, min: String(f.min), q: f.q, fresh: f.fresh ? "1" : "0", ai: f.ai ? "1" : "0" });
     start(() => router.push(`/admin?${p}`));
   };
   const scan = async (auto = false) => {
@@ -45,7 +45,7 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
     setScanning(true);
     setMsg(null);
     try {
-      const r = await fetch("/api/admin/score", { method: "POST" });
+      const r = await fetch("/api/admin/score?n=120", { method: "POST" });
       const j = await r.json();
       setMsg(j.error ? j.error : `Claude scored ${j.scored} postings.`);
       router.refresh();
@@ -73,6 +73,9 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
             {s} {s !== "all" && <span className="text-fg-3">{counts[s] ?? 0}</span>}
           </button>
         ))}
+        <button type="button" onClick={() => setFilter({ ai: !filters.ai })} className={`${sel} ${filters.ai ? "border-fg text-fg" : ""}`} title="Agents, models, prompts, or evals in the title or description, three mentions or more">
+          AI is the work <span className="text-fg-3">{counts.ai ?? 0}</span>
+        </button>
         <button type="button" onClick={() => setFilter({ fresh: !filters.fresh })} className={`${sel} ${filters.fresh ? "border-fg text-fg" : ""}`} title="First seen by the scanner in the last seven days">
           found this week <span className="text-fg-3">{counts.fresh ?? 0}</span>
         </button>

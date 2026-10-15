@@ -40,7 +40,8 @@ function restates(summary: string, bullet: string): boolean {
 export function buildResume(profile: Profile, persona: Persona, keywords: string[] = [], maxBullets = 4): ResumeData {
   const experience = profile.experience.map((e, i) => {
     const sorted = [...e.bullets].filter((b) => !restates(e.summary, b.text)).sort((a, b) => rank(b.tags, b.text, persona, keywords) - rank(a.tags, a.text, persona, keywords));
-    const n = i === 0 ? maxBullets : i < 3 ? maxBullets - 1 : 2;
+    // the current role carries the most; the oldest two get one line each so the whole thing holds two pages
+    const n = i === 0 ? maxBullets : i < 3 ? maxBullets - 1 : i < 5 ? 2 : 1;
     return { company: e.company, role: e.role, start: e.start, end: e.end, location: e.location, summary: e.summary, bullets: sorted.slice(0, n).map((b) => b.text), client: e.client };
   });
   const skills = SKILL_ORDER[persona].filter((g) => profile.skills[g]).map((g) => ({ group: g, items: profile.skills[g] }));
@@ -55,7 +56,7 @@ export function buildResume(profile: Profile, persona: Persona, keywords: string
     links: profile.links,
     sections: ORDER[persona],
     experience,
-    builds: profile.builds.slice(0, persona === "ai-builder" ? 4 : 3).map((b) => ({ title: b.title, line: b.line, url: b.url })),
+    builds: profile.builds.slice(0, 3).map((b) => ({ title: b.title, line: b.line, url: b.url })),
     skills,
     education: profile.education,
     publications: profile.publications,

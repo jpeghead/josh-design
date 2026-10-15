@@ -4,7 +4,7 @@ import { JobsTable } from "@/components/admin/jobs-table";
 
 export const dynamic = "force-dynamic";
 
-export default async function Jobs({ searchParams }: { searchParams: Promise<{ status?: string; tier?: string; min?: string; q?: string; fresh?: string }> }) {
+export default async function Jobs({ searchParams }: { searchParams: Promise<{ status?: string; tier?: string; min?: string; q?: string; fresh?: string; ai?: string }> }) {
   const sp = await searchParams;
   const all = readJson<Posting[]>("jobs", []);
   const runs = readJson<ScanRun[]>("scans", []);
@@ -14,16 +14,18 @@ export default async function Jobs({ searchParams }: { searchParams: Promise<{ s
   const min = Number(sp.min ?? 40);
   const q = (sp.q ?? "").toLowerCase();
   const fresh = sp.fresh === "1";
+  const aiOnly = sp.ai === "1";
   const weekAgo = Date.now() - 7 * 86400000;
   const rows = all.filter(
     (p) =>
       (!fresh || new Date(p.firstSeen).getTime() >= weekAgo) &&
+      (!aiOnly || (p.ai ?? 0) >= 3) &&
       (status === "all" || p.status === status) &&
       (tier === "all" || p.tier === tier) &&
       p.score >= min &&
       (!q || `${p.company} ${p.title} ${p.location}`.toLowerCase().includes(q))
   );
-  const counts = { fresh: all.filter((p) => p.status === "new" && new Date(p.firstSeen).getTime() >= weekAgo).length, new: all.filter((p) => p.status === "new").length, saved: all.filter((p) => p.status === "saved").length, applied: all.filter((p) => p.status === "applied").length, hidden: all.filter((p) => p.status === "hidden").length };
+  const counts = { ai: all.filter((p) => p.status === "new" && (p.ai ?? 0) >= 3).length, fresh: all.filter((p) => p.status === "new" && new Date(p.firstSeen).getTime() >= weekAgo).length, new: all.filter((p) => p.status === "new").length, saved: all.filter((p) => p.status === "saved").length, applied: all.filter((p) => p.status === "applied").length, hidden: all.filter((p) => p.status === "hidden").length };
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -34,7 +36,7 @@ export default async function Jobs({ searchParams }: { searchParams: Promise<{ s
           </p>
         </div>
       </div>
-      <JobsTable rows={rows} counts={counts} filters={{ status, tier, min, q: sp.q ?? "", fresh }} errors={runs[0]?.errors ?? []} lastScanAt={runs[0]?.at ?? null} />
+      <JobsTable rows={rows} counts={counts} filters={{ status, tier, min, q: sp.q ?? "", fresh, ai: aiOnly }} errors={runs[0]?.errors ?? []} lastScanAt={runs[0]?.at ?? null} />
     </div>
   );
 }

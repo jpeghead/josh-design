@@ -29,7 +29,7 @@ function text(html: string): string {
 function make(p: Omit<Posting, "tier" | "score" | "scoreWhy" | "scoredBy" | "persona" | "status" | "firstSeen" | "lastSeen">): Posting {
   const now = new Date().toISOString();
   const rs = ruleScore(p.title, p.description, p.location, p.remote);
-  return { ...p, tier: tier(p.title), score: rs.score, scoreWhy: rs.why, scoredBy: "rules", persona: rs.persona, status: "new", firstSeen: now, lastSeen: now };
+  return { ...p, tier: tier(p.title), score: rs.score, scoreWhy: rs.why, scoredBy: "rules", persona: rs.persona, ai: rs.ai, status: "new", firstSeen: now, lastSeen: now };
 }
 
 export async function greenhouse(c: Company): Promise<Posting[]> {

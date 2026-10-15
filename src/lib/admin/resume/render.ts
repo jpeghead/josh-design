@@ -30,29 +30,32 @@ export function renderResumeHtml(d: ResumeData, opts: { preview?: boolean } = {}
       case "skills":
         return `<section><h2>Skills</h2>${d.skills.map((g) => `<p><strong>${esc(g.group)}:</strong> ${g.items.map(esc).join(", ")}</p>`).join("")}</section>`;
       case "education":
-        return d.education.length ? `<section><h2>Education</h2>${d.education.map((e) => `<p><strong>${esc(e.school)}</strong>${e.years ? `, ${esc(e.years)}` : ""}. ${esc(e.detail)}</p>`).join("")}</section>` : "";
+        // education and service share one section: both are short, and a heading each costs a line the page does not have
+        return d.education.length
+          ? `<section><h2>${d.service ? "Education &amp; service" : "Education"}</h2>${d.education.map((e) => `<p><strong>${esc(e.school)}</strong>${e.years ? `, ${esc(e.years)}` : ""}. ${esc(e.detail)}</p>`).join("")}${d.service ? `<p><strong>${esc(d.service.branch)}</strong>, ${esc(d.service.years)}. ${esc(d.service.role)}.</p>` : ""}</section>`
+          : "";
       case "publications":
         return d.publications.length ? `<section><h2>Publications</h2>${d.publications.map((p) => `<p><strong>${esc(p.title)}.</strong> ${esc(p.detail)}${p.url ? ` ${esc(p.url.replace(/^https?:\/\//, ""))}` : ""}</p>`).join("")}</section>` : "";
       case "service":
-        return d.service ? `<section><h2>Military service</h2><p>${esc(d.service.role)}, ${esc(d.service.branch)}, ${esc(d.service.years)}.</p></section>` : "";
+        return d.service && !d.education.length ? `<section><h2>Military service</h2><p>${esc(d.service.role)}, ${esc(d.service.branch)}, ${esc(d.service.years)}.</p></section>` : "";
     }
   };
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>${esc(d.name)} — Résumé</title>
 <style>
-  @page { size: Letter; margin: 0.55in 0.6in; }
+  @page { size: Letter; margin: 0.5in 0.6in; }
   html { -webkit-print-color-adjust: exact; }
-  body { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 10pt; line-height: 1.32; color: #111; ${opts.preview ? "background:#fff; padding: 0.6in 0.65in; max-width: 8.5in; box-sizing: border-box; margin: 0 auto;" : ""} }
+  body { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 10pt; line-height: 1.28; color: #111; ${opts.preview ? "background:#fff; padding: 0.6in 0.65in; max-width: 8.5in; box-sizing: border-box; margin: 0 auto;" : ""} }
   h1 { font-size: 20pt; margin: 0; letter-spacing: -0.01em; font-weight: 700; }
   .headline { font-size: 11.5pt; margin: 2pt 0 0; }
   .contact { margin: 4pt 0 0; font-size: 9.5pt; color: #333; }
-  h2 { font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; letter-spacing: 0.12em; text-transform: uppercase; margin: 11pt 0 3pt; padding-bottom: 2pt; border-bottom: 0.75pt solid #999; }
+  h2 { font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; letter-spacing: 0.12em; text-transform: uppercase; margin: 8pt 0 3pt; padding-bottom: 2pt; border-bottom: 0.75pt solid #999; }
   h3 { font-size: 10.5pt; margin: 7pt 0 0; font-weight: 700; }
   .meta { margin: 1pt 0 0; font-size: 9.5pt; color: #333; }
   .sub { margin: 2pt 0 0; font-size: 10pt; color: #222; }
   p { margin: 3pt 0; }
   ul { margin: 3pt 0 0; padding-left: 14pt; }
-  li { margin: 0 0 2pt; }
+  li { margin: 0 0 1pt; }
   article { break-inside: avoid; }
   section { break-inside: auto; }
 </style></head>

@@ -82,6 +82,38 @@ data/admin/               companies.json, jobs.json, profile.json,
   submitted | failed | stopped`), steps[], screenshots[], answers{},
   startedAt, finishedAt, error.
 
+## The record
+
+`src/lib/admin/resume/record.ts` is the verified record: every claim a résumé
+or application may make, gathered 2026-10-15 from LinkedIn, the 2026 résumé
+PDF, and the site. Numbers are Josh's own published numbers (Spin: +40%
+usage, +60% signups, 84 cities, team of 10; Hush: 200 reviews at 3.5★ to
+50K+ at 4.8★, Android at 30%+ of revenue; Saucey: referrals +65%, tickets
+−90%; NationBuilder: the $6.25M a16z raise; Boneyard: 20–60 commits a day
+across 3–10 projects, the Veo dialogue-density fix, OLO's founding team).
+Dates come from `src/lib/data.ts`, which is the locked timeline; LinkedIn
+and the old résumé say Boneyard began May 2023 and Spin spanned 2018–2023,
+and that disagreement is Josh's to settle. The seed merges the record by
+company; "Reseed" on Setup rebuilds the profile from it while keeping the
+answers Josh typed.
+
+## Scoring, second pass
+
+Rules alone top out at 72 and penalize admin surfaces (IT, HRIS, payroll,
+ads) without AI in the title, so an unscored posting never outranks a
+Claude-scored one. Claude's brief now says what the hunt is for, in order:
+agent-experience and AI-product design, design engineer, founding designer,
+prototyper, forward-deployed design, product engineer on an AI product, all
+at AI-native companies; generic design at a company where AI is a feature
+scores under 50; roles outside the US score under 40 unless remote
+worldwide (the posting carries a US_OK flag). The taxonomy gained the AI
+titles (agent experience, AI product designer, design technologist,
+prototyper, founding designer, product engineer on AI) and stretch titles
+(founding engineer, AI PM, DevRel, prompt engineer, solutions designer).
+Each posting carries `ai`, the count of AI words in title and description;
+"AI is the work" on the jobs page filters to three or more. `POST
+/api/admin/score?n=300` scores up to 300 at a time, AI-heavy first.
+
 ## Freshness
 
 The jobs page runs one scan on load when the last scan is more than twelve
