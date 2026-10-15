@@ -112,6 +112,21 @@ tests), jobscan.co (AI screening), sapia.ai (screening 2026),
 madegooddesigns.com (resume design 2026), Greenhouse support (unsuccessful
 parse). None are primary; the checklist is the overlap between them.
 
+## The site and the sent résumé are one document
+
+"Publish to site" in the studio writes the current base's PDF to
+`public/Josh-Whitehead-Resume.pdf`; commit it and josh.design/resume offers
+it as "Download the PDF". The /resume page itself renders the record's
+bullets (`lib/admin/resume/record.ts`), so what a recruiter reads on the
+site matches what the application carried. The cover letter is set in the
+same faces and the run's template, as `Josh-Whitehead-Cover-Letter-Company.pdf`.
+Every scan first snapshots the JSON files to `data/admin/backups/<day>`
+(seven days kept).
+
+A note on the dev server: Turbopack sometimes keeps a stale copy of a
+`lib/admin` module after an edit ("x is not a function" from a route that
+imports it). Restart `npm run dev`; it is not a code bug.
+
 ## Templates and the A/B
 
 `lib/admin/resume/templates.ts` holds ten settings of the same document
