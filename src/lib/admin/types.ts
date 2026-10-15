@@ -1,4 +1,4 @@
-export type Source = "greenhouse" | "ashby" | "lever" | "hn";
+export type Source = "greenhouse" | "ashby" | "lever" | "workable" | "rippling" | "hn";
 
 export type Company = { name: string; source: Exclude<Source, "hn">; slug: string; note?: string };
 

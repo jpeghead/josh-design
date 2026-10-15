@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { Posting } from "@/lib/admin/types";
 
-type Filters = { status: string; tier: string; min: number; q: string };
+type Filters = { status: string; tier: string; min: number; q: string; fresh: boolean };
 
 export function JobsTable({ rows, counts, filters, errors }: { rows: Posting[]; counts: Record<string, number>; filters: Filters; errors: string[] }) {
   const router = useRouter();
@@ -15,7 +15,7 @@ export function JobsTable({ rows, counts, filters, errors }: { rows: Posting[]; 
 
   const setFilter = (patch: Partial<Filters>) => {
     const f = { ...filters, ...patch };
-    const p = new URLSearchParams({ status: f.status, tier: f.tier, min: String(f.min), q: f.q });
+    const p = new URLSearchParams({ status: f.status, tier: f.tier, min: String(f.min), q: f.q, fresh: f.fresh ? "1" : "0" });
     start(() => router.push(`/admin?${p}`));
   };
   const scan = async () => {
@@ -58,6 +58,9 @@ export function JobsTable({ rows, counts, filters, errors }: { rows: Posting[]; 
             {s} {s !== "all" && <span className="text-fg-3">{counts[s] ?? 0}</span>}
           </button>
         ))}
+        <button type="button" onClick={() => setFilter({ fresh: !filters.fresh })} className={`${sel} ${filters.fresh ? "border-fg text-fg" : ""}`} title="First seen by the scanner in the last seven days">
+          found this week <span className="text-fg-3">{counts.fresh ?? 0}</span>
+        </button>
         <span className="mx-2 h-4 w-px bg-line" />
         {(["all", "core", "stretch"] as const).map((t) => (
           <button key={t} type="button" onClick={() => setFilter({ tier: t })} className={`${sel} ${filters.tier === t ? "border-fg text-fg" : ""}`}>
@@ -107,6 +110,7 @@ export function JobsTable({ rows, counts, filters, errors }: { rows: Posting[]; 
                 <p className="text-xs text-fg-3">
                   {p.location || "location not stated"} · {p.tier} · {p.persona === "ai-builder" ? "AI builder résumé" : "Designer-who-builds résumé"} · {p.source} · scored by {p.scoredBy}
                   {p.postedAt ? ` · posted ${new Date(p.postedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
+                  {Date.now() - new Date(p.firstSeen).getTime() < 7 * 86400000 ? <span className="text-fg-2"> · found {new Date(p.firstSeen).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span> : ""}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2 text-[13px]">

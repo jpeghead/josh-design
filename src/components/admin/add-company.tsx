@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-type Hit = { source: "greenhouse" | "ashby" | "lever"; slug: string; jobs: number; listed: boolean };
+type Hit = { source: "greenhouse" | "ashby" | "lever" | "workable" | "rippling"; slug: string; jobs: number; listed: boolean };
 
 /** Type a company name or its careers URL; the panel finds its board and adds it to the scan. */
 export function AddCompany() {
@@ -20,7 +20,7 @@ export function AddCompany() {
     const r = await fetch("/api/admin/companies", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: q }) });
     const j = await r.json();
     setHits(j.hits ?? []);
-    if (!j.hits?.length) setMsg("No public board answered for that name. Try the exact slug from their careers URL (the part after greenhouse.io/, ashbyhq.com/, or lever.co/).");
+    if (!j.hits?.length) setMsg("No public board answered for that name. Try the exact slug from their careers URL (the part after greenhouse.io/, ashbyhq.com/, lever.co/, apply.workable.com/, or ats.rippling.com/).");
     setBusy(false);
   };
   const save = async (h: Hit) => {

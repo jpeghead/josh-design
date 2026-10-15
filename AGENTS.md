@@ -22,7 +22,7 @@
 > and builds on every push. `app/error.tsx` and `app/global-error.tsx` exist.
 > `components/lab/desktop-only.tsx` keeps phones from booting the 3D city.
 > **Admin cockpit (local only, October 2026):** `/admin` is Josh's job-hunt
-> tool: a scanner over 145 Greenhouse/Ashby/Lever boards plus Hacker News with
+> tool: a scanner over ~150 Greenhouse/Ashby/Lever/Workable/Rippling boards plus Hacker News with
 > a role taxonomy and rule scoring (Claude rescoring with a key), a résumé
 > generator with two personas, live preview, instruction edits, tailoring, and
 > PDF/DOCX/TXT export, and a Playwright apply agent that fills forms, drafts

@@ -85,9 +85,15 @@ data/admin/               companies.json, jobs.json, profile.json,
 ## Adding companies
 
 Setup → "Add a company": type a name or careers URL; `lib/admin/discover.ts`
-probes Greenhouse, Ashby, and Lever with a few slug spellings and offers the
-boards that answered. Companies without a public board on those three
-cannot be scanned; paste the exact slug from the careers URL if a guess misses.
+probes Greenhouse, Ashby, Lever, Workable, and Rippling with a few slug
+spellings and offers the boards that answered. Companies without a public
+board on those five cannot be scanned (Workday, SmartRecruiters, iCIMS, and
+custom careers pages have no keyless listing); paste the exact slug from the
+careers URL if a guess misses. Rippling lists titles only, so the scanner
+fetches details just for titles the taxonomy keeps. A probe of about 300
+AI-company names in October 2026 found four on Workable (Hugging Face,
+Jasper, Writesonic, D-ID) and one on Rippling (Rippling itself), so those
+two systems are a long tail, not a second Greenhouse.
 
 ## Pipeline and briefs
 
