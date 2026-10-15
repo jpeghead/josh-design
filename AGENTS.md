@@ -243,15 +243,19 @@ that cadence.
 
 ---
 
-## 7. Git / branch state
+## 7. Git / branch state / deploy
 
-- **Active branch: `portfolio2026`** (renamed from `import/framer-assets`).
-  All the game work lives here. `main` is far behind and is still the
-  repo's default branch — don't build on `main`.
-- Everything through the "Quality sweep" commit is pushed to
-  `origin/portfolio2026`.
-
----
+- **`main` is the production branch** (GitHub default and Vercel production).
+  `portfolio2026` is the working branch and is kept equal to `main`; push to
+  both, or merge into `main` to deploy.
+- **Vercel:** project `josh-design` (team `jpeghead-8439s-projects`), Git
+  integration on `jpeghead/josh-design`. Production: https://josh-design.vercel.app.
+  `.vercelignore` keeps the 184 MB full-res Framer export out of deploys; the
+  site serves `public/img`. `ANTHROPIC_API_KEY` is not set on Vercel, so
+  `/lab/ask` shows its "off" state; add it in the project's environment
+  variables to turn the hosted demo on. The custom domain josh.design is not
+  attached yet.
+- The repo is public.
 
 ## 8. Current state & the open punch list
 
