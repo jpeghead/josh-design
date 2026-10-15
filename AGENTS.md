@@ -14,6 +14,13 @@
 > live sites; `src/content/products.ts` and `books.ts` mirror their own copy
 > and link out. Re-read the live sites before changing those entries.
 > `/log` lists the repo's commits live from the GitHub API (ISR, fails soft).
+> A ⌘K palette (`components/command-palette.tsx`, index in `lib/palette.ts`)
+> jumps anywhere and turns unmatched text into a question for Ask; the home
+> page's plain GET form does the same. `/resume.json` is the résumé in the
+> JSON Resume schema. `.github/workflows/ci.yml` type-checks, runs `npm test`
+> (node:test, native type stripping, tests beside the code as `*.test.ts`),
+> and builds on every push. `app/error.tsx` and `app/global-error.tsx` exist.
+> `components/lab/desktop-only.tsx` keeps phones from booting the 3D city.
 > Machine layer: `/resume`, JSON-LD in `components/json-ld.tsx`,
 > `app/opengraph-image.tsx` (Instrument Serif + Geist TTFs in `app/fonts`),
 > `app/feed.xml` (RSS of the essays), `public/llms.txt`, AI-open `robots.ts`.
