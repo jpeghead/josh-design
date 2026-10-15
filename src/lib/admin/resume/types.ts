@@ -27,6 +27,8 @@ export type Resume = {
   basedOn?: string;
   instruction?: string;
   jobId?: string;
+  /** Company name of the posting a tailored résumé is for; goes into the file name. */
+  company?: string;
   keywords?: { covered: string[]; missing: string[] };
   data: ResumeData;
 };

@@ -28,6 +28,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const next = newResume(r.persona, `${r.label} → ${job.company}: ${job.title}`.slice(0, 90), data, {
       basedOn: r.id,
       jobId: job.id,
+      company: job.company,
       instruction: hasKey ? `Tailored to ${job.company} — ${job.title}` : `Reordered by rule for ${job.company} — ${job.title} (no key, no rewording)`,
       keywords: coverage(data, keywords),
     });

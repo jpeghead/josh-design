@@ -3,23 +3,35 @@ import { join } from "node:path";
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx";
 import { DATA_DIR } from "../store";
 import { renderResumeHtml, renderResumeText } from "./render";
+import { resumeFontCss } from "./fonts";
 import type { Resume } from "./types";
 
 const OUT = join(DATA_DIR, "out");
 
-function slug(r: Resume) {
-  return `josh-whitehead-${r.persona}-${r.id.replace(/^res_/, "")}`;
+/**
+ * Each résumé exports into its own folder so the file itself can carry the
+ * name recruiters and parsers expect: First-Last-Resume.pdf, with the
+ * company appended on a tailored one. The folder keeps versions apart.
+ */
+function outDir(r: Resume) {
+  const dir = join(OUT, r.id);
+  mkdirSync(dir, { recursive: true });
+  return dir;
+}
+function fileBase(r: Resume) {
+  const name = r.data.name.trim().split(/\s+/).join("-");
+  const co = r.company ? `-${r.company.replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "")}` : "";
+  return `${name}-Resume${co}`;
 }
 
 /** Text-layer PDF through Chromium: the same HTML as the preview, printed at Letter. */
 export async function toPdf(r: Resume): Promise<string> {
   const { chromium } = await import("playwright");
-  mkdirSync(OUT, { recursive: true });
-  const file = join(OUT, `${slug(r)}.pdf`);
+  const file = join(outDir(r), `${fileBase(r)}.pdf`);
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
-    await page.setContent(renderResumeHtml(r.data), { waitUntil: "load" });
+    await page.setContent(renderResumeHtml(r.data, { fontCss: resumeFontCss() }), { waitUntil: "load" });
     await page.pdf({ path: file, format: "Letter", printBackground: true, preferCSSPageSize: true });
   } finally {
     await browser.close();
@@ -30,8 +42,7 @@ export async function toPdf(r: Resume): Promise<string> {
 /** Word document, the format the strictest parsers prefer. Headings are real heading styles, bullets are real bullets. */
 export async function toDocx(r: Resume): Promise<string> {
   const d = r.data;
-  mkdirSync(OUT, { recursive: true });
-  const file = join(OUT, `${slug(r)}.docx`);
+  const file = join(outDir(r), `${fileBase(r)}.docx`);
   const P = (text: string, o: { bold?: boolean; size?: number; color?: string } = {}) => new Paragraph({ children: [new TextRun({ text, bold: o.bold, size: o.size ?? 21, color: o.color })], spacing: { after: 60 } });
   const H = (text: string) => new Paragraph({ text, heading: HeadingLevel.HEADING_2, spacing: { before: 240, after: 80 } });
   const B = (text: string) => new Paragraph({ children: [new TextRun({ text, size: 21 })], bullet: { level: 0 }, spacing: { after: 40 } });
@@ -52,7 +63,7 @@ export async function toDocx(r: Resume): Promise<string> {
       }
     }
     if (s === "builds" && d.builds.length) {
-      children.push(H("Selected builds"));
+      children.push(H("Projects"));
       for (const b of d.builds) children.push(B(`${b.title}. ${b.line} ${b.url}`));
     }
     if (s === "skills") {
@@ -67,7 +78,8 @@ export async function toDocx(r: Resume): Promise<string> {
       children.push(H("Publications"));
       for (const p of d.publications) children.push(P(`${p.title}. ${p.detail}${p.url ? ` ${p.url}` : ""}`));
     }
-    if (s === "service" && d.service) children.push(H("Military service"), P(`${d.service.role}, ${d.service.branch}, ${d.service.years}.`));
+    if (s === "education" && d.service) children.push(P(`${d.service.branch}, ${d.service.years}. ${d.service.role}.`));
+    if (s === "service" && d.service && !d.education.length) children.push(H("Military service"), P(`${d.service.role}, ${d.service.branch}, ${d.service.years}.`));
   }
   const doc = new Document({ styles: { default: { document: { run: { font: "Calibri", size: 21 } } } }, sections: [{ properties: { page: { margin: { top: 864, bottom: 864, left: 936, right: 936 } } }, children }] });
   writeFileSync(file, await Packer.toBuffer(doc));
@@ -75,8 +87,7 @@ export async function toDocx(r: Resume): Promise<string> {
 }
 
 export function toTxt(r: Resume): string {
-  mkdirSync(OUT, { recursive: true });
-  const file = join(OUT, `${slug(r)}.txt`);
+  const file = join(outDir(r), `${fileBase(r)}.txt`);
   writeFileSync(file, renderResumeText(r.data));
   return file;
 }

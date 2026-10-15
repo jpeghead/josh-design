@@ -82,6 +82,36 @@ data/admin/               companies.json, jobs.json, profile.json,
   submitted | failed | stopped`), steps[], screenshots[], answers{},
   startedAt, finishedAt, error.
 
+## The résumé, as a document
+
+What screeners read in October 2026, from the sources below (practitioner
+blogs, no vendor documentation exists): parsing still comes first, and
+LLM-based ranking sits on top of it. So the file is one column, real text,
+standard headings (Summary, Experience, Projects, Skills, Publications,
+Education), contact in the body not a header, one date format on the same
+line as the employer, round bullets, no tables, columns, icons, text boxes,
+or images, and honest quantified bullets that match LinkedIn (hidden
+keywords are now a detected signal). On that shape sits the site's type:
+Instrument Serif for the name and role titles, Geist for everything else,
+embedded in the PDF as data URIs (both OFL, files in `src/app/fonts`).
+Three things the first draft got wrong and `pdftotext` caught: wide tracking
+on headings extracts as "P U B L I C A T I O N S" (tracking is now 0.04em),
+a "→" in a title pulled a system font into the PDF (a role written "A → B"
+renders as title B with "joined as A"), and "★" did the same ("stars").
+`/admin/resumes` shows the PDF's own pages (poppler's `pdftoppm`, cached by
+a hash of the rendered HTML) with a persona toggle and a computed list of
+what differs; a base per persona is built from the record on first view;
+tailored versions hang off a posting and are named
+`Josh-Whitehead-Resume-Company.pdf`. Check any change with
+`pdftotext file.pdf - | head` and `pdffonts file.pdf`.
+
+Sources read: atsverification.com (AI screening 2026, format guide, date
+formats), resumeats.net (ATS vs AI, Greenhouse formatting), jobloo.co
+(five ATS reverse-engineered, one vs two columns), resumemate.io (two-column
+tests), jobscan.co (AI screening), sapia.ai (screening 2026),
+madegooddesigns.com (resume design 2026), Greenhouse support (unsuccessful
+parse). None are primary; the checklist is the overlap between them.
+
 ## The record
 
 `src/lib/admin/resume/record.ts` is the verified record: every claim a résumé

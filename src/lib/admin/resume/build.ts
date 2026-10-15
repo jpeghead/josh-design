@@ -42,7 +42,8 @@ export function buildResume(profile: Profile, persona: Persona, keywords: string
     const sorted = [...e.bullets].filter((b) => !restates(e.summary, b.text)).sort((a, b) => rank(b.tags, b.text, persona, keywords) - rank(a.tags, a.text, persona, keywords));
     // the current role carries the most; the oldest two get one line each so the whole thing holds two pages
     const n = i === 0 ? maxBullets : i < 3 ? maxBullets - 1 : i < 5 ? 2 : 1;
-    return { company: e.company, role: e.role, start: e.start, end: e.end, location: e.location, summary: e.summary, bullets: sorted.slice(0, n).map((b) => b.text), client: e.client };
+    // the oldest roles keep their bullets but lose the role summary; two pages is the whole budget
+    return { company: e.company, role: e.role, start: e.start, end: e.end, location: e.location, summary: i < 4 ? e.summary : undefined, bullets: sorted.slice(0, n).map((b) => b.text), client: e.client };
   });
   const skills = SKILL_ORDER[persona].filter((g) => profile.skills[g]).map((g) => ({ group: g, items: profile.skills[g] }));
   return {

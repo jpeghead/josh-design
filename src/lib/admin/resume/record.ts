@@ -42,7 +42,7 @@ export const RECORD: Record<string, { role?: string; summary?: string; bullets: 
     role: "Senior Product Designer → Director of Design",
     bullets: [
       { text: "First designer at a social-commerce platform; owned product across iOS, Android, and web, then brand and the marketing site, as the product scaled past 1 million users.", tags: ["0-to-1", "leadership", "mobile", "brand"] },
-      { text: "Took the apps from 200 App Store reviews at 3.5★ (and no Google Play presence) to 50,000+ combined reviews at 4.8★ through a research-led redesign and review prompts placed at the right moments.", tags: ["outcome", "mobile"] },
+      { text: "Took the apps from 200 App Store reviews at 3.5 stars (and no Google Play presence) to 50,000+ combined reviews at 4.8 stars through a research-led redesign and review prompts placed at the right moments.", tags: ["outcome", "mobile"] },
       { text: "Designed and shipped the company's first Android app, which grew to more than 30% of company revenue.", tags: ["shipping", "mobile", "outcome"] },
       { text: "Built an internal influencer-batching tool that halved deal closure time and handled 100+ influencer contracts.", tags: ["b2b", "engineering", "outcome"] },
       { text: "Promoted to Director of Design: led a team of three, shaped the roadmap with leadership, and pitched investors directly. Hush was acquired.", tags: ["leadership", "outcome"] },
