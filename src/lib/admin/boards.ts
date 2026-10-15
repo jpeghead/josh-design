@@ -26,10 +26,20 @@ function text(html: string): string {
     .trim();
 }
 
-function make(p: Omit<Posting, "tier" | "score" | "scoreWhy" | "scoredBy" | "persona" | "status" | "firstSeen" | "lastSeen">): Posting {
+/** A pay range stated in the posting text: "$180,000 - $250,000", "$170K – $295K", "USD 150,000 to 200,000". */
+export function payInText(text: string): string | undefined {
+  const m = text.match(/(?:\$|USD\s?)\s?(\d{2,3}(?:,\d{3})?K?)\s?(?:-|–|—|to)\s?(?:\$|USD\s?)?\s?(\d{2,3}(?:,\d{3})?K?)/i);
+  if (!m) return undefined;
+  const n = (x: string) => (/k$/i.test(x) ? Number(x.replace(/k/i, "")) * 1000 : Number(x.replace(/,/g, "")));
+  const [a, b] = [n(m[1]), n(m[2])];
+  if (!(a >= 40000 && b >= a && b <= 2000000)) return undefined;
+  return `$${Math.round(a / 1000)}K – $${Math.round(b / 1000)}K`;
+}
+
+function make(p: Omit<Posting, "tier" | "score" | "scoreWhy" | "scoredBy" | "persona" | "status" | "firstSeen" | "lastSeen" | "ai">): Posting {
   const now = new Date().toISOString();
   const rs = ruleScore(p.title, p.description, p.location, p.remote);
-  return { ...p, tier: tier(p.title), score: rs.score, scoreWhy: rs.why, scoredBy: "rules", persona: rs.persona, ai: rs.ai, status: "new", firstSeen: now, lastSeen: now };
+  return { ...p, pay: p.pay ?? payInText(p.description), tier: tier(p.title), score: rs.score, scoreWhy: rs.why, scoredBy: "rules", persona: rs.persona, ai: rs.ai, status: "new", firstSeen: now, lastSeen: now };
 }
 
 export async function greenhouse(c: Company): Promise<Posting[]> {
@@ -55,7 +65,7 @@ export async function greenhouse(c: Company): Promise<Posting[]> {
 export async function ashby(c: Company): Promise<Posting[]> {
   const r = await get(`https://api.ashbyhq.com/posting-api/job-board/${c.slug}?includeCompensation=true`);
   if (!r.ok) throw new Error(`ashby ${c.slug} ${r.status}`);
-  const j = (await r.json()) as { jobs: { id: string; title: string; location?: string; isRemote?: boolean; jobUrl: string; applyUrl: string; descriptionPlain?: string; descriptionHtml?: string; publishedAt?: string; isListed?: boolean }[] };
+  const j = (await r.json()) as { jobs: { id: string; title: string; location?: string; isRemote?: boolean; jobUrl: string; applyUrl: string; descriptionPlain?: string; descriptionHtml?: string; publishedAt?: string; isListed?: boolean; compensation?: { scrapeableCompensationSalarySummary?: string; compensationTierSummary?: string } }[] };
   return j.jobs
     .filter((x) => x.isListed !== false)
     .map((x) =>
@@ -70,6 +80,10 @@ export async function ashby(c: Company): Promise<Posting[]> {
         applyUrl: x.applyUrl ?? x.jobUrl,
         description: (x.descriptionPlain ?? text(x.descriptionHtml ?? "")).slice(0, 12000),
         postedAt: x.publishedAt ?? null,
+        pay: (() => {
+          const raw = x.compensation?.scrapeableCompensationSalarySummary ?? x.compensation?.compensationTierSummary?.split("•")[0]?.trim();
+          return raw ? (payInText(raw) ?? raw) : undefined;
+        })(),
       })
     );
 }
@@ -77,7 +91,7 @@ export async function ashby(c: Company): Promise<Posting[]> {
 export async function lever(c: Company): Promise<Posting[]> {
   const r = await get(`https://api.lever.co/v0/postings/${c.slug}?mode=json`);
   if (!r.ok) throw new Error(`lever ${c.slug} ${r.status}`);
-  const j = (await r.json()) as { id: string; text: string; hostedUrl: string; applyUrl: string; categories?: { location?: string; commitment?: string }; workplaceType?: string; descriptionPlain?: string; createdAt?: number }[];
+  const j = (await r.json()) as { id: string; text: string; hostedUrl: string; applyUrl: string; categories?: { location?: string; commitment?: string }; workplaceType?: string; descriptionPlain?: string; createdAt?: number; salaryRange?: { min?: number; max?: number; currency?: string } }[];
   return j.map((x) =>
     make({
       id: `lv_${c.slug}_${x.id}`,
@@ -90,6 +104,7 @@ export async function lever(c: Company): Promise<Posting[]> {
       applyUrl: x.applyUrl ?? x.hostedUrl,
       description: (x.descriptionPlain ?? "").slice(0, 12000),
       postedAt: x.createdAt ? new Date(x.createdAt).toISOString() : null,
+      pay: x.salaryRange?.min && x.salaryRange?.max ? `${x.salaryRange.currency === "USD" || !x.salaryRange.currency ? "$" : `${x.salaryRange.currency} `}${Math.round(x.salaryRange.min / 1000)}K – $${Math.round(x.salaryRange.max / 1000)}K` : undefined,
     })
   );
 }

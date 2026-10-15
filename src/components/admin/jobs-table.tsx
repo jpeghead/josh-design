@@ -121,12 +121,15 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
                 {p.score}
               </span>
               <div className="min-w-0">
-                <button type="button" onClick={() => setOpen(open === p.id ? null : p.id)} className="text-left text-[15px] text-fg hover:underline">
+                <a href={`/admin/jobs/${encodeURIComponent(p.id)}`} className="text-left text-[15px] text-fg hover:underline">
                   {p.title}
+                </a>
+                <button type="button" onClick={() => setOpen(open === p.id ? null : p.id)} className="ml-2 text-xs text-fg-3 hover:text-fg" aria-label="Show the score reason and posting">
+                  {open === p.id ? "less" : "more"}
                 </button>
                 <span className="text-[15px] text-fg-2"> · {p.company}</span>
                 <p className="text-xs text-fg-3">
-                  {p.location || "location not stated"} · {p.tier} · {p.persona === "ai-builder" ? "AI builder résumé" : "Designer-who-builds résumé"} · {p.source} · scored by {p.scoredBy}
+                  {p.location || "location not stated"}{p.pay ? <span className="text-fg-2"> · {p.pay}</span> : ""} · {p.tier} · {p.persona === "ai-builder" ? "AI builder résumé" : "Designer-who-builds résumé"} · {p.source} · scored by {p.scoredBy}
                   {p.postedAt ? ` · posted ${new Date(p.postedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
                   {Date.now() - new Date(p.firstSeen).getTime() < 7 * 86400000 ? <span className="text-fg-2"> · found {new Date(p.firstSeen).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span> : ""}
                 </p>

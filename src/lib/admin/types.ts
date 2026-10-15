@@ -21,6 +21,8 @@ export type Posting = {
   scoredBy: "rules" | "claude";
   /** AI words in the title and description; 3 or more means AI is the job. */
   ai?: number;
+  /** Published pay range, as the board states it ("$170K – $295K"), or found in the text. */
+  pay?: string;
   persona: "designer-who-builds" | "ai-builder";
   status: "new" | "saved" | "hidden" | "applied";
   notes?: string;

@@ -27,7 +27,15 @@ export function coverage(data: ResumeData, keywords: string[]): { covered: strin
   const text = renderResumeText(data).toLowerCase();
   const covered: string[] = [];
   const missing: string[] = [];
-  for (const k of keywords) (text.includes(k.toLowerCase()) ? covered : missing).push(k);
+  const stem = (w: string) => w.replace(/(ies|es|s|ing|ed)$/, "");
+  const words = new Set(text.split(/[^a-z0-9+#.]+/).map(stem).filter((w) => w.length > 2));
+  for (const k of keywords) {
+    const key = k.toLowerCase();
+    // exact phrase, else every significant word of the term (parentheticals aside), the way semantic screeners credit it
+    const parts = key.replace(/\(.*?\)/g, "").split(/[^a-z0-9+#.]+/).map(stem).filter((w) => w.length > 2 && !["and", "the", "for", "with"].includes(w));
+    const hit = text.includes(key) || (parts.length > 0 && parts.every((w) => words.has(w)));
+    (hit ? covered : missing).push(k);
+  }
   return { covered, missing };
 }
 
