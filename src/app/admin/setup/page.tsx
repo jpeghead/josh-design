@@ -5,11 +5,16 @@ import { getProfile } from "@/lib/admin/resume/profile";
 import { ProfileEditor } from "@/components/admin/profile-editor";
 import { AddCompany } from "@/components/admin/add-company";
 import { AnswersForm } from "@/components/admin/answers-form";
+import { CompaniesTable } from "@/components/admin/companies-table";
+import type { Posting } from "@/lib/admin/types";
 
 export const dynamic = "force-dynamic";
 
 export default function Setup() {
   const companies = readJson<Company[]>("companies", []);
+  const jobs = readJson<Posting[]>("jobs", []);
+  const kept = new Map<string, number>();
+  for (const j of jobs) kept.set(j.company.toLowerCase(), (kept.get(j.company.toLowerCase()) ?? 0) + 1);
   const profile = getProfile();
   const hasKey = anthropicConfigured();
   return (
@@ -29,6 +34,7 @@ export default function Setup() {
       </dl>
       <AnswersForm profile={profile} />
       <AddCompany />
+      <CompaniesTable rows={companies.map((c) => ({ name: c.name, source: c.source, slug: c.slug, watch: !!c.watch, kept: kept.get(c.name.toLowerCase()) ?? 0 }))} />
       <ProfileEditor initial={profile} />
     </div>
   );

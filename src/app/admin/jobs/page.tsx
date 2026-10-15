@@ -28,7 +28,8 @@ export default async function JobsList({ searchParams }: { searchParams: Promise
   ));
   const sort = sp.sort === "newest" ? "newest" : sp.sort === "pay" ? "pay" : "score";
   const payNum = (x?: string) => (x ? Number((x.match(/\$(\d+)K/g) ?? []).map((m) => m.replace(/\D/g, "")).pop() ?? 0) : 0);
-  rows.sort((a, b) => (sort === "newest" ? Date.parse(b.firstSeen) - Date.parse(a.firstSeen) : sort === "pay" ? payNum(b.pay) - payNum(a.pay) : b.score - a.score));
+  const when = (p: { postedAt: string | null; firstSeen: string }) => Date.parse(p.postedAt ?? p.firstSeen) || Date.parse(p.firstSeen);
+  rows.sort((a, b) => (sort === "newest" ? when(b) - when(a) : sort === "pay" ? payNum(b.pay) - payNum(a.pay) : b.score - a.score));
   const counts = { ai: all.filter((p) => p.status === "new" && (p.ai ?? 0) >= 3).length, fresh: all.filter((p) => p.status === "new" && new Date(p.firstSeen).getTime() >= weekAgo).length, new: all.filter((p) => p.status === "new").length, saved: all.filter((p) => p.status === "saved").length, applied: all.filter((p) => p.status === "applied").length, hidden: all.filter((p) => p.status === "hidden").length };
   return (
     <div>

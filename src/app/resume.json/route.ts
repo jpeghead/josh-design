@@ -2,6 +2,7 @@ import { resume } from "@/content/resume";
 import { socials } from "@/content/about";
 import { projects } from "@/lib/data";
 import { books } from "@/content/books";
+import { RECORD, SKILLS_EXTRA } from "@/lib/admin/resume/record";
 
 const MONTHS: Record<string, string> = { Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06", Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12" };
 
@@ -38,11 +39,11 @@ export function GET() {
         startDate,
         endDate,
         summary: p.summary,
-        highlights: [...p.contribution, ...p.outcome],
+        highlights: RECORD[p.context]?.bullets.map((b) => b.text) ?? [...p.contribution, ...p.outcome],
         url: `${resume.site}/work/${p.slug}`,
       };
     }),
-    skills: Object.entries(resume.skills).map(([name, keywords]) => ({ name, keywords })),
+    skills: Object.entries(resume.skills).map(([name, keywords]) => ({ name, keywords: [...keywords, ...(SKILLS_EXTRA[name] ?? [])] })),
     publications: books
       .filter((b) => b.status !== "In progress")
       .map((b) => ({ name: b.subtitle ? `${b.title}: ${b.subtitle}` : b.title, releaseDate: b.year, url: b.site ?? b.link?.href, summary: b.blurb })),

@@ -3,6 +3,7 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { toPdf } from "./export";
+import { resumeFontCss } from "./fonts";
 import { renderResumeHtml } from "./render";
 import type { Resume } from "./types";
 
@@ -34,4 +35,30 @@ export async function resumePages(r: Resume): Promise<{ dir: string; count: numb
 export function pagePng(dir: string, n: number): Buffer | null {
   const f = join(dir, `page-${n}.png`);
   return existsSync(f) ? readFileSync(f) : null;
+}
+
+/**
+ * A small first-page image of this résumé in a given template, for the
+ * picker. Rendered straight from HTML (no save), cached by content hash.
+ */
+export async function thumbnail(r: Resume, template: string): Promise<Buffer> {
+  const html = renderResumeHtml(r.data, { fontCss: resumeFontCss(), template });
+  const hash = createHash("sha1").update(html).digest("hex").slice(0, 10);
+  const dir = join(dirname(await toPdf(r)), "thumbs");
+  const file = join(dir, `${template}-${hash}.png`);
+  if (existsSync(file)) return readFileSync(file);
+  execFileSync("mkdir", ["-p", dir]);
+  const { chromium } = await import("playwright");
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "load" });
+    const pdf = join(dir, `${template}-${hash}.pdf`);
+    await page.pdf({ path: pdf, format: "Letter", printBackground: true, preferCSSPageSize: true });
+    execFileSync("/opt/homebrew/bin/pdftoppm", ["-png", "-r", "40", "-f", "1", "-l", "1", "-singlefile", pdf, join(dir, `${template}-${hash}`)]);
+    execFileSync("rm", ["-f", pdf]);
+  } finally {
+    await browser.close();
+  }
+  return readFileSync(file);
 }

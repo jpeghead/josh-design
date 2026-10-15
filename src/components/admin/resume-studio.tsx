@@ -234,11 +234,13 @@ export function ResumeStudio(props: { bases?: Record<Persona, Resume>; initial?:
             <span className="text-xs text-fg-3">{tplBusy ? "saving…" : templateById(template).name}</span>
           </div>
           <p className="mt-1 text-xs text-fg-3">Ten settings of the same text, all one column and parser-safe. Click to preview; it is saved to this résumé. Applications rotate through them for the A/B numbers unless you turn that off below.</p>
-          <ul className="mt-3 grid grid-cols-2 gap-1.5">
+          <ul className="mt-3 grid grid-cols-2 gap-2">
             {TEMPLATES.map((t) => (
               <li key={t.id}>
-                <button type="button" onClick={() => chooseTemplate(t.id)} aria-pressed={template === t.id} title={t.blurb} className={`w-full rounded-md border px-2.5 py-1.5 text-left text-[13px] ${template === t.id ? "border-fg bg-fg text-bg" : "border-line text-fg-2 hover:text-fg"}`}>
-                  {t.name}
+                <button type="button" onClick={() => chooseTemplate(t.id)} aria-pressed={template === t.id} title={t.blurb} className={`group w-full rounded-md border p-1 text-left ${template === t.id ? "border-fg" : "border-line hover:border-fg-3"}`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/api/admin/resume/${current.id}/thumb?template=${t.id}&v=${m?.hash ?? "0"}`} alt="" width={340} height={440} loading="lazy" className="aspect-[17/22] w-full rounded-[2px] bg-white object-cover object-top" />
+                  <span className={`mt-1 block px-1 text-[12px] ${template === t.id ? "text-fg" : "text-fg-2 group-hover:text-fg"}`}>{t.name}</span>
                 </button>
               </li>
             ))}
