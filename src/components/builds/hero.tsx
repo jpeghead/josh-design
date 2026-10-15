@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { LifeParticles, STAGES } from "./life-particles";
+import dynamic from "next/dynamic";
+import { STAGES } from "./life-particles";
+const LifeParticles = dynamic(() => import("./life-particles").then((m) => m.LifeParticles), { ssr: false });
 
 /**
  * The first screen is a build, and scroll conducts it: the hero is tall,

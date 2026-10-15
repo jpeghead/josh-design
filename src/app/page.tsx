@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Container, Label, Arrow } from "@/components/ui";
 import { Reveal } from "@/components/motion";
-import { LifeParticles } from "@/components/builds/life-particles";
+import { ParticlesMount } from "@/components/builds/particles-mount";
 import { lab, REPO } from "@/content/lab";
 import { now } from "@/content/now";
 import { portedEssays } from "@/content/writing";
@@ -77,7 +77,7 @@ export default async function Home() {
     <>
       <section className="relative isolate overflow-hidden" aria-label="Introduction">
         <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[52%] lg:block">
-          <LifeParticles />
+          <ParticlesMount />
           <div className="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-transparent" />
         </div>
         <Container wide className="relative pb-24 pt-28 sm:pt-36">
