@@ -6,7 +6,7 @@
  * this tab; nothing is uploaded. The portrait is written from the numbers.
  */
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { parseExport, type Source } from "@/lib/olo/parse";
 import { analyze, portrait, sampleConversations, type Stats } from "@/lib/olo/analyze";
 
@@ -81,6 +81,9 @@ export function OloApp() {
     const stats = analyze(sampleConversations());
     setState({ kind: "done", stats, source: "sample", lines: portrait(stats) });
   }, []);
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("sample")) sample();
+  }, [sample]);
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();

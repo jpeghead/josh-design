@@ -26,7 +26,7 @@ export const lab: LabEntry[] = [
     built: "TypeScript · parsers for ChatGPT and Claude exports · local analysis · no server",
     when: "October 2026",
     href: "/lab/portrait",
-    image: "/img/lab/olo.jpg",
+    image: "/img/lab/portrait.jpg",
     aspect: "16 / 10",
     live: true,
   },

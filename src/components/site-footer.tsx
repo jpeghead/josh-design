@@ -37,6 +37,9 @@ export function SiteFooter({ invite = true }: { invite?: boolean }) {
           <Link href="/log" className="transition-colors hover:text-fg">
             Build log
           </Link>
+          <a href="/feed.xml" className="transition-colors hover:text-fg">
+            RSS
+          </a>
           {REPO.isPublic && (
             <a href={REPO.url} target="_blank" rel="me noreferrer" className="transition-colors hover:text-fg">
               GitHub

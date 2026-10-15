@@ -12,6 +12,7 @@ const serif = Instrument_Serif({ variable: "--font-instrument", subsets: ["latin
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://josh.design"),
+  alternates: { types: { "application/rss+xml": "/feed.xml" } },
   title: {
     default: "Josh Whitehead — designer who builds AI products",
     template: "%s — Josh Whitehead",

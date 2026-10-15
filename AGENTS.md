@@ -15,7 +15,8 @@
 > and link out. Re-read the live sites before changing those entries.
 > `/log` lists the repo's commits live from the GitHub API (ISR, fails soft).
 > Machine layer: `/resume`, JSON-LD in `components/json-ld.tsx`,
-> `app/opengraph-image.tsx`, `public/llms.txt`, AI-open `robots.ts`.
+> `app/opengraph-image.tsx` (Instrument Serif + Geist TTFs in `app/fonts`),
+> `app/feed.xml` (RSS of the essays), `public/llms.txt`, AI-open `robots.ts`.
 > Open-source spin-offs live in `jpeghead/agent-ui-patterns` and
 > `jpeghead/local-grounded-chat` (MIT); keep them in sync by hand.
 > Routes in `src/app/*`, primitives in `src/components/ui.tsx` + `motion.tsx`

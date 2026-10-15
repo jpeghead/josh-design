@@ -10,6 +10,7 @@
 - [Products](https://josh.design/products): OLO (olomode.com), Weaver (useweaver.app), StoryMode (playstorymode.app), SignalScan (in development), Xenomorph typeface.
 - [Writing](https://josh.design/writing): build logs and essays.
 - [Build log](https://josh.design/log): every commit to this site, live from GitHub.
+- [RSS](https://josh.design/feed.xml): the essays, full text.
 - [About](https://josh.design/about): the story and the principles.
 - Contact: josh@josh.design
 
