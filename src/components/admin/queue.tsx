@@ -23,7 +23,7 @@ export function Queue({ initial, snapshot }: { initial: Application[]; snapshot:
       const [r, q] = await Promise.all([fetch("/api/admin/apply", { cache: "no-store" }), fetch("/api/admin/apply/batch", { cache: "no-store" })]);
       if (!r.ok || stop) return;
       const all = (await r.json()) as Application[];
-      setApps(all.filter((a) => a.headless && ["queued", "starting", "filling", "review", "needs-you", "submitting"].includes(a.status)));
+      setApps(all.filter((a) => a.headless && ["queued", "starting", "filling", "review", "needs-you", "submitting", "failed"].includes(a.status)));
       if (q.ok) setSnap(await q.json());
     };
     const iv = setInterval(tick, 3000);
@@ -49,7 +49,16 @@ export function Queue({ initial, snapshot }: { initial: Application[]; snapshot:
   }, [apps, a?.id]);
   useEffect(() => setEdits({}), [a?.id]);
   const ready = apps.filter((x) => READY.has(x.status));
-  const pending = apps.filter((x) => !READY.has(x.status));
+  const failed = apps.filter((x) => x.status === "failed");
+  const pending = apps.filter((x) => !READY.has(x.status) && x.status !== "failed");
+  const retry = async (x: Application) => {
+    setBusy("retry");
+    await fetch(`/api/admin/apply/${x.id}`, { method: "DELETE" });
+    const r = await fetch("/api/admin/apply/batch", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobIds: [x.jobId] }) });
+    const j = await r.json();
+    setSel(j.ids?.[0] ?? null);
+    setBusy(null);
+  };
 
   const act = async (what: "submit" | "stop") => {
     if (!a) return;
@@ -141,6 +150,21 @@ export function Queue({ initial, snapshot }: { initial: Application[]; snapshot:
             </ul>
           </section>
         )}
+        {failed.length > 0 && (
+          <section>
+            <h2 className="text-xs uppercase tracking-[0.14em] text-fg-3">Failed</h2>
+            <ul className="mt-2 space-y-1">
+              {failed.map((x) => (
+                <li key={x.id}>
+                  <button type="button" onClick={() => setSel(x.id)} className={`w-full rounded-md px-2 py-1.5 text-left text-[13px] ${a?.id === x.id ? "bg-fill text-fg" : "text-fg-2 hover:text-fg"}`}>
+                    <span className="block truncate">{x.title}</span>
+                    <span className="block truncate text-xs text-red-300/90">{x.company} · {(x.message ?? "failed").slice(0, 60)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         {apps.length === 0 && <p className="text-sm text-fg-3">Nothing queued. Tick postings on the Jobs page and press Prepare.</p>}
       </aside>
 
@@ -161,6 +185,9 @@ export function Queue({ initial, snapshot }: { initial: Application[]; snapshot:
               <button type="button" disabled={!!busy || !READY.has(a.status) || Object.keys(edits).length > 0} onClick={() => act("submit")} title={Object.keys(edits).length ? "Save your edits first" : needs ? "Fields still need you" : "Send this application"} className="rounded-full bg-fg px-4 py-1.5 text-[13px] font-medium text-bg disabled:opacity-50">
                 {busy === "submit" ? "Submitting…" : "Submit"}
               </button>
+              {a.status === "failed" && (
+                <button type="button" disabled={!!busy} onClick={() => retry(a)} className="rounded-full border border-line px-3 py-1.5 text-[13px] text-fg-2 hover:text-fg disabled:opacity-50">{busy === "retry" ? "Queuing…" : "Try again"}</button>
+              )}
               <button type="button" disabled={!!busy} onClick={openVisibly} className="rounded-full border border-line px-3 py-1.5 text-[13px] text-fg-2 hover:text-fg disabled:opacity-50">Open visibly</button>
               <button type="button" disabled={!!busy} onClick={() => act("stop")} className="rounded-full border border-line px-3 py-1.5 text-[13px] text-fg-2 hover:text-fg disabled:opacity-50">Drop</button>
               <a href={a.url} target="_blank" rel="noreferrer" className="text-[13px] text-fg-3 hover:text-fg">posting ↗</a>

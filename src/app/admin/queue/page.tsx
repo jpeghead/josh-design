@@ -8,6 +8,6 @@ export const dynamic = "force-dynamic";
 export default async function QueuePage() {
   reconcile();
   void kick();
-  const apps = listApplications().filter((a) => a.headless && ["queued", "starting", "filling", "review", "needs-you", "submitting"].includes(a.status));
+  const apps = listApplications().filter((a) => a.headless && ["queued", "starting", "filling", "review", "needs-you", "submitting", "failed"].includes(a.status));
   return <Queue initial={apps} snapshot={queueSnapshot()} />;
 }

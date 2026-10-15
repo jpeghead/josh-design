@@ -17,6 +17,7 @@ type Props = {
   lastScan: { at: string; added: number; errors: number } | null;
   counts: { kept: number; scored: number; saved: number };
   week: { prepared: number; submitted: number; replies: number; interviews: number };
+  model: { ok: boolean; mode: string; error?: string };
 };
 
 export function Today(p: Props) {
@@ -65,6 +66,12 @@ export function Today(p: Props) {
           </p>
         </div>
 
+        {!p.model.ok && (
+          <section className="rounded-xl border border-red-400/30 bg-red-400/5 p-4 text-sm">
+            <p className="text-red-200">Claude is not reachable, so scoring, tailoring, briefs, cover letters, and drafted answers are off until it is.</p>
+            <p className="mt-1 text-xs text-fg-3">{p.model.mode === "federation" ? "The Vercel identity token could not be exchanged. The helper refreshes it itself while the Vercel CLI is signed in, so run `vercel login` in the project folder, then reload." : "Set the federation variables or a key in .env.local."}{p.model.error ? ` · ${p.model.error}` : ""}</p>
+          </section>
+        )}
         <section className="flex flex-wrap gap-x-8 gap-y-2 text-[13px] text-fg-2">
           <span><span className="tabular-nums text-fg">{p.week.prepared}</span> prepared this week</span>
           <span><span className="tabular-nums text-fg">{p.week.submitted}</span> submitted</span>

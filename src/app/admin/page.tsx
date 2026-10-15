@@ -4,6 +4,7 @@ import type { Company, Posting, ScanRun } from "@/lib/admin/types";
 import { listApplications } from "@/lib/admin/apply/store";
 import { kick, queueSnapshot, reconcile } from "@/lib/admin/apply/queue";
 import { lastVisit, markVisit } from "@/lib/admin/visits";
+import { anthropicHealth } from "@/lib/anthropic";
 import { Today } from "@/components/admin/today";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ export default async function TodayPage() {
   reconcile();
   void kick();
   const since = lastVisit();
+  const model = await anthropicHealth();
   const sinceMs = since ? Date.parse(since) : Date.now() - 7 * 86400000;
   const jobs = readJson<Posting[]>("jobs", []);
   const companies = readJson<Company[]>("companies", []);
@@ -47,6 +49,7 @@ export default async function TodayPage() {
       lastScan={runs[0] ? { at: runs[0].at, added: runs[0].added, errors: runs[0].errors.length } : null}
       counts={{ kept: jobs.length, scored: jobs.filter((p) => p.scoredBy === "claude").length, saved: jobs.filter((p) => p.status === "saved").length }}
       week={week}
+      model={model}
     />
   );
 }

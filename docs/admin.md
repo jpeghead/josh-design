@@ -123,6 +123,12 @@ same faces and the run's template, as `Josh-Whitehead-Cover-Letter-Company.pdf`.
 Every scan first snapshots the JSON files to `data/admin/backups/<day>`
 (seven days kept).
 
+A note on the token: `VERCEL_OIDC_TOKEN` in `.env.local` expires after
+twelve hours, but `@vercel/oidc` 4 refreshes it itself while the Vercel CLI
+is signed in, which is why the model kept working all day on a token that
+had expired at noon. Today checks reachability on load and shows a red
+banner with the fix when the exchange fails.
+
 A note on the dev server: Turbopack sometimes keeps a stale copy of a
 `lib/admin` module after an edit ("x is not a function" from a route that
 imports it). Restart `npm run dev`; it is not a code bug.

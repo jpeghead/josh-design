@@ -77,3 +77,31 @@ export function anthropicClient(req?: Request): Anthropic {
   });
   return new Anthropic({ credentials: cached(provider), baseURL: BASE });
 }
+
+/**
+ * Can this process reach Claude right now? For federation, mints (or reuses)
+ * the access token; for a key, trusts it. Cheap enough for a page load:
+ * the token is cached for an hour.
+ */
+export async function anthropicHealth(req?: Request): Promise<{ ok: boolean; mode: ReturnType<typeof anthropicMode>; error?: string }> {
+  const mode = anthropicMode();
+  if (mode === "off") return { ok: false, mode, error: "No federation variables and no key." };
+  if (mode === "api-key") return { ok: true, mode };
+  try {
+    const fed = federationEnv()!;
+    const headerToken = req?.headers.get("x-vercel-oidc-token") ?? undefined;
+    const provider = oidcFederationProvider({
+      identityTokenProvider: async () => headerToken ?? (await getVercelOidcToken()),
+      federationRuleId: fed.ruleId,
+      organizationId: fed.organizationId,
+      serviceAccountId: fed.serviceAccountId,
+      workspaceId: fed.workspaceId,
+      baseURL: BASE,
+      fetch: globalThis.fetch,
+    });
+    await cached(provider)({});
+    return { ok: true, mode };
+  } catch (e) {
+    return { ok: false, mode, error: (e as Error).message.slice(0, 200) };
+  }
+}
