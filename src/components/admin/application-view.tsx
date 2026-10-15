@@ -61,6 +61,9 @@ export function ApplicationView({ initial }: { initial: Application }) {
           <a href={a.url} target="_blank" rel="noreferrer" className="rounded-full border border-line px-4 py-1.5 text-[13px] text-fg-2 hover:text-fg">
             Open the form ↗
           </a>
+          <Link href={`/admin/jobs/${encodeURIComponent(a.jobId)}/brief`} className="rounded-full border border-line px-4 py-1.5 text-[13px] text-fg-2 hover:text-fg">
+            Interview brief
+          </Link>
           {a.coverLetter && (
             <a href={`/api/admin/file?name=${encodeURIComponent(a.coverLetter.split("/").pop() ?? "")}`} target="_blank" rel="noreferrer" className="rounded-full border border-line px-4 py-1.5 text-[13px] text-fg-2 hover:text-fg">
               Cover letter PDF ↗

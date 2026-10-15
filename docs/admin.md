@@ -82,6 +82,13 @@ data/admin/               companies.json, jobs.json, profile.json,
   submitted | failed | stopped`), steps[], screenshots[], answers{},
   startedAt, finishedAt, error.
 
+## Freshness
+
+The jobs page runs one scan on load when the last scan is more than twelve
+hours old, so there is no scheduler to keep alive. Workable rate-limits by
+IP and a 429 can last well over an hour; the fetch helper retries once, and
+failed boards are listed under the scan summary and picked up next time.
+
 ## Adding companies
 
 Setup → "Add a company": type a name or careers URL; `lib/admin/discover.ts`

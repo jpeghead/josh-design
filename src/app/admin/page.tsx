@@ -34,7 +34,7 @@ export default async function Jobs({ searchParams }: { searchParams: Promise<{ s
           </p>
         </div>
       </div>
-      <JobsTable rows={rows} counts={counts} filters={{ status, tier, min, q: sp.q ?? "", fresh }} errors={runs[0]?.errors ?? []} />
+      <JobsTable rows={rows} counts={counts} filters={{ status, tier, min, q: sp.q ?? "", fresh }} errors={runs[0]?.errors ?? []} lastScanAt={runs[0]?.at ?? null} />
     </div>
   );
 }

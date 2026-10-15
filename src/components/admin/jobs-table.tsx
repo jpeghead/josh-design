@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import type { Posting } from "@/lib/admin/types";
 
 type Filters = { status: string; tier: string; min: number; q: string; fresh: boolean };
 
-export function JobsTable({ rows, counts, filters, errors }: { rows: Posting[]; counts: Record<string, number>; filters: Filters; errors: string[] }) {
+export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows: Posting[]; counts: Record<string, number>; filters: Filters; errors: string[]; lastScanAt: string | null }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [scanning, setScanning] = useState(false);
@@ -18,9 +18,9 @@ export function JobsTable({ rows, counts, filters, errors }: { rows: Posting[]; 
     const p = new URLSearchParams({ status: f.status, tier: f.tier, min: String(f.min), q: f.q, fresh: f.fresh ? "1" : "0" });
     start(() => router.push(`/admin?${p}`));
   };
-  const scan = async () => {
+  const scan = async (auto = false) => {
     setScanning(true);
-    setMsg(null);
+    setMsg(auto ? "Last scan was over twelve hours ago; scanning the boards now." : null);
     try {
       const r = await fetch("/api/admin/scan", { method: "POST" });
       const j = await r.json();
@@ -48,6 +48,16 @@ export function JobsTable({ rows, counts, filters, errors }: { rows: Posting[]; 
       setScanning(false);
     }
   };
+
+  // Keep the list fresh without a scheduler: one scan per page load when the last one is stale.
+  const autoRan = useRef(false);
+  useEffect(() => {
+    if (autoRan.current) return;
+    autoRan.current = true;
+    const stale = !lastScanAt || Date.now() - new Date(lastScanAt).getTime() > 12 * 3600000;
+    if (stale) void scan(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const sel = "rounded-full border border-line bg-transparent px-3 py-1 text-[13px] text-fg-2 hover:text-fg";
   return (
@@ -82,7 +92,7 @@ export function JobsTable({ rows, counts, filters, errors }: { rows: Posting[]; 
         <button type="button" onClick={score} disabled={scanning} className="rounded-full border border-line px-3 py-1 text-[13px] text-fg-2 hover:text-fg disabled:opacity-50">
           Score with Claude
         </button>
-        <button type="button" onClick={scan} disabled={scanning} className="rounded-full bg-fg px-4 py-1.5 text-[13px] font-medium text-bg disabled:opacity-50">
+        <button type="button" onClick={() => scan()} disabled={scanning} className="rounded-full bg-fg px-4 py-1.5 text-[13px] font-medium text-bg disabled:opacity-50">
           {scanning ? "Working…" : "Scan boards"}
         </button>
       </div>
