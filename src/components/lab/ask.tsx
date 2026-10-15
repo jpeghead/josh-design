@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Cited } from "./cited";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -96,7 +97,7 @@ export function Ask() {
             <li key={i} className={m.role === "user" ? "text-fg" : "text-fg-2"}>
               <span className="block text-xs text-fg-3">{m.role === "user" ? "You" : "Claude"}</span>
               <p className="mt-1 whitespace-pre-wrap text-[15px] leading-relaxed">
-                {m.content || <span className="inline-block h-4 w-2 animate-pulse rounded-sm bg-fg-3/60 align-middle" aria-label="thinking" />}
+                {m.content ? m.role === "assistant" ? <Cited text={m.content} /> : m.content : <span className="inline-block h-4 w-2 animate-pulse rounded-sm bg-fg-3/60 align-middle" aria-label="thinking" />}
               </p>
             </li>
           ))}

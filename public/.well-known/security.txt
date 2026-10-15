@@ -1,0 +1,5 @@
+Contact: mailto:josh@josh.design
+Expires: 2027-12-31T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://josh.design/.well-known/security.txt
+Policy: https://github.com/jpeghead/josh-design
