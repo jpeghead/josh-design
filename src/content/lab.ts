@@ -48,10 +48,10 @@ export const lab: LabEntry[] = [
     title: "A life in particles",
     kind: "Interactive",
     blurb:
-      "The hero of this site: four photographs of my life sampled into 65,536 GPU particles that morph from the school photo to the Marine to the shipped product to the city built with an agent. Two custom shaders, one draw call, pointer physics.",
+      "Four photographs of my life sampled into 65,536 GPU particles that morph from the school photo to the Marine to the shipped product to the city built with an agent. Two custom shaders, one draw call, pointer physics.",
     built: "Three.js · GLSL · React Three Fiber · no library effects",
     when: "October 2026",
-    href: "/#top",
+    href: "/lab/particles",
     image: "/img/lab/particles.jpg",
     aspect: "16 / 10",
   },

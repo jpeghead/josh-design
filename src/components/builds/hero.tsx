@@ -17,7 +17,7 @@ const LINES = [
   { era: "Now", head: "Designer who builds. Agents in the loop, a person at the wheel.", sub: "I design and ship AI products end to end. The builds below run." },
 ];
 
-export function Hero() {
+export function Hero({ buildsHref = "#builds" }: { buildsHref?: string }) {
   const [stage, setStage] = useState(0);
   const progress = useRef(0);
   const section = useRef<HTMLElement>(null);
@@ -57,7 +57,7 @@ export function Hero() {
           <p className="mt-5 max-w-xl text-lg text-fg-2 text-pretty sm:text-xl">{line.sub}</p>
           <div className="mt-8 flex flex-wrap items-end justify-between gap-6">
             <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-              <Link href="#builds" className="group inline-flex items-center gap-2 rounded-full bg-fg px-5 py-2.5 text-[15px] font-medium text-bg transition-opacity hover:opacity-85">
+              <Link href={buildsHref} className="group inline-flex items-center gap-2 rounded-full bg-fg px-5 py-2.5 text-[15px] font-medium text-bg transition-opacity hover:opacity-85">
                 {stage >= 3 || reduce ? "See the builds" : "Skip to the builds"}
                 <span aria-hidden className="transition-transform duration-300 group-hover:translate-y-0.5">↓</span>
               </Link>
