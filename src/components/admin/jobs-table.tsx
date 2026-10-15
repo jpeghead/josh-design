@@ -17,6 +17,13 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
   const [open, setOpen] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set());
+  const prepareOne = async (id: string) => {
+    setScanning(true);
+    const r = await fetch("/api/admin/apply/batch", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobIds: [id] }) });
+    setScanning(false);
+    if (r.ok) router.push("/admin/queue");
+    else setMsg(`Could not queue (${r.status}).`);
+  };
   const prepare = async () => {
     if (!picked.size) return;
     setScanning(true);
@@ -260,9 +267,9 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
                 <a href={`/admin/jobs/${encodeURIComponent(p.id)}/brief`} className="rounded-full border border-line px-3 py-1 text-fg-2 hover:text-fg">
                   Brief
                 </a>
-                <a href={`/admin/apply?job=${encodeURIComponent(p.id)}`} className="rounded-full bg-fg px-3 py-1 font-medium text-bg">
-                  Apply
-                </a>
+                <button type="button" onClick={() => prepareOne(p.id)} disabled={scanning} className="rounded-full bg-fg px-3 py-1 font-medium text-bg disabled:opacity-50" title="Fill this application in the background; review it in the queue">
+                  Prepare
+                </button>
                 {p.status !== "hidden" && (
                   <button type="button" onClick={() => update(p.id, "hidden")} className="rounded-full px-2 py-1 text-fg-3 hover:text-fg" aria-label="Hide">
                     ×

@@ -24,6 +24,15 @@ export function enqueue(jobIds: string[]): string[] {
   for (const id of jobIds) {
     const job = jobs.find((j) => j.id === id);
     if (!job) continue;
+    if (job.source === "hn") {
+      // a Who-is-hiring comment points at an email or an arbitrary site; there is no board form to fill
+      const app = newApplication({ jobId: job.id, company: job.company, title: job.title, url: job.applyUrl, resumeId: currentBase(job.persona).id, autoSubmit: false, headless: true });
+      app.status = "needs-you";
+      app.message = `This one came from Hacker News, so there is no board form. Apply at ${job.applyUrl} with the tailored résumé from the job page.`;
+      saveApplication(app);
+      ids.push(app.id);
+      continue;
+    }
     const open = listApplications().find((a) => a.jobId === id && ["queued", "starting", "filling", "review", "needs-you"].includes(a.status));
     if (open) {
       ids.push(open.id);

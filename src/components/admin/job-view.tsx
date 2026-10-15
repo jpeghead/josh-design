@@ -43,6 +43,13 @@ export function JobView({ job, baseId, fit: initialFit, brief, tailored, sameCom
     setBusy(null);
     router.refresh();
   };
+  const prepare = async () => {
+    setBusy("prepare");
+    const r = await fetch("/api/admin/apply/batch", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobIds: [job.id] }) });
+    setBusy(null);
+    if (r.ok) router.push("/admin/queue");
+    else setErr(`Could not queue (${r.status}).`);
+  };
   const tailor = async () => {
     setBusy("tailor");
     setErr(null);
@@ -86,7 +93,10 @@ export function JobView({ job, baseId, fit: initialFit, brief, tailored, sameCom
             </span>
             <button type="button" onClick={() => patch({ status: job.status === "saved" ? "new" : "saved" })} disabled={!!busy} className={pill(job.status === "saved")}>{job.status === "saved" ? "Saved" : "Save"}</button>
             <button type="button" onClick={() => patch({ status: job.status === "hidden" ? "new" : "hidden" })} disabled={!!busy} className={pill(job.status === "hidden")}>{job.status === "hidden" ? "Hidden" : "Hide"}</button>
-            <Link href={`/admin/apply?job=${encodeURIComponent(job.id)}`} className="rounded-full bg-fg px-4 py-1.5 text-[13px] font-medium text-bg">Apply</Link>
+            <button type="button" onClick={prepare} disabled={!!busy} className="rounded-full bg-fg px-4 py-1.5 text-[13px] font-medium text-bg disabled:opacity-50" title="Fill the application in the background; review it in the queue">
+              {busy === "prepare" ? "Queuing…" : "Prepare"}
+            </button>
+            <Link href={`/admin/apply?job=${encodeURIComponent(job.id)}`} className="rounded-full border border-line px-3 py-1.5 text-[13px] text-fg-2 hover:text-fg" title="Open a browser window you can watch and fill it there">Apply visibly</Link>
           </div>
         </div>
 

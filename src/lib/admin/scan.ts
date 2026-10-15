@@ -1,4 +1,4 @@
-import { readJson, writeJson } from "./store";
+import { readJson, snapshot, writeJson } from "./store";
 import { fetchBoard, hackerNews } from "./boards";
 import type { Company, Posting, ScanRun } from "./types";
 
@@ -9,6 +9,7 @@ import type { Company, Posting, ScanRun } from "./types";
  * fatal.
  */
 export async function runScan(): Promise<ScanRun> {
+  snapshot();
   const companies = readJson<Company[]>("companies", []);
   const existing = readJson<Posting[]>("jobs", []);
   const byId = new Map(existing.map((p) => [p.id, p]));

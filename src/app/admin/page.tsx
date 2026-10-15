@@ -26,6 +26,13 @@ export default async function TodayPage() {
   const today = new Date().toISOString().slice(0, 10);
   const due = apps.filter((a) => a.status === "submitted" && a.nextAction?.date && a.nextAction.date <= today && !["rejected", "withdrawn", "offer"].includes(a.stage ?? ""));
   const waiting = apps.filter((a) => ["review", "needs-you"].includes(a.status));
+  const weekMs = Date.now() - 7 * 86400000;
+  const week = {
+    prepared: apps.filter((a) => Date.parse(a.startedAt) > weekMs && a.status !== "failed").length,
+    submitted: apps.filter((a) => a.submittedAt && Date.parse(a.submittedAt) > weekMs).length,
+    replies: apps.filter((a) => a.stageAt?.replied && Date.parse(a.stageAt.replied) > weekMs).length,
+    interviews: apps.filter((a) => a.stageAt?.interviewing && Date.parse(a.stageAt.interviewing) > weekMs).length,
+  };
   markVisit();
   return (
     <Today
@@ -39,6 +46,7 @@ export default async function TodayPage() {
       companies={companies.map((c) => ({ name: c.name, source: c.source, slug: c.slug, watch: !!c.watch }))}
       lastScan={runs[0] ? { at: runs[0].at, added: runs[0].added, errors: runs[0].errors.length } : null}
       counts={{ kept: jobs.length, scored: jobs.filter((p) => p.scoredBy === "claude").length, saved: jobs.filter((p) => p.status === "saved").length }}
+      week={week}
     />
   );
 }

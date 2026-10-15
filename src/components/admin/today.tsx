@@ -16,6 +16,7 @@ type Props = {
   companies: { name: string; source: string; slug: string; watch: boolean }[];
   lastScan: { at: string; added: number; errors: number } | null;
   counts: { kept: number; scored: number; saved: number };
+  week: { prepared: number; submitted: number; replies: number; interviews: number };
 };
 
 export function Today(p: Props) {
@@ -63,6 +64,13 @@ export function Today(p: Props) {
             {msg ? ` · ${msg}` : ""}
           </p>
         </div>
+
+        <section className="flex flex-wrap gap-x-8 gap-y-2 text-[13px] text-fg-2">
+          <span><span className="tabular-nums text-fg">{p.week.prepared}</span> prepared this week</span>
+          <span><span className="tabular-nums text-fg">{p.week.submitted}</span> submitted</span>
+          <span><span className="tabular-nums text-fg">{p.week.replies}</span> replies</span>
+          <span><span className="tabular-nums text-fg">{p.week.interviews}</span> interviews set</span>
+        </section>
 
         {(p.waiting.length > 0 || p.queue.queued + p.queue.preparing > 0) && (
           <section className="rounded-xl border border-amber-300/30 bg-amber-300/5 p-4">
