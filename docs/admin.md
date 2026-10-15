@@ -128,5 +128,12 @@ two systems are a long tail, not a second Greenhouse.
   stripped from labels, X handle from the site's socials, location
   autocomplete and country select filled. Lever's visible hCaptcha is a
   real blocker: tick it in the browser, then Submit from the panel.
+- **Rippling** (Rippling, Product Design Lead): 13 of 16, résumé and cover
+  letter into hidden drop-zone inputs, location picked from the place search,
+  all four self-identification dropdowns set to "Choose not to disclose",
+  text-message consent set to No. Rippling's dropdowns ignore Escape, so the
+  agent now closes any open list before clicking the next control; the first
+  run picked "Female" for Gender because the previous list was still open
+  under the click. Labels come from `<span id="field-N-label">`.
 - Model calls use `thinking: between_tools` so short budgets go to the
   answer; the first cover-letter attempt spent its whole budget thinking.

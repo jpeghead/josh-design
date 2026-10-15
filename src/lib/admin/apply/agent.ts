@@ -46,10 +46,15 @@ async function readForm(page: Page): Promise<Field[]> {
         const l = document.querySelector(`label[for="${CSS.escape(id)}"]`);
         if (l) t = l.textContent ?? "";
       }
-      if (!t) t = el.getAttribute("aria-label") ?? "";
       if (!t) {
         const lb = el.getAttribute("aria-labelledby");
         if (lb) t = lb.split(/\s+/).map((x) => document.getElementById(x)?.textContent ?? "").join(" ");
+      }
+      // Rippling and others: <span id="field-9-label"> with no for= and no aria link
+      if (!t && id) t = document.getElementById(`${id}-label`)?.textContent ?? "";
+      if (!t) {
+        const al = el.getAttribute("aria-label") ?? "";
+        if (!/^(textbox|search|select\.{3}|input|combobox)$/i.test(al.trim())) t = al;
       }
       if (!t) {
         const wrap = el.closest("label");
@@ -58,7 +63,7 @@ async function readForm(page: Page): Promise<Field[]> {
       if (!t) {
         // walk up a few levels; take the nearest label-like element that comes before the control
         // first pass: real labels and legends; second pass: label-ish classes and question spans. Headings are never borrowed.
-        for (const selector of ["label, legend", "[class*='label' i], [class*='question' i] > span"]) {
+        for (const selector of ["label, legend, [id$='-label']", "[class*='label' i], [class*='question' i] > span"]) {
           let node: Element | null = el.parentElement;
           for (let depth = 0; node && depth < 5 && !t; depth++, node = node.parentElement) {
             const cands = [...node.querySelectorAll(selector)].filter((c) => !c.contains(el) && !c.querySelector("input, select, textarea") && c.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
@@ -75,7 +80,8 @@ async function readForm(page: Page): Promise<Field[]> {
     const visible = (el: Element) => {
       const r = (el as HTMLElement).getBoundingClientRect();
       const cs = getComputedStyle(el as HTMLElement);
-      return cs.display !== "none" && cs.visibility !== "hidden" && (r.width > 0 || r.height > 0 || (el as HTMLInputElement).type === "file");
+      if ((el as HTMLInputElement).type === "file") return true; // drop zones hide the real input; setInputFiles still works
+      return cs.display !== "none" && cs.visibility !== "hidden" && (r.width > 0 || r.height > 0);
     };
     let n = 0;
     const tag = (el: Element) => {
@@ -86,7 +92,8 @@ async function readForm(page: Page): Promise<Field[]> {
     // radios/checkbox groups by name
     const groups = new Map<string, HTMLInputElement[]>();
     document.querySelectorAll<HTMLInputElement>("input[type=radio], input[type=checkbox]").forEach((el) => {
-      if (!visible(el) && !visible(el.closest("label") ?? el)) return;
+      const byId = el.getAttribute("aria-labelledby")?.split(/\s+/).map((x) => document.getElementById(x)).find(Boolean);
+      if (!visible(el) && !visible(el.closest("label") ?? el) && !(byId && visible(byId))) return;
       const name = el.name || labelOf(el);
       groups.set(name, [...(groups.get(name) ?? []), el]);
     });
@@ -95,7 +102,10 @@ async function readForm(page: Page): Promise<Field[]> {
       const first = els[0];
       const fieldset = first.closest("fieldset, [role=group], [role=radiogroup], [class*=question], [class*=field]");
       const legend = fieldset?.querySelector("legend, [class*=label], label:not(:has(input))")?.textContent?.replace(/\s+/g, " ").trim() ?? name;
-      const options = els.map((e) => (e.closest("label")?.textContent ?? document.querySelector(`label[for="${CSS.escape(e.id)}"]`)?.textContent ?? e.value).replace(/\s+/g, " ").trim());
+      const options = els.map((e) => {
+        const lb = e.getAttribute("aria-labelledby")?.split(/\s+/).map((x) => document.getElementById(x)?.textContent ?? "").join(" ").trim();
+        return (e.closest("label")?.textContent ?? (e.id ? document.querySelector(`label[for="${CSS.escape(e.id)}"]`)?.textContent : null) ?? lb ?? e.value).replace(/\s+/g, " ").trim();
+      });
       const key = tag(first);
       els.forEach((e, i) => e.setAttribute("data-apply-option", `${key}:${i}`));
       out.push({ key, label: legend.slice(0, 160), kind: first.type === "radio" ? "radio" : "checkbox", required: els.some((e) => e.required || e.getAttribute("aria-required") === "true"), options });
@@ -107,11 +117,27 @@ async function readForm(page: Page): Promise<Field[]> {
       if (["hidden", "submit", "button", "reset", "image", "radio", "checkbox"].includes(type)) return;
       if (!visible(el)) return;
       if (el.closest("[data-apply-key]") && el.getAttribute("role") !== "combobox") return;
-      if (el.getAttribute("role") !== "combobox" && (el.closest('[role="combobox"]') || el.closest('[class*="select__"], [class*="Select__"], [class*="select-shell"]') || el.getAttribute("aria-autocomplete"))) return;
-      const kind = el.tagName === "TEXTAREA" || el.getAttribute("contenteditable") === "true" ? "textarea" : el.tagName === "SELECT" ? "select" : el.getAttribute("role") === "combobox" ? "combobox" : type === "file" ? "file" : type === "email" ? "email" : type === "tel" ? "tel" : type === "url" ? "url" : type === "number" ? "number" : type === "date" ? "date" : "text";
+      const inShell = el.getAttribute("role") !== "combobox" && (el.closest('[role="combobox"]') || el.closest('[class*="select__"], [class*="Select__"], [class*="select-shell"]'));
+      if (inShell) return; // the shell itself is listed as the combobox
+      const autocompletes = !!el.getAttribute("aria-autocomplete") || el.getAttribute("aria-haspopup") === "listbox";
+      const kind = el.tagName === "TEXTAREA" || el.getAttribute("contenteditable") === "true" ? "textarea" : el.tagName === "SELECT" ? "select" : el.getAttribute("role") === "combobox" || autocompletes ? "combobox" : type === "file" ? "file" : type === "email" ? "email" : type === "tel" ? "tel" : type === "url" ? "url" : type === "number" ? "number" : type === "date" ? "date" : "text";
       const key = tag(el);
       const options = el.tagName === "SELECT" ? [...(el as HTMLSelectElement).options].map((o) => o.text.trim()).filter(Boolean) : undefined;
-      out.push({ key, label: labelOf(el), kind, required: input.required || el.getAttribute("aria-required") === "true", options, value: kind === "file" ? "" : (input.value ?? "").slice(0, 200) });
+      let label = labelOf(el);
+      if (kind === "file" && !/resume|résumé|\bcv\b|cover/i.test(label)) {
+        // drop zones wrap the input in their own label; the field's name sits just before the zone
+        const zone = el.closest("label") ?? el.parentElement;
+        let node: Element | null = zone?.parentElement ?? null;
+        for (let depth = 0; node && depth < 5; depth++, node = node.parentElement) {
+          const cands = [...node.querySelectorAll("[id$='-label'], legend, label, [class*='label' i]")].filter((c) => !c.contains(el) && !zone?.contains(c) && c.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
+          const txt = cands[cands.length - 1]?.textContent?.replace(/\s+/g, " ").replace(/[*✱]/g, "").trim() ?? "";
+          if (txt && txt.length < 120) {
+            label = txt;
+            break;
+          }
+        }
+      }
+      out.push({ key, label, kind, required: input.required || el.getAttribute("aria-required") === "true", options, value: kind === "file" ? "" : (input.value ?? "").slice(0, 200) });
     });
     return out as never;
   }) as Promise<Field[]>;
@@ -143,6 +169,7 @@ const RX = {
   company: /current (company|employer)|^company$|organization/i,
   title: /current (title|role)|^title$|job title/i,
   years: /years of experience/i,
+  sms: /text message|\bsms\b|texting/i,
   privacy: /privacy|consent|agree|acknowledg|terms/i,
 };
 
@@ -167,6 +194,10 @@ function decide(f: Field, profile: Profile, resume: Resume): { value?: string; s
   if (RX.eeo.test(L)) {
     const v = pickOption(f.options, [/decline|prefer not|choose not|do not wish|don.?t wish|not wish|rather not/i]);
     return v ? { value: v, status: "filled", note: "declined, as allowed" } : { status: "left", note: "self-identification left blank" };
+  }
+  if (RX.sms.test(L) || f.options?.some((o) => RX.sms.test(o))) {
+    const v = pickOption(f.options, [/^no\b/i]);
+    return v ? { value: v, status: "filled", note: "declined text messages" } : { status: "left" };
   }
   if (RX.first.test(L)) return { value: a.firstName, status: "filled" };
   if (RX.last.test(L)) return { value: a.lastName, status: "filled" };
@@ -243,10 +274,23 @@ async function answerWithClaude(questions: { key: string; label: string }[], job
 }
 
 /** react-select and friends: the combobox is a zero-size input inside a control div; click the control. */
+const OPEN_LIST = '[role="listbox"]:visible, [id$="-listbox"]:visible';
+
+/** Some dropdowns ignore Escape; an open list under the next control would swallow the click and pick an option. */
+async function closeLists(page: Page) {
+  for (const step of ["escape", "blank", "tab"]) {
+    if (!(await page.locator(OPEN_LIST).count())) return;
+    if (step === "escape") await page.keyboard.press("Escape").catch(() => {});
+    else if (step === "blank") await page.mouse.click(2, 2).catch(() => {});
+    else await page.keyboard.press("Tab").catch(() => {});
+    await page.waitForTimeout(150);
+  }
+}
+
 async function openCombobox(page: Page, sel: string) {
   const el = page.locator(sel).first();
+  await closeLists(page);
   await el.scrollIntoViewIfNeeded().catch(() => {});
-  await page.keyboard.press("Escape").catch(() => {});
   const control = el.locator('xpath=ancestor::*[contains(@class,"control") or contains(@class,"select__") or contains(@class,"select-shell")][1]');
   try {
     if (await control.count()) await control.first().click({ timeout: 2500 });
@@ -264,9 +308,9 @@ async function comboboxOptions(page: Page, key: string): Promise<string[]> {
   try {
     await openCombobox(page, sel);
     await page.waitForTimeout(350);
-    const list = page.locator('[role="listbox"]:visible, [id$="-listbox"]:visible').first();
+    const list = page.locator(OPEN_LIST).first();
     const opts = (await list.count()) ? await list.locator('[role="option"]').allInnerTexts() : [];
-    await page.keyboard.press("Escape");
+    await closeLists(page);
     return [...new Set(opts.map((o) => o.replace(/\s+/g, " ").trim()).filter(Boolean))].slice(0, 80);
   } catch {
     return [];
@@ -306,17 +350,39 @@ async function coverLetterPdf(text: string, profile: Profile, job: Posting, appI
 async function setField(page: Page, f: Field, value: string, pdfPath: string, coverPath?: string) {
   const sel = `[data-apply-key="${f.key}"]`;
   if (f.kind === "file") {
-    if (value === "__COVER_PDF__") {
-      if (!coverPath) throw new Error("no cover letter to upload");
-      await page.setInputFiles(sel, coverPath);
-      return;
+    const isCover = value === "__COVER_PDF__";
+    if (isCover && !coverPath) throw new Error("no cover letter to upload");
+    const path = isCover ? (coverPath as string) : pdfPath;
+    try {
+      await page.setInputFiles(sel, path, { timeout: 5000 });
+    } catch {
+      // Rippling re-renders the form after parsing the résumé, which drops our tag: fall back to position
+      const inputs = page.locator('input[type="file"]');
+      const n = await inputs.count();
+      if (!n) throw new Error("the upload field disappeared");
+      await inputs.nth(isCover ? n - 1 : 0).setInputFiles(path, { timeout: 5000 });
     }
-    await page.setInputFiles(sel, pdfPath);
     return;
   }
   if (f.kind === "radio" || f.kind === "checkbox") {
     const idx = f.options?.findIndex((o) => o === value) ?? -1;
-    if (idx >= 0) await page.click(`[data-apply-option="${f.key}:${idx}"]`, { force: true });
+    if (idx < 0) return;
+    const optSel = `[data-apply-option="${f.key}:${idx}"]`;
+    try {
+      await page.click(optSel, { force: true, timeout: 3000 });
+    } catch {
+      // the real input is hidden behind a styled control: click its label, else click it in the DOM
+      const clicked = await page.evaluate((q) => {
+        const el = document.querySelector<HTMLInputElement>(q);
+        if (!el) return false;
+        const lb = el.getAttribute("aria-labelledby")?.split(/\s+/).map((x) => document.getElementById(x)).find(Boolean);
+        const target = (el.id && document.querySelector<HTMLElement>(`label[for="${CSS.escape(el.id)}"]`)) || el.closest("label") || (lb as HTMLElement | undefined) || el;
+        target.click();
+        if (!el.checked) el.click();
+        return el.checked;
+      }, optSel);
+      if (!clicked) throw new Error("the option would not take the click");
+    }
     return;
   }
   if (f.kind === "select") {
@@ -326,14 +392,32 @@ async function setField(page: Page, f: Field, value: string, pdfPath: string, co
   if (f.kind === "combobox") {
     await openCombobox(page, sel);
     await page.waitForTimeout(250);
-    await page.keyboard.type(value.slice(0, 40), { delay: 10 });
-    await page.waitForTimeout(400);
+    const typable = await page.locator(sel).first().evaluate((el) => el.tagName === "INPUT" || el.tagName === "TEXTAREA" || !!el.querySelector("input"));
+    if (typable) {
+      await page.keyboard.type(value.slice(0, 40), { delay: 10 });
+      await page.waitForTimeout(400);
+    }
     // only the list that just opened, and the whole option text, so "No" never means "Norway"
     const list = page.locator('[role="listbox"]:visible, [id$="-listbox"]:visible').first();
     const exact = new RegExp(`^\\s*${value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`, "i");
-    const opt = (await list.count()) ? list.locator('[role="option"]', { hasText: exact }).first() : page.locator('[role="option"]:visible', { hasText: exact }).first();
-    if (await opt.count()) await opt.click({ timeout: 3000 });
-    else await page.keyboard.press("Enter");
+    const scope = (await list.count()) ? list : page;
+    const opt = scope.locator('[role="option"]:visible', { hasText: exact }).first();
+    if (await opt.count()) {
+      try {
+        await opt.click({ timeout: 3000 });
+      } catch {
+        await opt.click({ force: true, timeout: 2000 }).catch(async () => {
+          await page.keyboard.type(value.slice(0, 12), { delay: 20 });
+          await page.keyboard.press("Enter");
+        });
+      }
+    } else {
+      // a place search ("Los Angeles, CA" → "Los Angeles, CA, USA"): the first option that starts with what was typed
+      const starts = scope.locator('[role="option"]:visible', { hasText: new RegExp(`^\\s*${value.split(",")[0].trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i") }).first();
+      if (await starts.count()) await starts.click({ timeout: 3000 });
+      else await page.keyboard.press("Enter");
+    }
+    await closeLists(page);
     return;
   }
   await page.fill(sel, value);
@@ -416,6 +500,10 @@ export async function startApplication(app: Application, job: Posting, resume: R
     const fields = await readForm(page);
     const files = fields.filter((f) => f.kind === "file");
     if (files.length === 1) files[0].note = "only-file";
+    else if (files.length === 2 && !files.some((f) => RX.resume.test(f.label) || RX.cover.test(f.label))) {
+      files[0].note = "only-file"; // convention on two-upload forms: résumé first, cover letter second
+      files[1].label = files[1].label || "Cover letter";
+    }
     for (const f of fields) if (f.kind === "combobox" && !f.options?.length) f.options = await comboboxOptions(page, f.key);
     log(a, `Read ${fields.length} fields.`);
     let coverText = "";
