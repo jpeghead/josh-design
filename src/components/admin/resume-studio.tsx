@@ -195,6 +195,11 @@ export function ResumeStudio(props: { bases?: Record<Persona, Resume>; initial?:
             )}
             <Downloads id={current.id} />
             <button type="button" onClick={copyText} className={btn} title="Copy the résumé as plain text">Copy text</button>
+            {!props.single && (
+              <button type="button" disabled={!!busy} onClick={() => post(`/api/admin/resume/${current.id}/publish`, {}, false).then(() => setErr(null))} className={btn} title="Write this PDF to public/Josh-Whitehead-Resume.pdf for josh.design/resume (then commit it)">
+                {busy?.endsWith("/publish") ? "Writing…" : "Publish to site"}
+              </button>
+            )}
           </div>
         </div>
 

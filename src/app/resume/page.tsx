@@ -4,6 +4,9 @@ import { resume } from "@/content/resume";
 import { career, projects, principles } from "@/lib/data";
 import { lab } from "@/content/lab";
 import { PrintButton } from "@/components/print-button";
+import { RECORD } from "@/lib/admin/resume/record";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 
 export const metadata: Metadata = {
   title: "Résumé",
@@ -12,6 +15,7 @@ export const metadata: Metadata = {
 
 export default function ResumePage() {
   const cs = projects.filter((p) => p.tier === "case-study");
+  const pdf = existsSync(join(process.cwd(), "public", "Josh-Whitehead-Resume.pdf"));
   return (
     <Container>
       <article className="pb-28 pt-28 sm:pt-36 print:pt-8" itemScope itemType="https://schema.org/Person">
@@ -33,6 +37,11 @@ export default function ResumePage() {
           </p>
           <p className="mt-4 text-sm text-fg-3">Open to: {resume.targets.join(" · ")}</p>
           <p className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 print:hidden">
+            {pdf && (
+              <a href="/Josh-Whitehead-Resume.pdf" download className="text-sm underline decoration-fg-3 underline-offset-4 transition-colors hover:text-fg">
+                Download the PDF
+              </a>
+            )}
             <PrintButton />
             <a href="/resume.json" className="text-sm text-fg-2 underline decoration-fg-3 underline-offset-4 transition-colors hover:text-fg">
               Machine-readable (JSON Resume)
@@ -75,11 +84,8 @@ export default function ResumePage() {
                     <p className="text-sm text-fg-3">{c.location}</p>
                     {p ? (
                       <ul className="mt-2 list-disc space-y-1 pl-5 text-[15px] text-fg-2">
-                        {p.contribution.map((x, i) => (
+                        {(RECORD[p.context]?.bullets.map((b) => b.text) ?? [...p.contribution, ...p.outcome.slice(0, 2)]).map((x, i) => (
                           <li key={i}>{x}</li>
-                        ))}
-                        {p.outcome.slice(0, 2).map((x, i) => (
-                          <li key={`o${i}`}>{x}</li>
                         ))}
                       </ul>
                     ) : (
