@@ -536,6 +536,9 @@ export async function submitApplication(id: string): Promise<Application | undef
     const body = (await l.page.textContent("body")) ?? "";
     if (/thank|received|submitted|success|we'll be in touch|application has been/i.test(body)) {
       a.status = "submitted";
+      a.stage = "applied";
+      a.submittedAt = new Date().toISOString();
+      a.nextAction = { date: new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10), note: "Follow up if no reply" };
       a.message = "Submitted. The confirmation is in the screenshot.";
     } else {
       a.status = "review";

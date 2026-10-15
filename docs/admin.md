@@ -89,6 +89,21 @@ probes Greenhouse, Ashby, and Lever with a few slug spellings and offers the
 boards that answered. Companies without a public board on those three
 cannot be scanned; paste the exact slug from the careers URL if a guess misses.
 
+## Pipeline and briefs
+
+- **Applications** is a board by stage (applied, replied, interviewing,
+  offer, rejected, withdrawn) with a "due today" list from each run's
+  `nextAction`. Submitting from the panel sets `stage: applied` and a
+  follow-up ten days out; "I submitted it myself" does the same for a run you
+  finished in the browser. `PATCH /api/admin/apply/[id]/stage` edits stage,
+  next action, and notes; `DELETE /api/admin/apply/[id]` removes a run.
+- **Brief** on a posting row (`/admin/jobs/[id]/brief`) writes an interview
+  brief from the posting text and the profile only: the role in two lines,
+  what they are hiring for, where Josh is strong and thin with proof, eight
+  likely questions, six to ask them, a thirty-second intro. Anything the
+  posting does not say is prefixed "verify:". Stored in
+  `data/admin/briefs.json`, one per posting, rewritten on request.
+
 ## Verified systems (dry runs, never submitted)
 
 - **Greenhouse** (Anthropic): 12 of 25 fields by rule, custom dropdowns read

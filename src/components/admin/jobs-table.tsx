@@ -118,6 +118,9 @@ export function JobsTable({ rows, counts, filters, errors }: { rows: Posting[]; 
                     Save
                   </button>
                 )}
+                <a href={`/admin/jobs/${encodeURIComponent(p.id)}/brief`} className="rounded-full border border-line px-3 py-1 text-fg-2 hover:text-fg">
+                  Brief
+                </a>
                 <a href={`/admin/apply?job=${encodeURIComponent(p.id)}`} className="rounded-full bg-fg px-3 py-1 font-medium text-bg">
                   Apply
                 </a>

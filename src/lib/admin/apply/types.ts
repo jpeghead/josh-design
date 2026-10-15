@@ -29,4 +29,9 @@ export type Application = {
   coverLetter?: string; // path under data/admin/out, when one was drafted
   startedAt: string;
   finishedAt?: string;
+  /** Where it stands after submission; set by hand in the panel. */
+  stage?: "applied" | "replied" | "interviewing" | "offer" | "rejected" | "withdrawn";
+  nextAction?: { date: string; note: string } | null;
+  notes?: string;
+  submittedAt?: string;
 };
