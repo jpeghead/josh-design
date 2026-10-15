@@ -122,7 +122,10 @@ export default function ProcessPage() {
       </section>
 
       <section className="flex flex-wrap gap-x-8 gap-y-3 border-t border-line py-16 pb-28">
-        <Arrow href="/writing/sixteen-days-in-whitehead-city">Read the build log</Arrow>
+        <Arrow href="/log">Every commit, live</Arrow>
+        <Arrow href="/writing/sixteen-days-in-whitehead-city" className="text-fg-2">
+          The sixteen-day log
+        </Arrow>
         <Arrow href="/lab" className="text-fg-2">
           See the builds
         </Arrow>
