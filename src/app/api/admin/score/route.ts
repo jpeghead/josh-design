@@ -24,7 +24,8 @@ export async function POST() {
   const scoreOne = async (p: Posting) => {
     const res = await client.messages.create({
       model: MODEL,
-      max_tokens: 300,
+      thinking: { type: "between_tools" },
+      max_tokens: 400,
       system: `You score job postings for one candidate. Reply with JSON only: {"score": 0-100, "why": "one sentence", "persona": "designer-who-builds" | "ai-builder"}. Score is the chance this candidate gets a first interview and would want the job: weight the posting's real requirements against the candidate's actual record, penalize hard requirements he lacks (e.g. ML research, a CS degree stated as required, 10+ years engineering), reward roles where a designer who ships code with agents is the point. persona is which résumé should lead.\n\nCANDIDATE:\n${profile}`,
       messages: [{ role: "user", content: `COMPANY: ${p.company}\nTITLE: ${p.title}\nLOCATION: ${p.location} ${p.remote ? "(remote)" : ""}\n\n${p.description.slice(0, 6000)}` }],
     });

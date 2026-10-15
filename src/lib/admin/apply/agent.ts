@@ -5,6 +5,7 @@ import type { Browser, BrowserContext, Page } from "playwright";
 import { anthropicClient, anthropicConfigured } from "@/lib/anthropic";
 import { DATA_DIR } from "../store";
 import { getProfile, type Profile } from "../resume/profile";
+import { socials } from "@/content/about";
 import { toPdf } from "../resume/export";
 import { renderResumeText } from "../resume/render";
 import type { Resume } from "../resume/types";
@@ -50,14 +51,26 @@ async function readForm(page: Page): Promise<Field[]> {
         const lb = el.getAttribute("aria-labelledby");
         if (lb) t = lb.split(/\s+/).map((x) => document.getElementById(x)?.textContent ?? "").join(" ");
       }
-      if (!t) t = el.closest("label")?.textContent ?? "";
       if (!t) {
-        const wrap = el.closest("[class*=field], [class*=question], [class*=form-group], fieldset, li, div");
-        const lab = wrap?.querySelector("label, legend, [class*=label]");
-        if (lab) t = lab.textContent ?? "";
+        const wrap = el.closest("label");
+        if (wrap) t = (wrap.textContent ?? "").replace(el.textContent ?? "", "");
+      }
+      if (!t) {
+        // walk up a few levels; take the nearest label-like element that comes before the control
+        // first pass: real labels and legends; second pass: label-ish classes and question spans. Headings are never borrowed.
+        for (const selector of ["label, legend", "[class*='label' i], [class*='question' i] > span"]) {
+          let node: Element | null = el.parentElement;
+          for (let depth = 0; node && depth < 5 && !t; depth++, node = node.parentElement) {
+            const cands = [...node.querySelectorAll(selector)].filter((c) => !c.contains(el) && !c.querySelector("input, select, textarea") && c.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
+            const last = cands[cands.length - 1];
+            const txt = last?.textContent?.replace(/\s+/g, " ").trim() ?? "";
+            if (txt && txt.length < 200) t = txt;
+          }
+          if (t) break;
+        }
       }
       if (!t) t = el.getAttribute("placeholder") ?? el.getAttribute("name") ?? "";
-      return t.replace(/\s+/g, " ").replace(/\*/g, "").trim().slice(0, 160);
+      return t.replace(/\s+/g, " ").replace(/[*✱]/g, "").replace(/\bSelect ?\.\.\..*$/, "").trim().slice(0, 160);
     };
     const visible = (el: Element) => {
       const r = (el as HTMLElement).getBoundingClientRect();
@@ -112,8 +125,10 @@ const RX = {
   phone: /phone|mobile/i,
   linkedin: /linkedin/i,
   github: /github/i,
+  twitter: /twitter|\bx (url|profile|handle)/i,
+  other: /^other (website|url|link)/i,
   portfolio: /portfolio|website|personal site|url|link/i,
-  location: /^(current )?location$|^city$|where (are|do) you (live|based)|city and state|^address/i,
+  location: /^(current )?location\b|^city$|where (are|do) you (live|based)|city and state|^address|what is your location/i,
   country: /^country$|country of residence/i,
   resume: /resume|résumé|cv\b/i,
   cover: /cover letter/i,
@@ -144,7 +159,11 @@ function pickOption(options: string[] | undefined, prefer: RegExp[]): string | u
 function decide(f: Field, profile: Profile, resume: Resume): { value?: string; status: Field["status"]; note?: string } {
   const L = f.label;
   const a = profile.answers;
-  if (f.kind === "file") return RX.resume.test(L) || RX.cover.test(L) === false ? { value: "__RESUME_PDF__", status: "filled", note: "résumé PDF" } : { status: "left" };
+  if (f.kind === "file") {
+    if (RX.cover.test(L)) return { value: "__COVER_PDF__", status: "filled", note: "cover letter PDF" };
+    if (RX.resume.test(L) || f.note === "only-file") return { value: "__RESUME_PDF__", status: "filled", note: "résumé PDF" };
+    return { status: "left", note: L ? undefined : "unlabeled upload; add it yourself if it is wanted" };
+  }
   if (RX.eeo.test(L)) {
     const v = pickOption(f.options, [/decline|prefer not|choose not|do not wish|don.?t wish|not wish|rather not/i]);
     return v ? { value: v, status: "filled", note: "declined, as allowed" } : { status: "left", note: "self-identification left blank" };
@@ -155,6 +174,11 @@ function decide(f: Field, profile: Profile, resume: Resume): { value?: string; s
   if (RX.email.test(L)) return { value: profile.email, status: "filled" };
   if (RX.phone.test(L)) return profile.phone ? { value: profile.phone, status: "filled" } : { status: "review", note: "no phone in profile.json" };
   if (RX.linkedin.test(L)) return { value: profile.links.find((l) => /linkedin/i.test(l.url))?.url ?? "", status: "filled" };
+  if (RX.twitter.test(L)) {
+    const x = socials.find((l) => /x\.com|twitter\.com/i.test(l.href))?.href;
+    return x ? { value: x, status: "filled" } : { status: "left" };
+  }
+  if (RX.other.test(L)) return { status: "left" };
   if (RX.github.test(L)) return { value: profile.links.find((l) => /github/i.test(l.url))?.url ?? "", status: "filled" };
   if (RX.resume.test(L) && f.kind === "textarea") return { value: renderResumeText(resume.data), status: "filled", note: "résumé as text" };
   if (RX.portfolio.test(L)) return { value: profile.links[0]?.url ?? "", status: "filled" };
@@ -163,7 +187,13 @@ function decide(f: Field, profile: Profile, resume: Resume): { value?: string; s
     const v = pickOption(f.options, [/^united states/i, /^usa?$/i]);
     return { value: v ?? "United States", status: "filled" };
   }
-  if (RX.location.test(L)) return { value: "Los Angeles, CA", status: "filled" };
+  if (RX.location.test(L)) {
+    if (f.options?.length) {
+      const v = pickOption(f.options, [/^united states/i, /^usa?$/i, /los angeles/i]);
+      return v ? { value: v, status: "filled" } : { status: "review", note: "location: pick it" };
+    }
+    return { value: "Los Angeles, CA", status: "filled" };
+  }
   if (RX.sponsor.test(L)) {
     const v = pickOption(f.options, a.needsSponsorship ? [/^yes/i] : [/^no/i]);
     return v ? { value: v, status: "filled" } : { value: a.needsSponsorship ? "Yes" : "No", status: "filled" };
@@ -184,7 +214,7 @@ function decide(f: Field, profile: Profile, resume: Resume): { value?: string; s
   if (RX.title.test(L)) return { value: "Founder & Design Lead", status: "filled" };
   if (RX.years.test(L)) return { value: "15", status: "filled" };
   if (RX.privacy.test(L) && f.kind === "checkbox") return { value: f.options?.[0] ?? "yes", status: "review", note: "consent box: read it, then tick it yourself" };
-  if (!L.trim()) return { status: "skipped", note: "no label; part of a dropdown" };
+  if (!L.trim() || /^\w+\[.*\]/.test(L)) return f.kind === "radio" || f.kind === "checkbox" ? { status: "review", note: "a question the form did not label; answer it in the browser" } : { status: "skipped", note: "no label; part of a dropdown" };
   if (/arbitrat|agreement|acknowledg|i have read|consent/i.test(L)) return { status: "review", note: "an agreement: read it, then answer yourself" };
   if (/^(are|do|would|have|will|can|is|were) you\b/i.test(L) || /\?$/.test(L)) return { status: "review", note: "your call" };
   if (f.kind === "textarea" || (f.kind === "text" && f.required)) return { status: "review", note: "free-text question" };
@@ -197,7 +227,8 @@ async function answerWithClaude(questions: { key: string; label: string }[], job
   const client = anthropicClient();
   const res = await client.messages.create({
     model: process.env.ASK_MODEL ?? "claude-sonnet-5-5",
-    max_tokens: 2500,
+    thinking: { type: "between_tools" },
+    max_tokens: 3000,
     system: `You draft application answers for one candidate, in first person, plain and specific, no flattery, no clichés, 40–140 words each unless the question clearly wants one line. Use only facts in CANDIDATE. If a question cannot be answered from the facts, answer with exactly "REVIEW". Cover letters follow this stance: ${profile.answers.coverLetterStance}\nReply with JSON only: {"<key>": "<answer>", ...}.\n\nCANDIDATE:\n${renderResumeText(resume.data)}`,
     messages: [{ role: "user", content: `ROLE: ${job.title} at ${job.company}\n\nPOSTING:\n${job.description.slice(0, 5000)}\n\nQUESTIONS:\n${questions.map((q) => `${q.key}: ${q.label}`).join("\n")}` }],
   });
@@ -242,9 +273,44 @@ async function comboboxOptions(page: Page, key: string): Promise<string[]> {
   }
 }
 
-async function setField(page: Page, f: Field, value: string, pdfPath: string) {
+/** A short cover letter in Josh's register, from the profile and the posting only. Empty when no model is reachable. */
+async function draftCoverLetter(job: Posting, profile: Profile, resume: Resume): Promise<string> {
+  if (!anthropicConfigured()) return "";
+  const client = anthropicClient();
+  const res = await client.messages.create({
+    model: process.env.ASK_MODEL ?? "claude-sonnet-5-5",
+    thinking: { type: "between_tools" },
+    max_tokens: 900,
+    system: `Write a cover letter for one candidate, first person, 150–220 words, three short paragraphs, no salutation flourishes beyond "Hello," and no closing beyond the name. Stance: ${profile.answers.coverLetterStance} Use only facts in CANDIDATE; never add a frequency, duration, metric, or client that is not stated there. Plain text only.\n\nCANDIDATE:\n${renderResumeText(resume.data)}`,
+    messages: [{ role: "user", content: `ROLE: ${job.title} at ${job.company}\n\nPOSTING:\n${job.description.slice(0, 5000)}` }],
+  });
+  return res.content.map((c) => (c.type === "text" ? c.text : "")).join("").trim();
+}
+
+async function coverLetterPdf(text: string, profile: Profile, job: Posting, appId: string): Promise<string> {
+  const { chromium } = await import("playwright");
+  const esc = (x: string) => x.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const html = `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:Letter;margin:1in}body{font-family:Georgia,serif;font-size:11pt;line-height:1.5;color:#111}h1{font-size:16pt;margin:0 0 2pt}.meta{color:#333;font-size:9.5pt;margin:0 0 18pt}p{margin:0 0 10pt}</style></head><body><h1>${esc(profile.name)}</h1><p class="meta">${esc([profile.location, profile.email, profile.links[0]?.url ?? ""].filter(Boolean).join(" · "))}</p><p class="meta">${esc(new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }))} · ${esc(job.title)}, ${esc(job.company)}</p>${text.split(/\n\s*\n/).map((para) => `<p>${esc(para.trim())}</p>`).join("")}</body></html>`;
+  const file = join(OUT, `${appId}-cover-letter.pdf`);
+  const browser = await chromium.launch();
+  try {
+    const pg = await browser.newPage();
+    await pg.setContent(html, { waitUntil: "load" });
+    await pg.pdf({ path: file, format: "Letter", preferCSSPageSize: true });
+  } finally {
+    await browser.close();
+  }
+  return file;
+}
+
+async function setField(page: Page, f: Field, value: string, pdfPath: string, coverPath?: string) {
   const sel = `[data-apply-key="${f.key}"]`;
   if (f.kind === "file") {
+    if (value === "__COVER_PDF__") {
+      if (!coverPath) throw new Error("no cover letter to upload");
+      await page.setInputFiles(sel, coverPath);
+      return;
+    }
     await page.setInputFiles(sel, pdfPath);
     return;
   }
@@ -273,6 +339,10 @@ async function setField(page: Page, f: Field, value: string, pdfPath: string) {
   await page.fill(sel, value);
 }
 
+async function turnstilePresent(page: Page): Promise<boolean> {
+  return (await page.locator('iframe[src*="challenges.cloudflare.com"], .cf-turnstile').count()) > 0;
+}
+
 /** A sign-in wall, before anything is filled. */
 async function loginWall(page: Page): Promise<string | null> {
   if (/login|signin|sign-in|auth/i.test(page.url()) && (await page.locator('input[type="password"]').count())) return "This board wants an account. Sign in in the open browser, then start the application again; the sign-in is remembered.";
@@ -285,7 +355,8 @@ async function loginWall(page: Page): Promise<string | null> {
  * only a visible challenge counts.
  */
 async function visibleCaptcha(page: Page): Promise<boolean> {
-  const challenge = page.locator('iframe[src*="recaptcha/api2/bframe"], iframe[src*="hcaptcha.com/captcha"], iframe[src*="challenges.cloudflare.com"], iframe[title*="challenge" i]');
+  // Cloudflare Turnstile usually clears itself; it is reported as a note, not a blocker (see turnstilePresent)
+  const challenge = page.locator('iframe[src*="recaptcha/api2/bframe"], iframe[src*="hcaptcha.com/captcha"]');
   const n = await challenge.count();
   for (let i = 0; i < n; i++) {
     const box = await challenge.nth(i).boundingBox().catch(() => null);
@@ -343,24 +414,53 @@ export async function startApplication(app: Application, job: Posting, resume: R
     }
     page.setDefaultTimeout(8000);
     const fields = await readForm(page);
+    const files = fields.filter((f) => f.kind === "file");
+    if (files.length === 1) files[0].note = "only-file";
     for (const f of fields) if (f.kind === "combobox" && !f.options?.length) f.options = await comboboxOptions(page, f.key);
     log(a, `Read ${fields.length} fields.`);
+    let coverText = "";
+    let coverPath: string | undefined;
+    if (fields.some((f) => RX.cover.test(f.label))) {
+      try {
+        coverText = await draftCoverLetter(job, profile, resume);
+        if (coverText) {
+          coverPath = await coverLetterPdf(coverText, profile, job, a.id);
+          a.coverLetter = coverPath;
+          log(a, "Drafted a cover letter with Claude; it is uploaded where the form asks for one. Read it.");
+        } else log(a, anthropicConfigured() ? "The model returned no cover letter text." : "No model reachable, so no cover letter was drafted.");
+      } catch (e) {
+        log(a, `Cover letter drafting failed: ${(e as Error).message.slice(0, 160)}`);
+      }
+    }
     const toAsk: { key: string; label: string }[] = [];
     for (const f of fields) {
       const d = decide(f, profile, resume);
       f.status = d.status;
       f.note = d.note;
-      if (d.value !== undefined && d.status === "filled") {
+      if (d.value === "__COVER_PDF__" && !coverPath) {
+        f.status = "left";
+        f.note = "cover letter upload: no model to draft one";
+      } else if (RX.cover.test(f.label) && f.kind === "textarea" && coverText) {
         try {
-          await setField(page, f, d.value, pdfPath);
-          f.value = d.value === "__RESUME_PDF__" ? pdfPath.split("/").pop() : d.value;
+          await setField(page, f, coverText, pdfPath, coverPath);
+          f.value = coverText;
+          f.status = "filled";
+          f.note = "cover letter drafted by Claude; read it";
+        } catch (e) {
+          f.status = "review";
+          f.note = `could not set: ${(e as Error).message.slice(0, 80)}`;
+        }
+      } else if (d.value !== undefined && d.status === "filled") {
+        try {
+          await setField(page, f, d.value, pdfPath, coverPath);
+          f.value = d.value === "__RESUME_PDF__" ? pdfPath.split("/").pop() : d.value === "__COVER_PDF__" ? coverPath?.split("/").pop() : d.value;
         } catch (e) {
           f.status = "review";
           f.note = `could not set: ${(e as Error).message.slice(0, 80)}`;
         }
         a.fields = fields;
         saveApplication(a);
-      } else if (d.status === "review" && (f.kind === "textarea" || f.kind === "text") && !RX.salary.test(f.label) && !RX.start.test(f.label) && !RX.relocate.test(f.label)) {
+      } else if (d.status === "review" && d.note === "free-text question") {
         toAsk.push({ key: f.key, label: f.label });
       }
     }
@@ -399,6 +499,7 @@ export async function startApplication(app: Application, job: Posting, resume: R
     }
     a.status = "review";
     a.message = reviewCount ? `${reviewCount} field${reviewCount === 1 ? "" : "s"} need${reviewCount === 1 ? "s" : ""} you. The browser is open; fix them there or here, then Submit.` : "Everything known is filled. Read it in the open browser, then Submit.";
+    if (await turnstilePresent(page)) a.message += " This form has a Cloudflare check; it usually clears on its own, and if it asks you to click, do that in the browser first.";
     log(a, a.message);
     if (a.autoSubmit && !reviewCount) await submitApplication(a.id);
   } catch (e) {

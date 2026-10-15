@@ -26,6 +26,7 @@ export type Application = {
   fields: Field[];
   steps: Step[];
   screenshot?: string; // path under data/admin/out
+  coverLetter?: string; // path under data/admin/out, when one was drafted
   startedAt: string;
   finishedAt?: string;
 };

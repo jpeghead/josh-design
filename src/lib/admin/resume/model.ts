@@ -42,6 +42,7 @@ function parse(txt: string): ResumeData {
 export async function editResume(data: ResumeData, instruction: string, profile: Profile): Promise<ResumeData> {
   const res = await client().messages.create({
     model: MODEL,
+    thinking: { type: "between_tools" },
     max_tokens: 6000,
     system: `${RULES}\n\nBANK:\n${bank(profile)}`,
     messages: [{ role: "user", content: `CURRENT RESUME JSON:\n${JSON.stringify(data)}\n\nINSTRUCTION: ${instruction}\n\nReturn the full updated JSON.` }],
@@ -53,6 +54,7 @@ export async function editResume(data: ResumeData, instruction: string, profile:
 export async function postingKeywords(p: Posting): Promise<string[]> {
   const res = await client().messages.create({
     model: MODEL,
+    thinking: { type: "between_tools" },
     max_tokens: 400,
     system: 'Extract the 12 to 20 most important keywords and phrases an applicant tracking system would match this posting on: tools, skills, role words, domain terms. Reply with a JSON array of strings only.',
     messages: [{ role: "user", content: `${p.title} at ${p.company}\n\n${p.description.slice(0, 7000)}` }],
@@ -71,6 +73,7 @@ export async function postingKeywords(p: Posting): Promise<string[]> {
 export async function tailorResume(data: ResumeData, p: Posting, keywords: string[], profile: Profile): Promise<ResumeData> {
   const res = await client().messages.create({
     model: MODEL,
+    thinking: { type: "between_tools" },
     max_tokens: 6000,
     system: `${RULES}\n\nBANK:\n${bank(profile)}`,
     messages: [

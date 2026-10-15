@@ -81,3 +81,17 @@ data/admin/               companies.json, jobs.json, profile.json,
 - `Application`: id, postingId, resumeId, status (`filling | review |
   submitted | failed | stopped`), steps[], screenshots[], answers{},
   startedAt, finishedAt, error.
+
+## Verified systems (dry runs, never submitted)
+
+- **Greenhouse** (Anthropic): 12 of 25 fields by rule, custom dropdowns read
+  and set, written answers drafted. Invisible reCAPTCHA is present on every
+  Greenhouse form and is not a blocker; only a visible challenge is.
+- **Ashby** (Render): 11 of 14, labels found by walking ancestors, cover
+  letter drafted and uploaded, Cloudflare Turnstile reported as a note.
+- **Lever** (Contentsquare): 14 of 20, ✱ markers and wrapped option text
+  stripped from labels, X handle from the site's socials, location
+  autocomplete and country select filled. Lever's visible hCaptcha is a
+  real blocker: tick it in the browser, then Submit from the panel.
+- Model calls use `thinking: between_tools` so short budgets go to the
+  answer; the first cover-letter attempt spent its whole budget thinking.

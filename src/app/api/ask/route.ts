@@ -46,7 +46,7 @@ export async function POST(req: Request) {
   const client = anthropicClient(req);
   const stream = client.messages.stream({
     model: MODEL,
-    max_tokens: 500,
+    max_tokens: 1400,
     system: SYSTEM,
     messages: [...history, { role: "user", content: q }],
   });
