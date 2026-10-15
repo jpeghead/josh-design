@@ -3,10 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import type { Posting } from "@/lib/admin/types";
+import type { Grouped } from "@/lib/admin/dedupe";
 
 type Filters = { status: string; tier: string; min: number; q: string; fresh: boolean; ai: boolean };
 
-export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows: Posting[]; counts: Record<string, number>; filters: Filters; errors: string[]; lastScanAt: string | null }) {
+export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows: Grouped[]; counts: Record<string, number>; filters: Filters; errors: string[]; lastScanAt: string | null }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [scanning, setScanning] = useState(false);
@@ -25,7 +26,7 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
   const setFilter = (patch: Partial<Filters>) => {
     const f = { ...filters, ...patch };
     const p = new URLSearchParams({ status: f.status, tier: f.tier, min: String(f.min), q: f.q, fresh: f.fresh ? "1" : "0", ai: f.ai ? "1" : "0" });
-    start(() => router.push(`/admin?${p}`));
+    start(() => router.push(`/admin/jobs?${p}`));
   };
   const scan = async (auto = false) => {
     setScanning(true);
@@ -62,6 +63,53 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
       setScanning(false);
     }
   };
+
+  // Keyboard triage: j/k move, s save, h hide, x pick, o or Enter open, b brief. Off while typing.
+  const [cursor, setCursor] = useState(-1);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const p = rows[cursor];
+      switch (e.key) {
+        case "j":
+          setCursor((c) => Math.min(rows.length - 1, c + 1));
+          break;
+        case "k":
+          setCursor((c) => Math.max(0, c - 1));
+          break;
+        case "s":
+          if (p) update(p.id, p.status === "saved" ? "new" : "saved");
+          break;
+        case "h":
+          if (p) update(p.id, "hidden");
+          break;
+        case "x":
+          if (p) setPicked((s) => { const n = new Set(s); if (n.has(p.id)) n.delete(p.id); else n.add(p.id); return n; });
+          break;
+        case "o":
+        case "Enter":
+          if (p) router.push(`/admin/jobs/${encodeURIComponent(p.id)}`);
+          break;
+        case "b":
+          if (p) router.push(`/admin/jobs/${encodeURIComponent(p.id)}/brief`);
+          break;
+        case "?":
+          setMsg("Keys: j/k move · s save · h hide · x pick · o open · b brief");
+          break;
+        default:
+          return;
+      }
+      e.preventDefault();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, cursor]);
+  useEffect(() => {
+    if (cursor >= 0) document.getElementById(`row-${cursor}`)?.scrollIntoView({ block: "nearest" });
+  }, [cursor]);
 
   // Keep the list fresh without a scheduler: one scan per page load when the last one is stale.
   const autoRan = useRef(false);
@@ -124,10 +172,10 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
         </details>
       )}
 
-      <p className="mt-6 text-xs uppercase tracking-[0.14em] text-fg-3">{rows.length} postings{pending ? " · loading" : ""}</p>
+      <p className="mt-6 text-xs uppercase tracking-[0.14em] text-fg-3">{rows.length} roles{pending ? " · loading" : ""} <span className="normal-case tracking-normal text-fg-3">· press ? for keys</span></p>
       <ul className="mt-2 divide-y divide-line border-y border-line">
-        {rows.map((p) => (
-          <li key={p.id} className="py-3">
+        {rows.map((p, i) => (
+          <li key={p.id} id={`row-${i}`} onClick={() => setCursor(i)} className={`py-3 ${cursor === i ? "-mx-3 rounded-md bg-fill/60 px-3" : ""}`}>
             <div className="grid gap-x-4 gap-y-1 sm:grid-cols-[1.25rem_3rem_1fr_auto] sm:items-baseline">
               <input type="checkbox" checked={picked.has(p.id)} onChange={(e) => setPicked((s) => { const n = new Set(s); if (e.target.checked) n.add(p.id); else n.delete(p.id); return n; })} aria-label={`Pick ${p.title} at ${p.company}`} className="h-3.5 w-3.5 accent-[var(--fg)]" />
               <span className={`tabular-nums text-[15px] font-semibold ${p.score >= 70 ? "text-fg" : p.score >= 50 ? "text-fg-2" : "text-fg-3"}`} title={p.scoreWhy}>
@@ -145,6 +193,16 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
                   {p.location || "location not stated"}{p.pay ? <span className="text-fg-2"> · {p.pay}</span> : ""} · {p.tier} · {p.persona === "ai-builder" ? "AI builder résumé" : "Designer-who-builds résumé"} · {p.source} · scored by {p.scoredBy}
                   {p.postedAt ? ` · posted ${new Date(p.postedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
                   {Date.now() - new Date(p.firstSeen).getTime() < 7 * 86400000 ? <span className="text-fg-2"> · found {new Date(p.firstSeen).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span> : ""}
+                  {p.variants.length > 0 && (
+                    <span className="text-fg-2">
+                      {" "}· also{" "}
+                      {p.variants.map((v, vi) => (
+                        <a key={v.id} href={`/admin/jobs/${encodeURIComponent(v.id)}`} className="underline decoration-fg-3 underline-offset-2 hover:text-fg">
+                          {v.location || "another listing"}{vi < p.variants.length - 1 ? ", " : ""}
+                        </a>
+                      ))}
+                    </span>
+                  )}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2 text-[13px]">

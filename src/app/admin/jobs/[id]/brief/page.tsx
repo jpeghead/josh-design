@@ -14,7 +14,7 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
   const brief = getBrief(id);
   return (
     <div className="max-w-3xl">
-      <Link href="/admin" className="text-xs text-fg-3 hover:text-fg">‹ Jobs</Link>
+      <Link href="/admin/jobs" className="text-xs text-fg-3 hover:text-fg">‹ Jobs</Link>
       <h1 className="serif mt-1 text-[1.75rem] leading-tight">
         {job.title} <span className="text-fg-2">· {job.company}</span>
       </h1>

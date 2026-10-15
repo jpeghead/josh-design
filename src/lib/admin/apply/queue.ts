@@ -2,7 +2,7 @@ import { readJson } from "../store";
 import type { Posting } from "../types";
 import { currentBase, listResumes } from "../resume/store";
 import { getApplication, listApplications, newApplication, saveApplication } from "./store";
-import { startApplication } from "./agent";
+import { isLive, startApplication } from "./agent";
 
 /**
  * The review queue: applications prepared in the background, one at a
@@ -75,4 +75,24 @@ export function queueSnapshot() {
 
 export function queued(id: string) {
   return getApplication(id)?.status === "queued";
+}
+
+/**
+ * A run that says it is waiting but has no browser behind it (the server
+ * restarted under it) is marked stopped, so Today and the queue never
+ * point at a window that is not there.
+ */
+export function reconcile(): number {
+  let n = 0;
+  for (const a of listApplications()) {
+    if (["starting", "filling", "review", "needs-you", "submitting"].includes(a.status) && !isLive(a.id)) {
+      a.status = "stopped";
+      a.finishedAt = new Date().toISOString();
+      a.message = "The browser behind this run was lost (the server restarted). Prepare it again.";
+      a.steps.push({ at: new Date().toISOString(), text: a.message });
+      saveApplication(a);
+      n++;
+    }
+  }
+  return n;
 }

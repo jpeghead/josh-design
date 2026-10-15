@@ -31,3 +31,14 @@ export async function DELETE(req: Request) {
   writeJson("companies", companies);
   return Response.json({ count: companies.length });
 }
+
+/** PATCH { source, slug, watch } flags a company for the Today watchlist. */
+export async function PATCH(req: Request) {
+  const { source, slug, watch } = (await req.json()) as { source: Company["source"]; slug: string; watch: boolean };
+  const companies = readJson<Company[]>("companies", []);
+  const c = companies.find((x) => x.source === source && x.slug === slug);
+  if (!c) return new Response("Not found", { status: 404 });
+  c.watch = !!watch;
+  writeJson("companies", companies);
+  return Response.json(c);
+}

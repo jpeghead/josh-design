@@ -1,42 +1,42 @@
+import Link from "next/link";
 import { readJson } from "@/lib/admin/store";
-import type { Posting, ScanRun, Company } from "@/lib/admin/types";
-import { JobsTable } from "@/components/admin/jobs-table";
+import type { Company, Posting, ScanRun } from "@/lib/admin/types";
+import { listApplications } from "@/lib/admin/apply/store";
+import { kick, queueSnapshot, reconcile } from "@/lib/admin/apply/queue";
+import { lastVisit, markVisit } from "@/lib/admin/visits";
+import { Today } from "@/components/admin/today";
 
 export const dynamic = "force-dynamic";
 
-export default async function Jobs({ searchParams }: { searchParams: Promise<{ status?: string; tier?: string; min?: string; q?: string; fresh?: string; ai?: string }> }) {
-  const sp = await searchParams;
-  const all = readJson<Posting[]>("jobs", []);
-  const runs = readJson<ScanRun[]>("scans", []);
+/** The front door: what arrived since you looked, what is waiting on you, what is due. */
+export default async function TodayPage() {
+  reconcile();
+  void kick();
+  const since = lastVisit();
+  const sinceMs = since ? Date.parse(since) : Date.now() - 7 * 86400000;
+  const jobs = readJson<Posting[]>("jobs", []);
   const companies = readJson<Company[]>("companies", []);
-  const status = sp.status ?? "new";
-  const tier = sp.tier ?? "all";
-  const min = Number(sp.min ?? 40);
-  const q = (sp.q ?? "").toLowerCase();
-  const fresh = sp.fresh === "1";
-  const aiOnly = sp.ai === "1";
-  const weekAgo = Date.now() - 7 * 86400000;
-  const rows = all.filter(
-    (p) =>
-      (!fresh || new Date(p.firstSeen).getTime() >= weekAgo) &&
-      (!aiOnly || (p.ai ?? 0) >= 3) &&
-      (status === "all" || p.status === status) &&
-      (tier === "all" || p.tier === tier) &&
-      p.score >= min &&
-      (!q || `${p.company} ${p.title} ${p.location}`.toLowerCase().includes(q))
-  );
-  const counts = { ai: all.filter((p) => p.status === "new" && (p.ai ?? 0) >= 3).length, fresh: all.filter((p) => p.status === "new" && new Date(p.firstSeen).getTime() >= weekAgo).length, new: all.filter((p) => p.status === "new").length, saved: all.filter((p) => p.status === "saved").length, applied: all.filter((p) => p.status === "applied").length, hidden: all.filter((p) => p.status === "hidden").length };
+  const runs = readJson<ScanRun[]>("scans", []);
+  const apps = listApplications();
+  const fresh = jobs.filter((p) => p.status === "new" && Date.parse(p.firstSeen) > sinceMs && p.score >= 60).sort((a, b) => b.score - a.score).slice(0, 12);
+  const watched = companies.filter((c) => c.watch);
+  const watchedNames = new Set(watched.map((c) => c.name.toLowerCase()));
+  const fromWatched = jobs.filter((p) => watchedNames.has(p.company.toLowerCase()) && p.status === "new" && Date.now() - Date.parse(p.firstSeen) < 14 * 86400000).sort((a, b) => b.score - a.score).slice(0, 12);
+  const today = new Date().toISOString().slice(0, 10);
+  const due = apps.filter((a) => a.status === "submitted" && a.nextAction?.date && a.nextAction.date <= today && !["rejected", "withdrawn", "offer"].includes(a.stage ?? ""));
+  const waiting = apps.filter((a) => ["review", "needs-you"].includes(a.status));
+  markVisit();
   return (
-    <div>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="serif text-[2rem] leading-tight">Roles worth a look.</h1>
-          <p className="mt-1 text-sm text-fg-2">
-            {companies.length} boards + Hacker News · {all.length} kept · {runs[0] ? `last scan ${new Date(runs[0].at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} (${runs[0].fetched} fetched, ${runs[0].added} new${runs[0].errors.length ? `, ${runs[0].errors.length} boards failed` : ""})` : "never scanned"}
-          </p>
-        </div>
-      </div>
-      <JobsTable rows={rows} counts={counts} filters={{ status, tier, min, q: sp.q ?? "", fresh, ai: aiOnly }} errors={runs[0]?.errors ?? []} lastScanAt={runs[0]?.at ?? null} />
-    </div>
+    <Today
+      since={since}
+      fresh={fresh.map((p) => ({ id: p.id, title: p.title, company: p.company, score: p.score, why: p.scoreWhy, location: p.location, pay: p.pay }))}
+      fromWatched={fromWatched.map((p) => ({ id: p.id, title: p.title, company: p.company, score: p.score, location: p.location }))}
+      due={due.map((a) => ({ id: a.id, title: a.title, company: a.company, note: a.nextAction?.note ?? "", date: a.nextAction?.date ?? "" }))}
+      waiting={waiting.map((a) => ({ id: a.id, title: a.title, company: a.company, headless: !!a.headless, fix: a.fields.filter((f) => f.status === "review").length }))}
+      queue={queueSnapshot()}
+      companies={companies.map((c) => ({ name: c.name, source: c.source, slug: c.slug, watch: !!c.watch }))}
+      lastScan={runs[0] ? { at: runs[0].at, added: runs[0].added, errors: runs[0].errors.length } : null}
+      counts={{ kept: jobs.length, scored: jobs.filter((p) => p.scoredBy === "claude").length, saved: jobs.filter((p) => p.status === "saved").length }}
+    />
   );
 }

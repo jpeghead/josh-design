@@ -65,7 +65,7 @@ export function JobView({ job, baseId, fit: initialFit, brief, tailored, sameCom
   return (
     <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="min-w-0">
-        <Link href="/admin" className="text-xs text-fg-3 hover:text-fg">‹ Jobs</Link>
+        <Link href="/admin/jobs" className="text-xs text-fg-3 hover:text-fg">‹ Jobs</Link>
         <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="serif text-[2rem] leading-tight">{job.title}</h1>

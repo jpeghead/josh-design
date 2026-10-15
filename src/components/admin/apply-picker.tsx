@@ -41,7 +41,7 @@ export function ApplyPicker({ job, resumes, hasKey }: { job: J; resumes: R[]; ha
 
   return (
     <div className="max-w-2xl">
-      <Link href="/admin" className="text-xs text-fg-3 hover:text-fg">‹ Jobs</Link>
+      <Link href="/admin/jobs" className="text-xs text-fg-3 hover:text-fg">‹ Jobs</Link>
       <h1 className="serif mt-1 text-[1.75rem] leading-tight">
         {job.title} <span className="text-fg-2">· {job.company}</span>
       </h1>

@@ -4,7 +4,8 @@ import Link from "next/link";
 export const metadata: Metadata = { title: { default: "Admin", template: "%s — Admin" }, robots: { index: false, follow: false } };
 
 const NAV = [
-  { href: "/admin", label: "Jobs" },
+  { href: "/admin", label: "Today" },
+  { href: "/admin/jobs", label: "Jobs" },
   { href: "/admin/resumes", label: "Résumés" },
   { href: "/admin/queue", label: "Queue" },
   { href: "/admin/applications", label: "Applications" },

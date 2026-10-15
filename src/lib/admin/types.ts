@@ -1,6 +1,6 @@
 export type Source = "greenhouse" | "ashby" | "lever" | "workable" | "rippling" | "hn";
 
-export type Company = { name: string; source: Exclude<Source, "hn">; slug: string; note?: string };
+export type Company = { name: string; source: Exclude<Source, "hn">; slug: string; note?: string; /** On Today: anything new from this company is called out. */ watch?: boolean };
 
 export type Posting = {
   id: string;
