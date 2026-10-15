@@ -22,11 +22,14 @@
 > and builds on every push. `app/error.tsx` and `app/global-error.tsx` exist.
 > `components/lab/desktop-only.tsx` keeps phones from booting the 3D city.
 > **Admin cockpit (local only, October 2026):** `/admin` is Josh's job-hunt
-> tool: a scanner over ~150 Greenhouse/Ashby/Lever/Workable/Rippling boards plus Hacker News with
-> a role taxonomy and rule scoring (Claude rescoring with a key), a résumé
-> generator with two personas, live preview, instruction edits, tailoring, and
-> PDF/DOCX/TXT export, and a Playwright apply agent that fills forms, drafts
-> written answers with a key, and stops for review before Submit. Gated by
+> tool: Today (new since last visit, waiting, due, watchlist), a scanner over
+> ~150 Greenhouse/Ashby/Lever/Workable/Rippling boards plus Hacker News with a
+> role taxonomy, rule scoring, and Claude scoring that learns from ↑/↓
+> verdicts, one page per job (pay, keyword fit, tailoring, brief, practice
+> interview), the résumé studio (the PDF's own pages, two personas, one
+> toggle, Instrument Serif + Geist embedded), a Playwright apply agent that
+> prepares applications in the background into a review queue and never
+> submits on its own, a pipeline with follow-up drafts, and the numbers. Gated by
 > `ADMIN_SECRET` in `.env.local` (404 without it, so production never has it);
 > data lives in git-ignored `data/admin/`. Design and decisions: `docs/admin.md`.
 > Code: `src/lib/admin/**`, `src/app/admin/**`, `src/app/api/admin/**`,
