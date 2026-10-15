@@ -21,7 +21,7 @@ export async function POST() {
   const client = anthropicClient();
   const profile = profileSummary();
   let scored = 0;
-  for (const p of todo) {
+  const scoreOne = async (p: Posting) => {
     const res = await client.messages.create({
       model: MODEL,
       max_tokens: 300,
@@ -30,7 +30,7 @@ export async function POST() {
     });
     const txt = res.content.map((c) => (c.type === "text" ? c.text : "")).join("");
     const m = txt.match(/\{[\s\S]*\}/);
-    if (!m) continue;
+    if (!m) return;
     try {
       const j = JSON.parse(m[0]) as { score: number; why: string; persona: Posting["persona"] };
       p.score = Math.max(0, Math.min(100, Math.round(j.score)));
@@ -41,7 +41,9 @@ export async function POST() {
     } catch {
       /* skip unparsable */
     }
-  }
+  };
+  // five at a time: fast enough, gentle on rate limits
+  for (let i = 0; i < todo.length; i += 5) await Promise.all(todo.slice(i, i + 5).map((p) => scoreOne(p).catch(() => undefined)));
   jobs.sort((a, b) => b.score - a.score);
   writeJson("jobs", jobs);
   return Response.json({ scored });
