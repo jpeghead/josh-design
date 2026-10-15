@@ -34,6 +34,19 @@ export function Queue({ initial, snapshot }: { initial: Application[]; snapshot:
   }, []);
 
   const a = useMemo(() => apps.find((x) => x.id === sel) ?? apps[0], [apps, sel]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+      if (e.key !== "j" && e.key !== "k") return;
+      const i = apps.findIndex((x) => x.id === (a?.id ?? ""));
+      const next = apps[Math.max(0, Math.min(apps.length - 1, i + (e.key === "j" ? 1 : -1)))];
+      if (next) setSel(next.id);
+      e.preventDefault();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [apps, a?.id]);
   useEffect(() => setEdits({}), [a?.id]);
   const ready = apps.filter((x) => READY.has(x.status));
   const pending = apps.filter((x) => !READY.has(x.status));
@@ -95,7 +108,7 @@ export function Queue({ initial, snapshot }: { initial: Application[]; snapshot:
         <div>
           <h1 className="serif text-[1.9rem] leading-tight">The queue.</h1>
           <p className="mt-1 text-sm text-fg-3">
-            {snap.ready} ready · {snap.preparing} preparing · {snap.queued} waiting
+            {snap.ready} ready · {snap.preparing} preparing · {snap.queued} waiting <span className="text-fg-3">· j/k to move</span>
           </p>
         </div>
         {ready.length > 0 && (

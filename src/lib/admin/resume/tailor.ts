@@ -19,7 +19,16 @@ export async function tailorFor(job: Posting, from?: Resume): Promise<Resume> {
   const profile = getProfile();
   const hasModel = anthropicConfigured();
   const keywords = hasModel ? await postingKeywords(job).catch(() => roughKeywords(job)) : roughKeywords(job);
-  const data = hasModel ? await tailorResume(base.data, job, keywords, profile) : buildResume(profile, base.persona, keywords);
+  let data = hasModel ? await tailorResume(base.data, job, keywords, profile) : buildResume(profile, base.persona, keywords);
+  if (hasModel) {
+    // second pass: the posting's terms still missing, worked in only where the bank supports them
+    const c = coverage(data, keywords);
+    if (c.missing.length && c.covered.length / keywords.length < 0.75) {
+      const again = await tailorResume(data, job, c.missing, profile).catch(() => data);
+      const c2 = coverage(again, keywords);
+      if (c2.covered.length > c.covered.length) data = again;
+    }
+  }
   const made = newResume(base.persona, `${base.label} → ${job.company}: ${job.title}`.slice(0, 90), data, {
     basedOn: base.id,
     jobId: job.id,

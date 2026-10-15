@@ -79,7 +79,7 @@ export async function tailorResume(data: ResumeData, p: Posting, keywords: strin
     messages: [
       {
         role: "user",
-        content: `POSTING: ${p.title} at ${p.company}\nKEYWORDS THE PARSER WILL LOOK FOR: ${keywords.join(", ")}\n\nPOSTING TEXT:\n${p.description.slice(0, 5000)}\n\nCURRENT RESUME JSON:\n${JSON.stringify(data)}\n\nTailor the résumé to this posting: choose the headline and summary wording that fits, reorder and reselect bullets from the bank so the most relevant lead, use the posting's vocabulary where it is true of the candidate, keep it to roughly the same length. Return the full JSON.`,
+        content: `POSTING: ${p.title} at ${p.company}\nKEYWORDS THE PARSER WILL LOOK FOR: ${keywords.join(", ")}\n\nPOSTING TEXT:\n${p.description.slice(0, 5000)}\n\nCURRENT RESUME JSON:\n${JSON.stringify(data)}\n\nTailor the résumé to this posting: choose the headline and summary wording that fits, reorder and reselect bullets from the bank so the most relevant lead, use the posting's vocabulary where it is true of the candidate, keep it to the same length or shorter (never longer). For each keyword above, if the bank supports it, make sure the exact term appears somewhere natural (a bullet, the summary, or the skills list); if the bank does not support it, leave it out. Return the full JSON.`,
       },
     ],
   });
