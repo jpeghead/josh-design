@@ -43,7 +43,7 @@ export default function LabPage() {
                 {l.when} · {l.built}
               </p>
               <span className="mt-3 inline-block text-sm font-medium">
-                {l.kind === "Playable" ? "Play" : l.kind === "Live model" ? "Ask" : "Open"} <span aria-hidden className="inline-block transition-transform duration-300 group-hover:translate-x-0.5">›</span>
+                {l.kind === "Playable" ? "Play" : l.kind === "Live model" ? "Ask" : l.kind === "Live beta" ? "Try it" : "Open"} <span aria-hidden className="inline-block transition-transform duration-300 group-hover:translate-x-0.5">›</span>
               </span>
             </Link>
           </Reveal>

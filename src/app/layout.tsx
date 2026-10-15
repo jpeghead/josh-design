@@ -3,6 +3,7 @@ import { Geist, Instrument_Serif } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { identityLine } from "@/content/about";
+import { JsonLd } from "@/components/json-ld";
 import "./globals.css";
 
 // Geist carries the interface and the body. Instrument Serif carries the story.
@@ -21,12 +22,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Josh Whitehead",
-    title: "Josh Whitehead",
+    title: "Josh Whitehead — designer who builds AI products",
     description: identityLine,
+    url: "https://josh.design",
   },
   twitter: {
-    card: "summary",
-    title: "Josh Whitehead",
+    card: "summary_large_image",
+    title: "Josh Whitehead — designer who builds AI products",
     description: identityLine,
   },
 };
@@ -43,6 +45,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         {/* lets CSS gate reveal animations on JavaScript being present, before first paint */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+        <JsonLd />
       </head>
       <body className="flex min-h-dvh flex-col antialiased">
         <a

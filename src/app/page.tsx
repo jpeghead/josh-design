@@ -13,12 +13,12 @@ const SKILLS: { title: string; body: string; href: string; proof: string }[] = [
   { title: "Agent interaction design", body: "Progress you can trust, permissions with real scope, failure that recovers, confidence that's graded. Built, not mocked.", href: "/lab/agents", proof: "Agent UI patterns" },
   { title: "Agentic workflow", body: "Claude Code and Codex read the repo, build, verify in a browser, and commit. I set direction and the bar. Whole directions get built and killed in a day.", href: "/process", proof: "Process, with the artifacts" },
   { title: "Real-time 3D and shaders", body: "A 65k-particle GLSL hero, a physics-driven 3D city, a scroll-conducted studio. Custom shaders, procedural textures, no asset downloads.", href: "/lab/city", proof: "Whitehead City" },
-  { title: "Product, end to end", body: "First designer to Head of Design twice, both companies acquired. Apple and Google partnerships shipped. The foundation under all of the above.", href: "/work", proof: "Fifteen years of work" },
+  { title: "Product, end to end", body: "OLO v0 shipped as a browser-only beta: parsers, analysis, portrait, privacy by construction. Before that, first designer to Head of Design twice, both companies acquired.", href: "/products/olo/app", proof: "Try OLO" },
 ];
 
 export default function Home() {
   const featured = projects.filter((p) => p.tier === "case-study");
-  const builds = lab.filter((l) => ["local", "agents", "city", "ask", "particles", "studio"].includes(l.slug));
+  const builds = lab.filter((l) => ["olo", "local", "agents", "city", "ask", "particles"].includes(l.slug));
   const essay = portedEssays[0];
 
   return (

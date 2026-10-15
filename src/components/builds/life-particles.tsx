@@ -123,7 +123,7 @@ const frag = /* glsl */ `
   }
 `;
 
-function Cloud({ samples, onStage, reduce, dims }: { samples: Sampled[]; onStage: (i: number) => void; reduce: boolean; dims: [number, number] }) {
+function Cloud({ samples, onStage, reduce, dims, progress }: { samples: Sampled[]; onStage: (i: number) => void; reduce: boolean; dims: [number, number]; progress?: React.MutableRefObject<number> }) {
   const mat = useRef<THREE.ShaderMaterial>(null!);
   const { size, viewport, camera, setSize } = useThree();
   // belt and braces: some embedded browsers never fire R3F's resize observer
@@ -158,9 +158,11 @@ function Cloud({ samples, onStage, reduce, dims }: { samples: Sampled[]; onStage
       const r = el.getBoundingClientRect();
       const x = ((e.clientX - r.left) / r.width) * 2 - 1;
       const y = -(((e.clientY - r.top) / r.height) * 2 - 1);
-      const ox = window.innerWidth > 900 ? 0.62 : 0;
-      const oy = window.innerWidth > 900 ? 0.05 : 0.25;
-      target.current.set((x * viewport.width) / 2 - ox, (y * viewport.height) / 2 - oy, 1);
+      const w = window.innerWidth > 900;
+      const ox = w ? 0.62 : 0;
+      const oy = w ? 0.05 : 0.55;
+      const sc = w ? 1 : 0.82;
+      target.current.set(((x * viewport.width) / 2 - ox) / sc, ((y * viewport.height) / 2 - oy) / sc, 1);
     };
     const onLeave = () => target.current.set(10, 10, 0);
     el.addEventListener("pointermove", onMove);
@@ -178,7 +180,15 @@ function Cloud({ samples, onStage, reduce, dims }: { samples: Sampled[]; onStage
     const period = HOLD + MORPH;
     let mix: number;
     if (reduce) mix = 3;
-    else {
+    else if (progress) {
+      // scroll owns the morph: 0..1 → stage 0..3, with a hold at each stage
+      const p = Math.min(1, Math.max(0, progress.current));
+      const seg = p * 3; // 0..3
+      const stage = Math.min(2, Math.floor(seg));
+      const local = seg - stage;
+      const f = local < 0.45 ? 0 : (local - 0.45) / 0.55; // hold 45%, morph 55%
+      mix = p >= 1 ? 3 : stage + f;
+    } else {
       const cycle = t % (period * 4);
       const stage = Math.floor(cycle / period);
       const local = cycle - stage * period;
@@ -207,9 +217,11 @@ function Cloud({ samples, onStage, reduce, dims }: { samples: Sampled[]; onStage
     () => ({ uMix: { value: 0 }, uTime: { value: 0 }, uPointer: { value: new THREE.Vector3(10, 10, 0) }, uPixelRatio: { value: 1 } }),
     []
   );
-  const offsetX = size.width > 900 ? 0.62 : 0;
+  const wide = size.width > 900;
+  const offsetX = wide ? 0.62 : 0;
+  // phones: lift the cloud above the headline and shrink it a little
   return (
-    <points geometry={geo} frustumCulled={false} position={[offsetX, size.width > 900 ? 0.05 : 0.25, 0]}>
+    <points geometry={geo} frustumCulled={false} position={[offsetX, wide ? 0.05 : 0.55, 0]} scale={wide ? 1 : 0.82}>
       <shaderMaterial
         ref={mat}
         vertexShader={vert.replace("vec3 b = pick(min(stage + 1.0, 3.0), p0, p1, p2, p3);", "vec3 b = pick(mod(stage + 1.0, 4.0), p0, p1, p2, p3);").replace("vec3 cb = pick(min(stage + 1.0, 3.0), c0, c1, c2, c3);", "vec3 cb = pick(mod(stage + 1.0, 4.0), c0, c1, c2, c3);")}
@@ -223,7 +235,7 @@ function Cloud({ samples, onStage, reduce, dims }: { samples: Sampled[]; onStage
   );
 }
 
-export function LifeParticles({ onStage, className = "" }: { onStage?: (i: number) => void; className?: string }) {
+export function LifeParticles({ onStage, className = "", progress }: { onStage?: (i: number) => void; className?: string; progress?: React.MutableRefObject<number> }) {
   const [samples, setSamples] = useState<Sampled[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [dims, setDims] = useState<[number, number]>([0, 0]);
@@ -274,7 +286,7 @@ export function LifeParticles({ onStage, className = "" }: { onStage?: (i: numbe
           gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
           camera={{ fov: 40, near: 0.1, far: 20, position: [0, 0, 3.4] }}
         >
-          <Cloud samples={samples} onStage={onStage ?? (() => {})} reduce={reduce} dims={dims} />
+          <Cloud samples={samples} onStage={onStage ?? (() => {})} reduce={reduce} dims={dims} progress={progress} />
         </Canvas>
       )}
     </div>

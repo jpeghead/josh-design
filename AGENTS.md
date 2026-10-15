@@ -6,7 +6,13 @@
 > the shelved experiments as proof of building with agents: the 3D city
 > (`game3d`), the studio (`archive3d`), the line (`line`), the room (`room`),
 > plus `components/lab/agent-patterns.tsx` (simulated agent UI) and a live
-> Claude demo (`app/api/ask`, on only when `ANTHROPIC_API_KEY` is set).
+> Claude demo (`app/api/ask`, on only when `ANTHROPIC_API_KEY` is set), a
+> WebGPU on-device model (`app/lab/local`), and **OLO v0** — a browser-only
+> product beta at `app/products/olo/app` (`src/lib/olo/{parse,analyze}.ts`).
+> Machine layer: `/resume`, JSON-LD in `components/json-ld.tsx`,
+> `app/opengraph-image.tsx`, `public/llms.txt`, AI-open `robots.ts`.
+> Open-source spin-offs live in `jpeghead/agent-ui-patterns` and
+> `jpeghead/local-grounded-chat` (MIT); keep them in sync by hand.
 > Routes in `src/app/*`, primitives in `src/components/ui.tsx` + `motion.tsx`
 > (CSS reveals gated on `html.js`), per-project imagery in
 > `src/content/work-media.ts`, web-sized copies in `public/img` (regenerate

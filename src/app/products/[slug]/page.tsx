@@ -68,7 +68,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </ul>
             <div className="mt-8 flex flex-wrap items-center gap-6">
               {p.link ? (
-                <Button href={p.link.href} external>
+                <Button href={p.link.href} external={p.link.href.startsWith("http")}>
                   {p.link.label}
                 </Button>
               ) : (

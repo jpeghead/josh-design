@@ -8,7 +8,7 @@ export type Product = {
   slug: string;
   name: string;
   tagline: string;
-  status: "Live" | "In development" | "Released";
+  status: "Live" | "Live beta" | "In development" | "Released";
   blurb: string;
   detail: string[];
   image: string | null;
@@ -25,17 +25,17 @@ export const products: Product[] = [
     slug: "olo",
     name: "OLO",
     tagline: "Spotify Wrapped for your brain.",
-    status: "In development",
+    status: "Live beta",
     blurb:
       "Point OLO at your own exported AI conversation history and it shows you the shape of how you actually think.",
     detail: [
       "You export your chat history yourself and bring it in — there's no account linking and no third-party access to your accounts.",
-      "Privacy-first by design: your data is yours, and the analysis is about you, for you.",
-      "The output is a portrait of your own patterns, obsessions, and questions over time.",
+      "Privacy-first by design: v0 runs entirely in your browser. The file is parsed and analyzed in the tab; nothing is uploaded.",
+      "The output is a portrait of your own patterns, obsessions, and questions over time: when you write, what you keep asking, how you open.",
     ],
-    image: null,
-    awaitingAsset: true,
+    image: "/img/lab/olo.jpg",
     aspect: "16/10",
+    link: { label: "Open the beta", href: "/products/olo/app" },
   },
   {
     slug: "signalscan",

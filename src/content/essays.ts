@@ -7,6 +7,31 @@ import type { Essay } from "./writing.generated";
 
 export const authoredEssays: Essay[] = [
   {
+    slug: "what-the-builds-taught-me-about-models",
+    title: "What the builds taught me about models",
+    date: "2026-10-15T12:00:00.000Z",
+    badge: "Notes",
+    description:
+      "Six things I now believe about building with language models, each one learned by shipping something on this site and watching it fail first.",
+    image: "/img/lab/local.jpg",
+    html: `
+<p><strong>I don't trust claims about models that didn't cost the person anything.</strong> So here are six, each of which cost me something this week, with the build that taught it.</p>
+<h3>1. Grounding is a formatting problem before it's a retrieval problem</h3>
+<p>The on-device model on this site answers from a summary of the site's own text. The first version packed every project into one long paragraph. A half-billion-parameter model read it and told a visitor I worked at Spin from 2015 to 2017. I was there from 2019 to 2022. Nothing about the facts was wrong; the shape was. One fact per line, years first, a sentence in the system prompt saying "copy years exactly, never guess a date," and the same model stopped inventing. The retrieval was identical. The formatting did the work.</p>
+<h3>2. A small model's mistakes are a feature if you show the comparison</h3>
+<p>I almost pulled the on-device demo when it got that date wrong. Instead the page now says a one-billion-parameter model will get things wrong sometimes, and points at the hosted Claude as the comparison. The gap between them is the most honest thing on the page. People who build with models know the gap exists; hiding it would have read as not knowing.</p>
+<h3>3. Hedging is not honesty. Grading is.</h3>
+<p>The fourth agent pattern puts two answers side by side. One hedges every clause: "I believe it may have been around 2020, possibly during WWDC, though I can't be completely certain." The other grades each claim: this one is sourced, this one is inferred, this one I don't know. The hedged answer sounds careful and tells you nothing. The graded answer tells you exactly what to verify. Every model interface I design from now on grades.</p>
+<h3>4. A permission prompt is a contract, and the narrowest yes should be the default</h3>
+<p>Agents ask to run things. The usual prompt is a command and two buttons. The pattern I built shows what will be touched, whether it can be undone, whether it leaves the repo, and offers an allow that is exactly as wide as the command, never wider. Deny is a real option with a stated consequence. I learned this from the other side: I am the one approving an agent's commands all day, and the prompts that scare me are the ones that don't say what they'll touch.</p>
+<h3>5. Verification is the whole job</h3>
+<p>Every good commit in this repo starts with a screenshot. The bad days were the ones where a green type-check stood in for looking at the screen. The city's worst crash was a React re-render running sixty times a second because game state lived in the wrong place; no compiler would have caught it. When I work with an agent, the thing I actually do is verify. The agent proposes and builds; I look, at three screen sizes, with the console open, before anything ships.</p>
+<h3>6. Cheap directions change how you decide</h3>
+<p>Between July and October this site was eight different sites: an archive, a darkroom, a line drawing, a side-scrolling room, a playable city, a monochrome page, a photo-led portfolio, and the one you're reading. Each cost about a day. When a direction costs a day you stop arguing about it and build it, then kill it by looking at it. Most of them died in an afternoon. The ones that survived are in the Builds. I don't think I could have reasoned my way to this site. I had to build the wrong ones first, fast.</p>
+<p>None of this is a framework. It's six scars. The builds are on the site if you want to press on them.</p>
+`,
+  },
+  {
     slug: "sixteen-days-in-whitehead-city",
     title: "Sixteen days in Whitehead City",
     date: "2026-10-14T12:00:00.000Z",

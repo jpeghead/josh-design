@@ -5,7 +5,7 @@
 export type LabEntry = {
   slug: string;
   title: string;
-  kind: "Playable" | "Interactive" | "Live model" | "Prototype" | "This site";
+  kind: "Playable" | "Interactive" | "Live model" | "Live beta" | "Prototype" | "This site";
   blurb: string;
   built: string;
   when: string;
@@ -17,6 +17,19 @@ export type LabEntry = {
 };
 
 export const lab: LabEntry[] = [
+  {
+    slug: "olo",
+    title: "OLO",
+    kind: "Live beta",
+    blurb:
+      "Spotify Wrapped for your brain. Drop in the export you can already download from ChatGPT or Claude and get a portrait of how you think: when you write, what you keep asking, how you open. v0 runs entirely in the browser; nothing is uploaded.",
+    built: "TypeScript · parsers for ChatGPT and Claude exports · local analysis · no server",
+    when: "October 2026",
+    href: "/products/olo/app",
+    image: "/img/lab/olo.jpg",
+    aspect: "16 / 10",
+    live: true,
+  },
   {
     slug: "local",
     title: "A model in your browser",

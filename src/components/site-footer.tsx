@@ -31,6 +31,9 @@ export function SiteFooter({ invite = true }: { invite?: boolean }) {
       <div className="gutter mx-auto flex w-full max-w-[1440px] flex-col gap-4 py-8 text-xs text-fg-3 sm:flex-row sm:items-center sm:justify-between">
         <p>© {YEAR} Josh Whitehead · Los Angeles</p>
         <nav aria-label="Elsewhere" className="flex flex-wrap gap-x-5 gap-y-2">
+          <Link href="/resume" className="transition-colors hover:text-fg">
+            Résumé
+          </Link>
           {REPO.isPublic && (
             <a href={REPO.url} target="_blank" rel="me noreferrer" className="transition-colors hover:text-fg">
               GitHub

@@ -65,6 +65,53 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         </div>
       </header>
 
+      {media?.proof && (
+        <Container wide>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-8 border-b border-line py-10 sm:grid-cols-4">
+            {media.proof.map((pf) => (
+              <div key={pf.label}>
+                <dt className="tighter text-[2rem] font-semibold leading-none sm:text-[2.75rem]">{pf.n}</dt>
+                <dd className="mt-2 text-sm text-fg-3 text-pretty">{pf.label}</dd>
+              </div>
+            ))}
+          </dl>
+        </Container>
+      )}
+
+      {media?.beats ? (
+        <Container wide>
+          <section className="py-20 sm:py-28" aria-label="The story">
+            <ol className="space-y-20 sm:space-y-28">
+              {media.beats.map((b, i) => {
+                const img = b.image !== undefined ? media.gallery[b.image] : undefined;
+                const flip = i % 2 === 1;
+                return (
+                  <li key={b.title} className="grid gap-8 lg:grid-cols-12 lg:items-center">
+                    <div className={`lg:col-span-5 ${flip ? "lg:order-2 lg:col-start-8" : ""}`}>
+                      <Reveal>
+                        <p className="text-sm tabular-nums text-fg-3">{String(i + 1).padStart(2, "0")}</p>
+                        <h2 className="serif mt-2 text-[2rem] leading-[1.05] sm:text-[2.75rem]">{b.title}</h2>
+                        <p className="mt-5 text-lg leading-relaxed text-fg-2 text-pretty">{b.body}</p>
+                      </Reveal>
+                    </div>
+                    {img && (
+                      <Reveal className={`lg:col-span-6 ${flip ? "lg:order-1 lg:col-start-1" : "lg:col-start-7"}`} delay={0.08}>
+                        <figure>
+                          <div className="frame rounded-lg" style={{ aspectRatio: img.aspect }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={img.src} alt={img.alt} loading="lazy" decoding="async" />
+                          </div>
+                          {img.caption && <figcaption className="mt-3 text-sm text-fg-2">{img.caption}</figcaption>}
+                        </figure>
+                      </Reveal>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+        </Container>
+      ) : (
       <Container>
         <section className="grid gap-8 py-20 sm:py-28 lg:grid-cols-12">
           <Label className="lg:col-span-3">The brief</Label>
@@ -94,13 +141,16 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
           </ul>
         </section>
       </Container>
+      )}
 
       {media && media.gallery.length > 0 && (
         <Container wide>
           <section className="border-t border-line py-20 sm:py-28" aria-label="Gallery">
-            <Label>The work</Label>
+            <Label>{media.beats ? "Everything else from the work" : "The work"}</Label>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              {media.gallery.map((m, i) => (
+              {media.gallery
+                .filter((_, i) => !media.beats?.some((b) => b.image === i))
+                .map((m, i) => (
                 <Reveal key={m.src} as="figure" className={m.span === 2 ? "sm:col-span-2" : ""} delay={0.03 * (i % 2)}>
                   <div className="frame rounded-lg" style={{ aspectRatio: m.aspect }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
