@@ -178,3 +178,8 @@ html.canvas-mode [data-dom-walk] { position: absolute; width: 1px; height: 1px; 
 .hud-tick { background: var(--color-graphite); }
 html.chapter-dark .hud-ink { color: var(--color-bone); }
 html.chapter-dark .hud-tick { background: var(--color-bone); }
+
+/* Mobile menu rows arrive one after another; reduced motion shows them at once. */
+.menu-item { opacity: 0; transform: translateY(6px); animation: menu-in 420ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards; }
+@keyframes menu-in { to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .menu-item { animation: none; opacity: 1; transform: none; } }
