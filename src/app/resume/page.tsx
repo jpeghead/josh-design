@@ -4,7 +4,7 @@ import { resume } from "@/content/resume";
 import { career, projects, principles } from "@/lib/data";
 import { lab } from "@/content/lab";
 import { PrintButton } from "@/components/print-button";
-import { RECORD } from "@/lib/admin/resume/record";
+import { RECORD, SKILLS_EXTRA } from "@/lib/admin/resume/record";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
@@ -54,7 +54,7 @@ export default function ResumePage() {
             Skills
           </h2>
           <dl className="space-y-3">
-            {Object.entries(resume.skills).map(([k, v]) => (
+            {Object.entries(resume.skills).map(([k, v]) => [k, [...v, ...(SKILLS_EXTRA[k] ?? [])]] as const).map(([k, v]) => (
               <div key={k} className="grid gap-1 sm:grid-cols-[9rem_1fr]">
                 <dt className="text-sm text-fg-2">{k}</dt>
                 <dd className="text-[15px]">{v.join(" · ")}</dd>
