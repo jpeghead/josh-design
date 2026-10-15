@@ -1,0 +1,475 @@
+import { join } from "node:path";
+import { mkdirSync } from "node:fs";
+import { execSync } from "node:child_process";
+import type { Browser, BrowserContext, Page } from "playwright";
+import Anthropic from "@anthropic-ai/sdk";
+import { DATA_DIR } from "../store";
+import { getProfile, type Profile } from "../resume/profile";
+import { toPdf } from "../resume/export";
+import { renderResumeText } from "../resume/render";
+import type { Resume } from "../resume/types";
+import type { Posting } from "../types";
+import { getApplication, saveApplication } from "./store";
+import type { Application, Field } from "./types";
+
+/**
+ * The apply agent. One visible Chromium per run, a persistent profile so
+ * sign-ins survive between runs, and a plain contract:
+ *   read the form → fill what is known → answer what needs words → stop.
+ * It never submits unless told to (autoSubmit, or the Submit action), it
+ * never touches a CAPTCHA, and it never invents an answer: unknowns are
+ * left blank and marked for review.
+ */
+
+const OUT = join(DATA_DIR, "out");
+const PROFILE_DIR = join(DATA_DIR, "browser");
+// On globalThis so every route bundle in the dev server sees the same open browsers.
+type Live = Map<string, { browser?: Browser; context: BrowserContext; page: Page }>;
+const g = globalThis as unknown as { __applyLive?: Live };
+const live: Live = g.__applyLive ?? (g.__applyLive = new Map());
+
+function log(a: Application, text: string) {
+  a.steps.push({ at: new Date().toISOString(), text });
+  saveApplication(a);
+}
+
+/** Collect every visible, fillable control with the best label we can find. Tags each with data-apply-key. */
+async function readForm(page: Page): Promise<Field[]> {
+  return page.evaluate(() => {
+    const out: { key: string; label: string; kind: string; required: boolean; options?: string[]; value?: string }[] = [];
+    const seen = new Set<Element>();
+    const labelOf = (el: Element): string => {
+      const id = el.getAttribute("id");
+      let t = "";
+      if (id) {
+        const l = document.querySelector(`label[for="${CSS.escape(id)}"]`);
+        if (l) t = l.textContent ?? "";
+      }
+      if (!t) t = el.getAttribute("aria-label") ?? "";
+      if (!t) {
+        const lb = el.getAttribute("aria-labelledby");
+        if (lb) t = lb.split(/\s+/).map((x) => document.getElementById(x)?.textContent ?? "").join(" ");
+      }
+      if (!t) t = el.closest("label")?.textContent ?? "";
+      if (!t) {
+        const wrap = el.closest("[class*=field], [class*=question], [class*=form-group], fieldset, li, div");
+        const lab = wrap?.querySelector("label, legend, [class*=label]");
+        if (lab) t = lab.textContent ?? "";
+      }
+      if (!t) t = el.getAttribute("placeholder") ?? el.getAttribute("name") ?? "";
+      return t.replace(/\s+/g, " ").replace(/\*/g, "").trim().slice(0, 160);
+    };
+    const visible = (el: Element) => {
+      const r = (el as HTMLElement).getBoundingClientRect();
+      const cs = getComputedStyle(el as HTMLElement);
+      return cs.display !== "none" && cs.visibility !== "hidden" && (r.width > 0 || r.height > 0 || (el as HTMLInputElement).type === "file");
+    };
+    let n = 0;
+    const tag = (el: Element) => {
+      const k = `f${n++}`;
+      el.setAttribute("data-apply-key", k);
+      return k;
+    };
+    // radios/checkbox groups by name
+    const groups = new Map<string, HTMLInputElement[]>();
+    document.querySelectorAll<HTMLInputElement>("input[type=radio], input[type=checkbox]").forEach((el) => {
+      if (!visible(el) && !visible(el.closest("label") ?? el)) return;
+      const name = el.name || labelOf(el);
+      groups.set(name, [...(groups.get(name) ?? []), el]);
+    });
+    for (const [name, els] of groups) {
+      els.forEach((e) => seen.add(e));
+      const first = els[0];
+      const fieldset = first.closest("fieldset, [role=group], [role=radiogroup], [class*=question], [class*=field]");
+      const legend = fieldset?.querySelector("legend, [class*=label], label:not(:has(input))")?.textContent?.replace(/\s+/g, " ").trim() ?? name;
+      const options = els.map((e) => (e.closest("label")?.textContent ?? document.querySelector(`label[for="${CSS.escape(e.id)}"]`)?.textContent ?? e.value).replace(/\s+/g, " ").trim());
+      const key = tag(first);
+      els.forEach((e, i) => e.setAttribute("data-apply-option", `${key}:${i}`));
+      out.push({ key, label: legend.slice(0, 160), kind: first.type === "radio" ? "radio" : "checkbox", required: els.some((e) => e.required || e.getAttribute("aria-required") === "true"), options });
+    }
+    document.querySelectorAll<HTMLElement>("input, textarea, select, [role=combobox], [contenteditable=true]").forEach((el) => {
+      if (seen.has(el)) return;
+      const input = el as HTMLInputElement;
+      const type = (input.type || "").toLowerCase();
+      if (["hidden", "submit", "button", "reset", "image", "radio", "checkbox"].includes(type)) return;
+      if (!visible(el)) return;
+      if (el.closest("[data-apply-key]") && el.getAttribute("role") !== "combobox") return;
+      if (el.getAttribute("role") !== "combobox" && (el.closest('[role="combobox"]') || el.closest('[class*="select__"], [class*="Select__"], [class*="select-shell"]') || el.getAttribute("aria-autocomplete"))) return;
+      const kind = el.tagName === "TEXTAREA" || el.getAttribute("contenteditable") === "true" ? "textarea" : el.tagName === "SELECT" ? "select" : el.getAttribute("role") === "combobox" ? "combobox" : type === "file" ? "file" : type === "email" ? "email" : type === "tel" ? "tel" : type === "url" ? "url" : type === "number" ? "number" : type === "date" ? "date" : "text";
+      const key = tag(el);
+      const options = el.tagName === "SELECT" ? [...(el as HTMLSelectElement).options].map((o) => o.text.trim()).filter(Boolean) : undefined;
+      out.push({ key, label: labelOf(el), kind, required: input.required || el.getAttribute("aria-required") === "true", options, value: kind === "file" ? "" : (input.value ?? "").slice(0, 200) });
+    });
+    return out as never;
+  }) as Promise<Field[]>;
+}
+
+const RX = {
+  first: /^(first|given)\s*name/i,
+  last: /^(last|family|sur)\s*name/i,
+  full: /^(full\s*)?name$|^your name/i,
+  email: /e-?mail/i,
+  phone: /phone|mobile/i,
+  linkedin: /linkedin/i,
+  github: /github/i,
+  portfolio: /portfolio|website|personal site|url|link/i,
+  location: /^(current )?location$|^city$|where (are|do) you (live|based)|city and state|^address/i,
+  country: /^country$|country of residence/i,
+  resume: /resume|résumé|cv\b/i,
+  cover: /cover letter/i,
+  heard: /how did you hear|where did you (hear|find)|source/i,
+  auth: /authori[sz]ed to work|legally (authori[sz]ed|eligible)|work authori[sz]ation|eligible to work/i,
+  sponsor: /sponsor/i,
+  pronoun: /pronoun/i,
+  salary: /salary|compensation|pay expectation/i,
+  start: /start date|when (can|could|would) you (start|begin)|earliest.*start|start working|notice period/i,
+  relocate: /relocat/i,
+  eeo: /gender|race|ethnicit|veteran|disabilit|hispanic|latino|sexual orientation|transgender/i,
+  company: /current (company|employer)|^company$|organization/i,
+  title: /current (title|role)|^title$|job title/i,
+  years: /years of experience/i,
+  privacy: /privacy|consent|agree|acknowledg|terms/i,
+};
+
+function pickOption(options: string[] | undefined, prefer: RegExp[]): string | undefined {
+  if (!options) return undefined;
+  for (const r of prefer) {
+    const o = options.find((x) => r.test(x));
+    if (o) return o;
+  }
+  return undefined;
+}
+
+/** Decide a value for a field from the profile, or leave it for review. */
+function decide(f: Field, profile: Profile, resume: Resume): { value?: string; status: Field["status"]; note?: string } {
+  const L = f.label;
+  const a = profile.answers;
+  if (f.kind === "file") return RX.resume.test(L) || RX.cover.test(L) === false ? { value: "__RESUME_PDF__", status: "filled", note: "résumé PDF" } : { status: "left" };
+  if (RX.eeo.test(L)) {
+    const v = pickOption(f.options, [/decline|prefer not|choose not|do not wish|don.?t wish|not wish|rather not/i]);
+    return v ? { value: v, status: "filled", note: "declined, as allowed" } : { status: "left", note: "self-identification left blank" };
+  }
+  if (RX.first.test(L)) return { value: a.firstName, status: "filled" };
+  if (RX.last.test(L)) return { value: a.lastName, status: "filled" };
+  if (RX.full.test(L)) return { value: `${a.firstName} ${a.lastName}`, status: "filled" };
+  if (RX.email.test(L)) return { value: profile.email, status: "filled" };
+  if (RX.phone.test(L)) return profile.phone ? { value: profile.phone, status: "filled" } : { status: "review", note: "no phone in profile.json" };
+  if (RX.linkedin.test(L)) return { value: profile.links.find((l) => /linkedin/i.test(l.url))?.url ?? "", status: "filled" };
+  if (RX.github.test(L)) return { value: profile.links.find((l) => /github/i.test(l.url))?.url ?? "", status: "filled" };
+  if (RX.resume.test(L) && f.kind === "textarea") return { value: renderResumeText(resume.data), status: "filled", note: "résumé as text" };
+  if (RX.portfolio.test(L)) return { value: profile.links[0]?.url ?? "", status: "filled" };
+  if (RX.relocate.test(L)) return a.willingToRelocate ? { value: a.willingToRelocate, status: "filled" } : { status: "review", note: "relocation: you decide" };
+  if (RX.country.test(L)) {
+    const v = pickOption(f.options, [/^united states/i, /^usa?$/i]);
+    return { value: v ?? "United States", status: "filled" };
+  }
+  if (RX.location.test(L)) return { value: "Los Angeles, CA", status: "filled" };
+  if (RX.sponsor.test(L)) {
+    const v = pickOption(f.options, a.needsSponsorship ? [/^yes/i] : [/^no/i]);
+    return v ? { value: v, status: "filled" } : { value: a.needsSponsorship ? "Yes" : "No", status: "filled" };
+  }
+  if (RX.auth.test(L)) {
+    const v = pickOption(f.options, a.workAuthorizedUS ? [/^yes/i] : [/^no/i]);
+    return v ? { value: v, status: "filled" } : { value: a.workAuthorizedUS ? "Yes" : "No", status: "filled" };
+  }
+  if (RX.heard.test(L)) {
+    const v = pickOption(f.options, [/company (website|careers|site)|careers page|website/i, /other/i]);
+    return v ? { value: v, status: "filled" } : { value: a.howHeard, status: "filled" };
+  }
+  if (RX.pronoun.test(L)) return a.pronouns ? { value: a.pronouns, status: "filled" } : { status: "left" };
+  if (RX.salary.test(L)) return a.salary ? { value: a.salary, status: "filled" } : { status: "review", note: "salary: you decide" };
+  if (RX.start.test(L)) return a.startDate ? { value: a.startDate, status: "filled" } : { status: "review", note: "start date: you decide" };
+  if (RX.relocate.test(L)) return a.willingToRelocate ? { value: a.willingToRelocate, status: "filled" } : { status: "review", note: "relocation: you decide" };
+  if (RX.company.test(L)) return { value: "Boneyard Collective", status: "filled" };
+  if (RX.title.test(L)) return { value: "Founder & Design Lead", status: "filled" };
+  if (RX.years.test(L)) return { value: "15", status: "filled" };
+  if (RX.privacy.test(L) && f.kind === "checkbox") return { value: f.options?.[0] ?? "yes", status: "review", note: "consent box: read it, then tick it yourself" };
+  if (!L.trim()) return { status: "skipped", note: "no label; part of a dropdown" };
+  if (/arbitrat|agreement|acknowledg|i have read|consent/i.test(L)) return { status: "review", note: "an agreement: read it, then answer yourself" };
+  if (/^(are|do|would|have|will|can|is|were) you\b/i.test(L) || /\?$/.test(L)) return { status: "review", note: "your call" };
+  if (f.kind === "textarea" || (f.kind === "text" && f.required)) return { status: "review", note: "free-text question" };
+  return { status: "left" };
+}
+
+/** Claude writes answers to free-text questions, from the profile only, in Josh's register. */
+async function answerWithClaude(questions: { key: string; label: string }[], job: Posting, profile: Profile, resume: Resume): Promise<Record<string, string>> {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key || !questions.length) return {};
+  const client = new Anthropic({ apiKey: key });
+  const res = await client.messages.create({
+    model: process.env.ASK_MODEL ?? "claude-sonnet-5-5",
+    max_tokens: 2500,
+    system: `You draft application answers for one candidate, in first person, plain and specific, no flattery, no clichés, 40–140 words each unless the question clearly wants one line. Use only facts in CANDIDATE. If a question cannot be answered from the facts, answer with exactly "REVIEW". Cover letters follow this stance: ${profile.answers.coverLetterStance}\nReply with JSON only: {"<key>": "<answer>", ...}.\n\nCANDIDATE:\n${renderResumeText(resume.data)}`,
+    messages: [{ role: "user", content: `ROLE: ${job.title} at ${job.company}\n\nPOSTING:\n${job.description.slice(0, 5000)}\n\nQUESTIONS:\n${questions.map((q) => `${q.key}: ${q.label}`).join("\n")}` }],
+  });
+  const txt = res.content.map((c) => (c.type === "text" ? c.text : "")).join("");
+  const m = txt.match(/\{[\s\S]*\}/);
+  if (!m) return {};
+  try {
+    return JSON.parse(m[0]) as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+
+/** react-select and friends: the combobox is a zero-size input inside a control div; click the control. */
+async function openCombobox(page: Page, sel: string) {
+  const el = page.locator(sel).first();
+  await el.scrollIntoViewIfNeeded().catch(() => {});
+  await page.keyboard.press("Escape").catch(() => {});
+  const control = el.locator('xpath=ancestor::*[contains(@class,"control") or contains(@class,"select__") or contains(@class,"select-shell")][1]');
+  try {
+    if (await control.count()) await control.first().click({ timeout: 2500 });
+    else await el.click({ force: true, timeout: 2500 });
+  } catch {
+    // last resort: focus the input itself and open with the keyboard
+    await el.focus({ timeout: 2000 });
+    await page.keyboard.press("ArrowDown");
+  }
+}
+
+/** Open a custom dropdown, read its options, close it. Returns [] when it will not open. */
+async function comboboxOptions(page: Page, key: string): Promise<string[]> {
+  const sel = `[data-apply-key="${key}"]`;
+  try {
+    await openCombobox(page, sel);
+    await page.waitForTimeout(350);
+    const list = page.locator('[role="listbox"]:visible, [id$="-listbox"]:visible').first();
+    const opts = (await list.count()) ? await list.locator('[role="option"]').allInnerTexts() : [];
+    await page.keyboard.press("Escape");
+    return [...new Set(opts.map((o) => o.replace(/\s+/g, " ").trim()).filter(Boolean))].slice(0, 80);
+  } catch {
+    return [];
+  }
+}
+
+async function setField(page: Page, f: Field, value: string, pdfPath: string) {
+  const sel = `[data-apply-key="${f.key}"]`;
+  if (f.kind === "file") {
+    await page.setInputFiles(sel, pdfPath);
+    return;
+  }
+  if (f.kind === "radio" || f.kind === "checkbox") {
+    const idx = f.options?.findIndex((o) => o === value) ?? -1;
+    if (idx >= 0) await page.click(`[data-apply-option="${f.key}:${idx}"]`, { force: true });
+    return;
+  }
+  if (f.kind === "select") {
+    await page.selectOption(sel, { label: value });
+    return;
+  }
+  if (f.kind === "combobox") {
+    await openCombobox(page, sel);
+    await page.waitForTimeout(250);
+    await page.keyboard.type(value.slice(0, 40), { delay: 10 });
+    await page.waitForTimeout(400);
+    // only the list that just opened, and the whole option text, so "No" never means "Norway"
+    const list = page.locator('[role="listbox"]:visible, [id$="-listbox"]:visible').first();
+    const exact = new RegExp(`^\\s*${value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`, "i");
+    const opt = (await list.count()) ? list.locator('[role="option"]', { hasText: exact }).first() : page.locator('[role="option"]:visible', { hasText: exact }).first();
+    if (await opt.count()) await opt.click({ timeout: 3000 });
+    else await page.keyboard.press("Enter");
+    return;
+  }
+  await page.fill(sel, value);
+}
+
+/** A sign-in wall, before anything is filled. */
+async function loginWall(page: Page): Promise<string | null> {
+  if (/login|signin|sign-in|auth/i.test(page.url()) && (await page.locator('input[type="password"]').count())) return "This board wants an account. Sign in in the open browser, then start the application again; the sign-in is remembered.";
+  return null;
+}
+
+/**
+ * A CAPTCHA that is actually asking something. Greenhouse and friends embed an
+ * invisible reCAPTCHA on every form, so the iframe's presence means nothing;
+ * only a visible challenge counts.
+ */
+async function visibleCaptcha(page: Page): Promise<boolean> {
+  const challenge = page.locator('iframe[src*="recaptcha/api2/bframe"], iframe[src*="hcaptcha.com/captcha"], iframe[src*="challenges.cloudflare.com"], iframe[title*="challenge" i]');
+  const n = await challenge.count();
+  for (let i = 0; i < n; i++) {
+    const box = await challenge.nth(i).boundingBox().catch(() => null);
+    if (box && box.width > 50 && box.height > 50) return true;
+  }
+  const robot = page.locator('text=/i\'m not a robot/i, text=/select all (images|squares)/i');
+  return (await robot.count()) > 0 && (await robot.first().isVisible().catch(() => false));
+}
+
+/** Start a run: opens the form, fills it, stops for review (or submits when autoSubmit). Runs in the background. */
+export async function startApplication(app: Application, job: Posting, resume: Resume): Promise<void> {
+  const a = app;
+  try {
+    const { chromium } = await import("playwright");
+    mkdirSync(OUT, { recursive: true });
+    mkdirSync(PROFILE_DIR, { recursive: true });
+    const profile = getProfile();
+    log(a, "Exporting the résumé PDF.");
+    const pdfPath = await toPdf(resume);
+    log(a, "Opening a browser you can watch.");
+    const launch = () => chromium.launchPersistentContext(PROFILE_DIR, { headless: false, viewport: { width: 1200, height: 900 } });
+    let context: BrowserContext;
+    try {
+      context = await launch();
+    } catch (e) {
+      if (!/already in use|existing browser session/i.test(String(e))) throw e;
+      // a browser from an earlier run still holds the profile (the dev server reloaded under it); close it and try once more
+      log(a, "An earlier browser was still open on this profile; closing it.");
+      try {
+        execSync(`pkill -f "${PROFILE_DIR}"`);
+      } catch {
+        /* nothing matched */
+      }
+      await new Promise((r) => setTimeout(r, 1200));
+      context = await launch();
+    }
+    const page = context.pages()[0] ?? (await context.newPage());
+    live.set(a.id, { context, page });
+    a.status = "filling";
+    log(a, `Going to ${job.applyUrl}`);
+    await page.goto(job.applyUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
+    await page.waitForTimeout(1500);
+    // Greenhouse and Lever job pages often need an "Apply" click to reveal the form
+    const applyBtn = page.locator('a:has-text("Apply"), button:has-text("Apply")').first();
+    if ((await page.locator("input[type=file]").count()) === 0 && (await applyBtn.count())) {
+      await applyBtn.click().catch(() => {});
+      await page.waitForTimeout(1500);
+    }
+    const wall = await loginWall(page);
+    if (wall) {
+      a.status = "needs-you";
+      a.message = wall;
+      log(a, wall);
+      return;
+    }
+    page.setDefaultTimeout(8000);
+    const fields = await readForm(page);
+    for (const f of fields) if (f.kind === "combobox" && !f.options?.length) f.options = await comboboxOptions(page, f.key);
+    log(a, `Read ${fields.length} fields.`);
+    const toAsk: { key: string; label: string }[] = [];
+    for (const f of fields) {
+      const d = decide(f, profile, resume);
+      f.status = d.status;
+      f.note = d.note;
+      if (d.value !== undefined && d.status === "filled") {
+        try {
+          await setField(page, f, d.value, pdfPath);
+          f.value = d.value === "__RESUME_PDF__" ? pdfPath.split("/").pop() : d.value;
+        } catch (e) {
+          f.status = "review";
+          f.note = `could not set: ${(e as Error).message.slice(0, 80)}`;
+        }
+        a.fields = fields;
+        saveApplication(a);
+      } else if (d.status === "review" && (f.kind === "textarea" || f.kind === "text") && !RX.salary.test(f.label) && !RX.start.test(f.label) && !RX.relocate.test(f.label)) {
+        toAsk.push({ key: f.key, label: f.label });
+      }
+    }
+    a.fields = fields;
+    saveApplication(a);
+    if (toAsk.length) {
+      log(a, process.env.ANTHROPIC_API_KEY ? `Drafting ${toAsk.length} written answer${toAsk.length === 1 ? "" : "s"} with Claude.` : `${toAsk.length} written question${toAsk.length === 1 ? "" : "s"} left for you (no model key).`);
+      const answers = await answerWithClaude(toAsk, job, profile, resume);
+      for (const f of fields) {
+        const ans = answers[f.key];
+        if (!ans) continue;
+        if (ans.trim() === "REVIEW") {
+          f.note = "the profile does not answer this; write it yourself";
+          continue;
+        }
+        try {
+          await setField(page, f, ans, pdfPath);
+          f.value = ans;
+          f.status = "filled";
+          f.note = "drafted by Claude from the profile; read it";
+        } catch (e) {
+          f.note = `could not set: ${(e as Error).message.slice(0, 80)}`;
+        }
+      }
+      a.fields = fields;
+    }
+    const shot = join(OUT, `${a.id}.png`);
+    await page.screenshot({ path: shot, fullPage: true });
+    a.screenshot = shot;
+    const reviewCount = fields.filter((f) => f.status === "review").length;
+    if (await visibleCaptcha(page)) {
+      a.status = "needs-you";
+      a.message = "A CAPTCHA is showing. Solve it in the open browser, then press Submit here.";
+      log(a, a.message);
+      return;
+    }
+    a.status = "review";
+    a.message = reviewCount ? `${reviewCount} field${reviewCount === 1 ? "" : "s"} need${reviewCount === 1 ? "s" : ""} you. The browser is open; fix them there or here, then Submit.` : "Everything known is filled. Read it in the open browser, then Submit.";
+    log(a, a.message);
+    if (a.autoSubmit && !reviewCount) await submitApplication(a.id);
+  } catch (e) {
+    a.status = "failed";
+    a.message = (e as Error).message.slice(0, 300);
+    log(a, `Failed: ${a.message}`);
+    const l = live.get(a.id);
+    if (l) {
+      await l.context.close().catch(() => {});
+      live.delete(a.id);
+    }
+  }
+}
+
+export async function submitApplication(id: string): Promise<Application | undefined> {
+  const a = getApplication(id);
+  const l = live.get(id);
+  if (!a || !l) return a;
+  try {
+    a.status = "submitting";
+    log(a, "Submitting.");
+    const btn = l.page.locator('button[type=submit], input[type=submit], button:has-text("Submit"), button:has-text("Submit application"), button:has-text("Apply")').last();
+    await btn.click();
+    await l.page.waitForTimeout(4000);
+    const shot = join(OUT, `${a.id}-submitted.png`);
+    await l.page.screenshot({ path: shot, fullPage: true });
+    a.screenshot = shot;
+    if (await visibleCaptcha(l.page)) {
+      a.status = "needs-you";
+      a.message = "A CAPTCHA appeared at submit. Solve it in the open browser, then press Submit here again.";
+      log(a, a.message);
+      return a;
+    }
+    const body = (await l.page.textContent("body")) ?? "";
+    if (/thank|received|submitted|success|we'll be in touch|application has been/i.test(body)) {
+      a.status = "submitted";
+      a.message = "Submitted. The confirmation is in the screenshot.";
+    } else {
+      a.status = "review";
+      a.message = "Clicked Submit but saw no confirmation. Check the open browser: a required field or a CAPTCHA may be waiting.";
+    }
+    a.finishedAt = new Date().toISOString();
+    log(a, a.message);
+    if (a.status === "submitted") {
+      await l.context.close().catch(() => {});
+      live.delete(id);
+    }
+  } catch (e) {
+    a.status = "review";
+    a.message = `Submit failed: ${(e as Error).message.slice(0, 200)}`;
+    log(a, a.message);
+  }
+  return a;
+}
+
+export async function stopApplication(id: string): Promise<Application | undefined> {
+  const a = getApplication(id);
+  const l = live.get(id);
+  if (l) {
+    await l.context.close().catch(() => {});
+    live.delete(id);
+  }
+  if (a && a.status !== "submitted") {
+    a.status = "stopped";
+    a.finishedAt = new Date().toISOString();
+    log(a, "Stopped; the browser is closed.");
+  }
+  return a;
+}
+
+export function isLive(id: string) {
+  return live.has(id);
+}

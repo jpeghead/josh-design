@@ -9,3 +9,6 @@ out
 # Personal Claude Code overrides
 .claude/settings.local.json
 .env*
+
+# private admin data (jobs, résumés, applications)
+data/admin/

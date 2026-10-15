@@ -201,3 +201,9 @@ dialog.palette[open] { animation: palette-in 180ms var(--ease) both; }
 }
 @keyframes reading-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @media (prefers-reduced-motion: reduce) { .reading-progress { display: none; } }
+
+/* The admin panel brings its own chrome: hide the site header, footer, and skip link while it is mounted. */
+body:has(.admin) > header { display: none; }
+body:has(.admin) > footer { display: none; }
+body:has(.admin) > a[href="#main"] { display: none; }
+body:has(.admin) > main { padding: 0; }

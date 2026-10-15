@@ -55,3 +55,13 @@ fabricated. Presentation (which image, which color field) lives in
 
 Read `AGENTS.md` first. It is the handoff: conventions, traps, the licensing
 rule (original or CC0 only), and how to verify in a browser before committing.
+
+## Admin (local only)
+
+`/admin` is a private cockpit for the job hunt and exists only where
+`ADMIN_SECRET` is set in `.env.local`; deployments return 404. It scans
+145 company boards (Greenhouse, Ashby, Lever) plus Hacker News for
+AI-builder and design roles, generates ATS-safe résumés from the site's
+own content in two personas, and drives a visible browser to fill
+applications, stopping for review before anything is submitted. Its data
+stays in the git-ignored `data/admin/`. See `docs/admin.md`.

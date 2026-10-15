@@ -21,6 +21,17 @@
 > (node:test, native type stripping, tests beside the code as `*.test.ts`),
 > and builds on every push. `app/error.tsx` and `app/global-error.tsx` exist.
 > `components/lab/desktop-only.tsx` keeps phones from booting the 3D city.
+> **Admin cockpit (local only, October 2026):** `/admin` is Josh's job-hunt
+> tool: a scanner over 145 Greenhouse/Ashby/Lever boards plus Hacker News with
+> a role taxonomy and rule scoring (Claude rescoring with a key), a résumé
+> generator with two personas, live preview, instruction edits, tailoring, and
+> PDF/DOCX/TXT export, and a Playwright apply agent that fills forms, drafts
+> written answers with a key, and stops for review before Submit. Gated by
+> `ADMIN_SECRET` in `.env.local` (404 without it, so production never has it);
+> data lives in git-ignored `data/admin/`. Design and decisions: `docs/admin.md`.
+> Code: `src/lib/admin/**`, `src/app/admin/**`, `src/app/api/admin/**`,
+> `src/components/admin/**`, `src/middleware.ts`.
+>
 > Model answers' parenthetical sources become links via `components/lab/cited.tsx`
 > (`lib/sources.ts` builds the label→route table; `lib/citation.ts` is the pure resolver).
 > Machine layer: `/resume`, JSON-LD in `components/json-ld.tsx`,
