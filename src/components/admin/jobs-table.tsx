@@ -12,6 +12,15 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
   const [scanning, setScanning] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const prepare = async () => {
+    if (!picked.size) return;
+    setScanning(true);
+    const r = await fetch("/api/admin/apply/batch", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobIds: [...picked] }) });
+    setScanning(false);
+    if (r.ok) router.push("/admin/queue");
+    else setMsg(`Could not queue (${r.status}).`);
+  };
 
   const setFilter = (patch: Partial<Filters>) => {
     const f = { ...filters, ...patch };
@@ -100,7 +109,10 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
         <button type="button" onClick={score} disabled={scanning} className="rounded-full border border-line px-3 py-1 text-[13px] text-fg-2 hover:text-fg disabled:opacity-50">
           Score with Claude
         </button>
-        <button type="button" onClick={() => scan()} disabled={scanning} className="rounded-full bg-fg px-4 py-1.5 text-[13px] font-medium text-bg disabled:opacity-50">
+        <button type="button" onClick={prepare} disabled={scanning || !picked.size} className="rounded-full bg-fg px-4 py-1.5 text-[13px] font-medium text-bg disabled:opacity-50" title="Fill these applications in the background, then review them in the queue">
+          Prepare {picked.size || ""}
+        </button>
+        <button type="button" onClick={() => scan()} disabled={scanning} className="rounded-full border border-line px-4 py-1.5 text-[13px] text-fg-2 hover:text-fg disabled:opacity-50">
           {scanning ? "Working…" : "Scan boards"}
         </button>
       </div>
@@ -116,7 +128,8 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
       <ul className="mt-2 divide-y divide-line border-y border-line">
         {rows.map((p) => (
           <li key={p.id} className="py-3">
-            <div className="grid gap-x-4 gap-y-1 sm:grid-cols-[3.5rem_1fr_auto] sm:items-baseline">
+            <div className="grid gap-x-4 gap-y-1 sm:grid-cols-[1.25rem_3rem_1fr_auto] sm:items-baseline">
+              <input type="checkbox" checked={picked.has(p.id)} onChange={(e) => setPicked((s) => { const n = new Set(s); if (e.target.checked) n.add(p.id); else n.delete(p.id); return n; })} aria-label={`Pick ${p.title} at ${p.company}`} className="h-3.5 w-3.5 accent-[var(--fg)]" />
               <span className={`tabular-nums text-[15px] font-semibold ${p.score >= 70 ? "text-fg" : p.score >= 50 ? "text-fg-2" : "text-fg-3"}`} title={p.scoreWhy}>
                 {p.score}
               </span>

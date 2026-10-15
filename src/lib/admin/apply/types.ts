@@ -21,7 +21,9 @@ export type Application = {
   url: string;
   resumeId: string;
   autoSubmit: boolean;
-  status: "starting" | "filling" | "review" | "needs-you" | "submitting" | "submitted" | "failed" | "stopped";
+  status: "queued" | "starting" | "filling" | "review" | "needs-you" | "submitting" | "submitted" | "failed" | "stopped";
+  /** Prepared in the background without a window; the queue shows the screenshot and fields instead. */
+  headless?: boolean;
   message?: string;
   fields: Field[];
   steps: Step[];

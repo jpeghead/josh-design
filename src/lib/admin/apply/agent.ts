@@ -1,4 +1,4 @@
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { mkdirSync } from "node:fs";
 import { execSync } from "node:child_process";
 import type { Browser, BrowserContext, Page } from "playwright";
@@ -25,9 +25,18 @@ import type { Application, Field } from "./types";
 const OUT = join(DATA_DIR, "out");
 const PROFILE_DIR = join(DATA_DIR, "browser");
 // On globalThis so every route bundle in the dev server sees the same open browsers.
-type Live = Map<string, { browser?: Browser; context: BrowserContext; page: Page }>;
+type Live = Map<string, { context: BrowserContext; page: Page; profileDir?: string; pdfPath?: string; fields?: Field[] }>;
 const g = globalThis as unknown as { __applyLive?: Live };
 const live: Live = g.__applyLive ?? (g.__applyLive = new Map());
+
+/** Close a run's browser and, for a background run, remove its profile copy. */
+async function closeRun(id: string) {
+  const l = live.get(id);
+  if (!l) return;
+  await l.context.close().catch(() => {});
+  live.delete(id);
+  if (l.profileDir && l.profileDir !== PROFILE_DIR) execSync(`rm -rf "${l.profileDir}"`);
+}
 
 function log(a: Application, text: string) {
   a.steps.push({ at: new Date().toISOString(), text });
@@ -451,8 +460,9 @@ async function visibleCaptcha(page: Page): Promise<boolean> {
 }
 
 /** Start a run: opens the form, fills it, stops for review (or submits when autoSubmit). Runs in the background. */
-export async function startApplication(app: Application, job: Posting, resume: Resume): Promise<void> {
+export async function startApplication(app: Application, job: Posting, resume: Resume, opts: { headless?: boolean } = {}): Promise<void> {
   const a = app;
+  let profileDir = PROFILE_DIR;
   try {
     const { chromium } = await import("playwright");
     mkdirSync(OUT, { recursive: true });
@@ -460,8 +470,14 @@ export async function startApplication(app: Application, job: Posting, resume: R
     const profile = getProfile();
     log(a, "Exporting the résumé PDF.");
     const pdfPath = await toPdf(resume);
-    log(a, "Opening a browser you can watch.");
-    const launch = () => chromium.launchPersistentContext(PROFILE_DIR, { headless: false, viewport: { width: 1200, height: 900 } });
+    if (opts.headless) {
+      // a background run gets its own copy of the sign-in profile, so several can be open at once
+      profileDir = join(DATA_DIR, "browser-runs", a.id);
+      execSync(`rm -rf "${profileDir}" && mkdir -p "${dirname(profileDir)}" && cp -R "${PROFILE_DIR}" "${profileDir}" && rm -f "${profileDir}/SingletonLock" "${profileDir}/SingletonSocket" "${profileDir}/SingletonCookie"`);
+      a.headless = true;
+      log(a, "Preparing in the background.");
+    } else log(a, "Opening a browser you can watch.");
+    const launch = () => chromium.launchPersistentContext(profileDir, { headless: !!opts.headless, viewport: { width: 1200, height: 900 } });
     let context: BrowserContext;
     try {
       context = await launch();
@@ -478,7 +494,7 @@ export async function startApplication(app: Application, job: Posting, resume: R
       context = await launch();
     }
     const page = context.pages()[0] ?? (await context.newPage());
-    live.set(a.id, { context, page });
+    live.set(a.id, { context, page, profileDir, pdfPath });
     a.status = "filling";
     log(a, `Going to ${job.applyUrl}`);
     await page.goto(job.applyUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
@@ -498,6 +514,8 @@ export async function startApplication(app: Application, job: Posting, resume: R
     }
     page.setDefaultTimeout(8000);
     const fields = await readForm(page);
+    const liveEntry = live.get(a.id);
+    if (liveEntry) liveEntry.fields = fields;
     const files = fields.filter((f) => f.kind === "file");
     if (files.length === 1) files[0].note = "only-file";
     else if (files.length === 2 && !files.some((f) => RX.resume.test(f.label) || RX.cover.test(f.label))) {
@@ -586,7 +604,13 @@ export async function startApplication(app: Application, job: Posting, resume: R
       return;
     }
     a.status = "review";
-    a.message = reviewCount ? `${reviewCount} field${reviewCount === 1 ? "" : "s"} need${reviewCount === 1 ? "s" : ""} you. The browser is open; fix them there or here, then Submit.` : "Everything known is filled. Read it in the open browser, then Submit.";
+    a.message = opts.headless
+      ? reviewCount
+        ? `${reviewCount} field${reviewCount === 1 ? "" : "s"} need${reviewCount === 1 ? "s" : ""} you. Fill them in the queue, then Submit.`
+        : "Everything known is filled. Read the screenshot and the fields, then Submit."
+      : reviewCount
+        ? `${reviewCount} field${reviewCount === 1 ? "" : "s"} need${reviewCount === 1 ? "s" : ""} you. The browser is open; fix them there or here, then Submit.`
+        : "Everything known is filled. Read it in the open browser, then Submit.";
     if (await turnstilePresent(page)) a.message += " This form has a Cloudflare check; it usually clears on its own, and if it asks you to click, do that in the browser first.";
     log(a, a.message);
     if (a.autoSubmit && !reviewCount) await submitApplication(a.id);
@@ -594,12 +618,37 @@ export async function startApplication(app: Application, job: Posting, resume: R
     a.status = "failed";
     a.message = (e as Error).message.slice(0, 300);
     log(a, `Failed: ${a.message}`);
-    const l = live.get(a.id);
-    if (l) {
-      await l.context.close().catch(() => {});
-      live.delete(a.id);
+    await closeRun(a.id);
+    if (profileDir !== PROFILE_DIR) execSync(`rm -rf "${profileDir}"`);
+  }
+}
+
+/** Set fields on a live form from the queue (typed values, chosen options), then re-screenshot. */
+export async function setFields(id: string, edits: { key: string; value: string }[]): Promise<Application | undefined> {
+  const a = getApplication(id);
+  const l = live.get(id);
+  if (!a || !l) return undefined;
+  for (const e of edits) {
+    const f = a.fields.find((x) => x.key === e.key);
+    if (!f || f.kind === "file") continue;
+    try {
+      if (f.kind === "text" || f.kind === "email" || f.kind === "tel" || f.kind === "url" || f.kind === "number" || f.kind === "date" || f.kind === "textarea") await l.page.fill(`[data-apply-key="${f.key}"]`, e.value);
+      else await setField(l.page, f, e.value, l.pdfPath ?? "");
+      f.value = e.value;
+      f.status = e.value ? "filled" : "left";
+      f.note = e.value ? "set by you" : undefined;
+    } catch (err) {
+      f.status = "review";
+      f.note = `could not set: ${(err as Error).message.slice(0, 80)}`;
     }
   }
+  const shot = join(OUT, `${a.id}.png`);
+  await l.page.screenshot({ path: shot, fullPage: true }).catch(() => {});
+  a.screenshot = shot;
+  const reviewCount = a.fields.filter((f) => f.status === "review").length;
+  a.message = reviewCount ? `${reviewCount} field${reviewCount === 1 ? "" : "s"} still need${reviewCount === 1 ? "s" : ""} you.` : "Everything is filled. Read it, then Submit.";
+  log(a, `Set ${edits.length} field${edits.length === 1 ? "" : "s"} from the queue.`);
+  return a;
 }
 
 export async function submitApplication(id: string): Promise<Application | undefined> {
@@ -634,10 +683,7 @@ export async function submitApplication(id: string): Promise<Application | undef
     }
     a.finishedAt = new Date().toISOString();
     log(a, a.message);
-    if (a.status === "submitted") {
-      await l.context.close().catch(() => {});
-      live.delete(id);
-    }
+    if (a.status === "submitted") await closeRun(id);
   } catch (e) {
     a.status = "review";
     a.message = `Submit failed: ${(e as Error).message.slice(0, 200)}`;
@@ -648,11 +694,7 @@ export async function submitApplication(id: string): Promise<Application | undef
 
 export async function stopApplication(id: string): Promise<Application | undefined> {
   const a = getApplication(id);
-  const l = live.get(id);
-  if (l) {
-    await l.context.close().catch(() => {});
-    live.delete(id);
-  }
+  await closeRun(id);
   if (a && a.status !== "submitted") {
     a.status = "stopped";
     a.finishedAt = new Date().toISOString();

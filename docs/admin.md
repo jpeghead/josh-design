@@ -164,6 +164,22 @@ AI-company names in October 2026 found four on Workable (Hugging Face,
 Jasper, Writesonic, D-ID) and one on Rippling (Rippling itself), so those
 two systems are a long tail, not a second Greenhouse.
 
+## The queue
+
+Tick postings on the Jobs page and press Prepare: `POST /api/admin/apply/batch`
+queues them and a worker (`lib/admin/apply/queue.ts`, one per process)
+prepares them one at a time in a headless Chromium, each with its own copy
+of the sign-in profile under `data/admin/browser-runs/<id>` (removed on
+Stop, Submit, or failure). Runs stop at review with a full-page screenshot
+and the field list; `/admin/queue` shows one at a time with every field
+editable, "Set on the form" pushes edits to the live page
+(`PATCH /api/admin/apply/[id]/fields`), Submit sends, Drop stops, and
+"Open visibly" starts the same job again in a window for anything the
+queue cannot reach (a CAPTCHA, a sign-in). At most six wait live at once.
+The tailored résumé for the posting is used when one exists, otherwise the
+persona's base. Cover letters are named
+`Josh-Whitehead-Cover-Letter-Company.pdf`.
+
 ## Pipeline and briefs
 
 - **Applications** is a board by stage (applied, replied, interviewing,
