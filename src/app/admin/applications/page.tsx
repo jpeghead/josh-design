@@ -20,7 +20,7 @@ export default function Applications() {
       <section className="mt-6 rounded-xl border border-line bg-fill/40 p-4">
         <h2 className="text-xs uppercase tracking-[0.14em] text-fg-3">The numbers</h2>
         {n.submitted === 0 ? (
-          <p className="mt-2 text-sm text-fg-3">They appear after the first submissions: response rate, interviews, days to a reply, and which résumé and which boards convert.</p>
+          <p className="mt-2 text-sm text-fg-3">They appear after the first submissions: response rate, interviews, days to a reply, and which résumé persona, which template, how much of the posting&rsquo;s language, and which boards convert. Each run records its template and its tailored version, so the A/B is on from the first send; it means something from about twenty.</p>
         ) : (
           <div className="mt-3 grid gap-4 sm:grid-cols-4">
             <div><p className="tabular-nums text-[1.6rem] leading-none text-fg">{n.submitted}</p><p className="mt-1 text-xs text-fg-3">submitted</p></div>
@@ -34,6 +34,14 @@ export default function Applications() {
             <div className="sm:col-span-2 text-[13px] text-fg-2">
               <p className="text-xs uppercase tracking-[0.14em] text-fg-3">By board</p>
               {n.bySource.map((p) => <p key={p.source}>{p.source}: {p.submitted} sent, {p.responded} replied</p>)}
+            </div>
+            <div className="sm:col-span-2 text-[13px] text-fg-2">
+              <p className="text-xs uppercase tracking-[0.14em] text-fg-3">By template (the visual A/B)</p>
+              {n.byTemplate.map((p) => <p key={p.template}>{p.template}: {p.submitted} sent, {p.responded} replied</p>)}
+            </div>
+            <div className="sm:col-span-2 text-[13px] text-fg-2">
+              <p className="text-xs uppercase tracking-[0.14em] text-fg-3">By how much of the posting&rsquo;s language the résumé carried</p>
+              {n.byCoverage.map((p) => <p key={p.bucket}>{p.bucket}: {p.submitted} sent, {p.responded} replied</p>)}
             </div>
           </div>
         )}

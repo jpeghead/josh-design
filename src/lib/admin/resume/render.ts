@@ -1,4 +1,5 @@
 import type { ResumeData } from "./types";
+import { templateById } from "./templates";
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const bare = (url: string) => url.replace(/^https?:\/\//, "").replace(/\/$/, "");
@@ -17,7 +18,8 @@ const splitRole = (role: string): { title: string; from?: string } => {
  * serif for the name and the role titles, Geist for everything else, a
  * single ink, hairline rules. The same HTML drives the preview and the PDF.
  */
-export function renderResumeHtml(d: ResumeData, opts: { preview?: boolean; fontCss?: string } = {}): string {
+export function renderResumeHtml(d: ResumeData, opts: { preview?: boolean; fontCss?: string; template?: string } = {}): string {
+  const t = templateById(opts.template);
   const sec = (key: ResumeData["sections"][number]) => {
     switch (key) {
       case "summary":
@@ -26,8 +28,9 @@ export function renderResumeHtml(d: ResumeData, opts: { preview?: boolean; fontC
         return `<section><h2>Experience</h2>${d.experience
           .map(
             (e) => `<article>
-  <h3>${esc(splitRole(e.role).title)}</h3>
-  <p class="meta"><span class="co">${esc(e.company)}${e.client && !/client/i.test(e.company) ? " (client engagement)" : ""}</span> · ${esc(e.start)} – ${esc(e.end)}${e.location ? ` · ${esc(e.location)}` : ""}${splitRole(e.role).from ? ` · joined as ${esc(splitRole(e.role).from as string)}` : ""}</p>
+  ${t.datesRight ? `<div class="row"><h3>${esc(splitRole(e.role).title)}</h3><span class="dates">${esc(e.start)} – ${esc(e.end)}</span></div>
+  <p class="meta"><span class="co">${esc(e.company)}${e.client && !/client/i.test(e.company) ? " (client engagement)" : ""}</span>${e.location ? ` · ${esc(e.location)}` : ""}${splitRole(e.role).from ? ` · joined as ${esc(splitRole(e.role).from as string)}` : ""}</p>` : `<h3>${esc(splitRole(e.role).title)}</h3>
+  <p class="meta"><span class="co">${esc(e.company)}${e.client && !/client/i.test(e.company) ? " (client engagement)" : ""}</span> · ${esc(e.start)} – ${esc(e.end)}${e.location ? ` · ${esc(e.location)}` : ""}${splitRole(e.role).from ? ` · joined as ${esc(splitRole(e.role).from as string)}` : ""}</p>`}
   ${e.summary ? `<p class="sub">${esc(e.summary)}</p>` : ""}
   <ul>${e.bullets.map((b) => `<li>${esc(b)}</li>`).join("")}</ul>
 </article>`
@@ -78,6 +81,7 @@ export function renderResumeHtml(d: ResumeData, opts: { preview?: boolean; fontC
   .skill strong::after { content: " ·"; color: #9a9a96; }
   .url { color: #666; }
   section { break-inside: auto; }
+  ${t.css}
 </style></head>
 <body>
 <header>

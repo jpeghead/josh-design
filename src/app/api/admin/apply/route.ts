@@ -3,6 +3,9 @@ import type { Posting } from "@/lib/admin/types";
 import { getResume } from "@/lib/admin/resume/store";
 import { newApplication, saveApplication } from "@/lib/admin/apply/store";
 import { tailoredFor } from "@/lib/admin/resume/tailor";
+import { pickTemplate } from "@/lib/admin/resume/ab";
+import { currentBase, saveResume } from "@/lib/admin/resume/store";
+import { templateById } from "@/lib/admin/resume/templates";
 import { startApplication } from "@/lib/admin/apply/agent";
 import { listApplications } from "@/lib/admin/apply/store";
 
@@ -34,6 +37,14 @@ export async function POST(req: Request) {
       app.steps.push({ at: new Date().toISOString(), text: app.resumeNote ?? "" });
       saveApplication(app);
     }
+    const template = pickTemplate(currentBase(job.persona));
+    if (use.template !== template) {
+      use.template = template;
+      saveResume(use);
+    }
+    app.template = template;
+    app.resumeNote = `${app.resumeNote ?? "Résumé"} · set in ${templateById(template).name}`;
+    saveApplication(app);
     await startApplication(app, job, use);
   })();
   return Response.json({ id: app.id });

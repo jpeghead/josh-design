@@ -12,6 +12,6 @@ export function resumeFontCss(): string {
   const dir = join(process.cwd(), "src", "app", "fonts");
   const face = (family: string, file: string, weight: number) =>
     `@font-face{font-family:"${family}";font-weight:${weight};font-style:normal;src:url(data:font/ttf;base64,${readFileSync(join(dir, file)).toString("base64")}) format("truetype");}`;
-  cached = [face("Instrument Serif", "InstrumentSerif-Regular.ttf", 400), face("Geist", "Geist-Regular.ttf", 400), face("Geist", "Geist-Medium.ttf", 500), face("Geist", "Geist-SemiBold.ttf", 600)].join("\n");
+  cached = [face("Instrument Serif", "InstrumentSerif-Regular.ttf", 400), face("Geist", "Geist-Regular.ttf", 400), face("Geist", "Geist-Medium.ttf", 500), face("Geist", "Geist-SemiBold.ttf", 600), face("Geist Mono", "GeistMono-Regular.ttf", 400)].join("\n");
   return cached;
 }

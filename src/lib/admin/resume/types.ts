@@ -27,6 +27,8 @@ export type Resume = {
   basedOn?: string;
   instruction?: string;
   jobId?: string;
+  /** Which of the ten templates sets it; see templates.ts. */
+  template?: string;
   /** Company name of the posting a tailored résumé is for; goes into the file name. */
   company?: string;
   keywords?: { covered: string[]; missing: string[] };

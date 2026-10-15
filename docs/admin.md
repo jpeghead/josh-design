@@ -112,6 +112,28 @@ tests), jobscan.co (AI screening), sapia.ai (screening 2026),
 madegooddesigns.com (resume design 2026), Greenhouse support (unsuccessful
 parse). None are primary; the checklist is the overlap between them.
 
+## Templates and the A/B
+
+`lib/admin/resume/templates.ts` holds ten settings of the same document
+(Story, Eyebrow, Grotesk, Editorial, Rules, Compact, Airy, Ledger, Ink,
+Monochrome). Each is CSS over the one renderer, plus one structural flag
+(Ledger sets dates flush right on the title line, still after the title
+in reading order); all are one column of real text with standard headings,
+so they parse alike, and each was measured to hold two pages on both bases.
+The studio previews the actual HTML in a frame (selectable text), switches
+templates live, and saves the choice to the résumé. With "Rotate templates
+across applications" on (`data/admin/settings.json`, default on),
+`lib/admin/resume/ab.ts` gives each new run the least-used template so the
+ten stay balanced; the run records `template`, and the tailored version
+records `keywords`, so the numbers on Applications read response rate by
+template (the visual test) and by how much of the posting's language the
+résumé carried, next to persona and board (the language test). Twenty or
+so submissions before the differences mean anything.
+
+The document is white on purpose: PDFs print and parse as white pages with
+dark text, and a dark page would invert on paper and confuse some parsers;
+the dark ground is the studio, not the file.
+
 ## The record
 
 `src/lib/admin/resume/record.ts` is the verified record: every claim a résumé

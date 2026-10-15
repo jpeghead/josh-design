@@ -4,20 +4,54 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { Persona, Resume, ResumeData } from "@/lib/admin/resume/types";
+import { TEMPLATES, templateById } from "@/lib/admin/resume/templates";
 
 type Tailored = { id: string; persona: Persona; createdAt: string; company: string; title: string; keywords?: { covered: string[]; missing: string[] } };
 type Pick = { id: string; label: string };
 const NAMES: Record<Persona, string> = { "ai-builder": "AI builder", "designer-who-builds": "Designer who builds with AI" };
 
-/** Pages of the exact PDF, as images on the dark ground. */
-function Pages({ id, hash, count, dim }: { id: string; hash: string; count: number; dim?: boolean }) {
+/**
+ * The document itself: the same HTML the PDF is printed from, in a frame
+ * sized like a Letter page, so the text is text (select it, copy it) and
+ * what you see is what the parser gets.
+ */
+function Paper({ id, template, hash, dim }: { id: string; template: string; hash: string; dim?: boolean }) {
   return (
-    <div className={`space-y-5 transition-opacity duration-300 ${dim ? "opacity-0" : "opacity-100"}`}>
-      {Array.from({ length: count }, (_, i) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img key={i} src={`/api/admin/resume/${id}/pages/${i + 1}?v=${hash}`} alt={`Page ${i + 1}`} width={1020} height={1320} className="w-full rounded-[3px] bg-white shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)]" />
-      ))}
-    </div>
+    <iframe
+      key={`${id}-${template}-${hash}`}
+      src={`/api/admin/resume/${id}/preview?template=${encodeURIComponent(template)}&v=${hash}`}
+      title="The résumé"
+      className={`h-[calc(11in*1.05)] w-full rounded-[3px] bg-white shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)] transition-opacity duration-300 ${dim ? "opacity-0" : "opacity-100"}`}
+    />
+  );
+}
+
+/** Download PDF, with the other formats one click further. */
+function Downloads({ id }: { id: string }) {
+  const [open, setOpen] = useState(false);
+  const base = `/api/admin/resume/${id}/export?format=`;
+  const all = () => {
+    for (const f of ["pdf", "docx", "txt"]) {
+      const a = document.createElement("a");
+      a.href = `${base}${f}`;
+      a.download = "";
+      a.click();
+    }
+    setOpen(false);
+  };
+  return (
+    <span className="relative inline-flex">
+      <a href={`${base}pdf`} download className="rounded-l-full bg-fg px-3.5 py-1.5 text-[13px] font-medium text-bg">Download PDF</a>
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-haspopup="menu" aria-expanded={open} aria-label="Other formats" className="rounded-r-full border-l border-bg/30 bg-fg px-2.5 py-1.5 text-[13px] font-medium text-bg">▾</button>
+      {open && (
+        <ul role="menu" className="absolute right-0 top-full z-10 mt-1 w-56 rounded-lg border border-line bg-bg p-1 text-[13px] shadow-xl">
+          <li><a role="menuitem" href={`${base}pdf`} download onClick={() => setOpen(false)} className="block rounded px-3 py-1.5 text-fg-2 hover:bg-fill hover:text-fg">Download PDF <span className="text-fg-3">· what you send</span></a></li>
+          <li><a role="menuitem" href={`${base}docx`} download onClick={() => setOpen(false)} className="block rounded px-3 py-1.5 text-fg-2 hover:bg-fill hover:text-fg">Download Word <span className="text-fg-3">· .docx, plain styling</span></a></li>
+          <li><a role="menuitem" href={`${base}txt`} download onClick={() => setOpen(false)} className="block rounded px-3 py-1.5 text-fg-2 hover:bg-fill hover:text-fg">Download text <span className="text-fg-3">· .txt, for pasting</span></a></li>
+          <li><button role="menuitem" type="button" onClick={all} className="block w-full rounded px-3 py-1.5 text-left text-fg-2 hover:bg-fill hover:text-fg">Download all three</button></li>
+        </ul>
+      )}
+    </span>
   );
 }
 
@@ -40,6 +74,8 @@ export function ResumeStudio(props: { bases?: Record<Persona, Resume>; initial?:
   const current: Resume = props.single ?? (props.bases as Record<Persona, Resume>)[persona];
   const other: Resume | undefined = props.single ? undefined : (props.bases as Record<Persona, Resume>)[persona === "ai-builder" ? "designer-who-builds" : "ai-builder"];
   const [meta, setMeta] = useState<Record<string, { count: number; hash: string }>>({});
+  const [template, setTemplate] = useState<string>(current.template ?? "story");
+  const [tplBusy, setTplBusy] = useState(false);
   const [swapping, setSwapping] = useState(false);
   const [instruction, setInstruction] = useState("");
   const [jobId, setJobId] = useState(props.job?.id ?? props.jobs[0]?.id ?? "");
@@ -63,6 +99,19 @@ export function ResumeStudio(props: { bases?: Record<Persona, Resume>; initial?:
     }
   }, [current.id, other?.id, meta]);
   useEffect(() => setJson(JSON.stringify(current.data, null, 2)), [current]);
+  useEffect(() => setTemplate(current.template ?? "story"), [current.id, current.template]);
+  const chooseTemplate = async (id: string) => {
+    setTemplate(id);
+    setTplBusy(true);
+    await fetch(`/api/admin/resume/${current.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ template: id }) });
+    setMeta((m) => ({ ...m, [current.id]: undefined as never }));
+    setTplBusy(false);
+    router.refresh();
+  };
+  const copyText = async () => {
+    const r = await fetch(`/api/admin/resume/${current.id}/export?format=txt`);
+    await navigator.clipboard?.writeText(await r.text());
+  };
 
   const toggle = (p: Persona) => {
     if (p === persona) return;
@@ -144,15 +193,16 @@ export function ResumeStudio(props: { bases?: Record<Persona, Resume>; initial?:
                 ))}
               </div>
             )}
-            <a href={`/api/admin/resume/${current.id}/export?format=pdf`} className="rounded-full bg-fg px-3.5 py-1.5 text-[13px] font-medium text-bg">PDF</a>
-            <a href={`/api/admin/resume/${current.id}/export?format=docx`} className={btn}>DOCX</a>
-            <a href={`/api/admin/resume/${current.id}/export?format=txt`} className={btn}>TXT</a>
+            <Downloads id={current.id} />
+            <button type="button" onClick={copyText} className={btn} title="Copy the résumé as plain text">Copy text</button>
           </div>
         </div>
 
-        <div className="relative mx-auto mt-6 w-full max-w-[52rem]">
-          {m ? <Pages id={current.id} hash={m.hash} count={m.count} dim={swapping} /> : <div className="aspect-[17/22] w-full animate-pulse rounded-[3px] bg-fill" aria-label="Rendering the PDF" />}
-          {m && <p className="mt-3 text-center text-xs text-fg-3">{m.count} page{m.count === 1 ? "" : "s"} · Letter · the PDF exactly as it will be sent</p>}
+        <div className="relative mx-auto mt-6 w-full max-w-[8.5in]">
+          <Paper id={current.id} template={template} hash={m?.hash ?? "0"} dim={swapping} />
+          <p className="mt-3 text-center text-xs text-fg-3">
+            {m ? `${m.count} page${m.count === 1 ? "" : "s"} at Letter · ` : ""}the same HTML the PDF is printed from: real text, one column, standard headings. The file is white on purpose; it prints and parses that way.
+          </p>
         </div>
       </div>
 
@@ -172,6 +222,25 @@ export function ResumeStudio(props: { bases?: Record<Persona, Resume>; initial?:
             <p className="mt-2 text-xs text-fg-3">Same facts in both. The persona decides which lead, which bullets, and which projects.</p>
           </section>
         )}
+
+        <section className="rounded-xl border border-line bg-fill/50 p-4">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-sm text-fg">Template</h2>
+            <span className="text-xs text-fg-3">{tplBusy ? "saving…" : templateById(template).name}</span>
+          </div>
+          <p className="mt-1 text-xs text-fg-3">Ten settings of the same text, all one column and parser-safe. Click to preview; it is saved to this résumé. Applications rotate through them for the A/B numbers unless you turn that off below.</p>
+          <ul className="mt-3 grid grid-cols-2 gap-1.5">
+            {TEMPLATES.map((t) => (
+              <li key={t.id}>
+                <button type="button" onClick={() => chooseTemplate(t.id)} aria-pressed={template === t.id} title={t.blurb} className={`w-full rounded-md border px-2.5 py-1.5 text-left text-[13px] ${template === t.id ? "border-fg bg-fg text-bg" : "border-line text-fg-2 hover:text-fg"}`}>
+                  {t.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-fg-3">{templateById(template).blurb}</p>
+          <AbToggle />
+        </section>
 
         <section className="rounded-xl border border-line bg-fill/50 p-4">
           <h2 className="text-sm text-fg">Change it</h2>
@@ -252,5 +321,25 @@ export function ResumeStudio(props: { bases?: Record<Persona, Resume>; initial?:
         </section>
       </aside>
     </div>
+  );
+}
+
+/** The A/B switch: rotate templates across applications, or send every one in the chosen template. */
+function AbToggle() {
+  const [on, setOn] = useState<boolean | null>(null);
+  useEffect(() => {
+    fetch("/api/admin/settings").then((r) => r.json()).then((j: { abTemplates: boolean }) => setOn(j.abTemplates)).catch(() => setOn(true));
+  }, []);
+  const flip = async () => {
+    const next = !on;
+    setOn(next);
+    await fetch("/api/admin/settings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ abTemplates: next }) });
+  };
+  if (on === null) return null;
+  return (
+    <label className="mt-3 flex items-center gap-2 text-xs text-fg-2">
+      <input type="checkbox" checked={on} onChange={flip} className="h-3.5 w-3.5 accent-[var(--fg)]" />
+      Rotate templates across applications (A/B)
+    </label>
   );
 }

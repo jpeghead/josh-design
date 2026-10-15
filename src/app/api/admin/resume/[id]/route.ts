@@ -13,9 +13,10 @@ export async function GET(_: Request, { params }: Ctx) {
 export async function PATCH(req: Request, { params }: Ctx) {
   const r = getResume((await params).id);
   if (!r) return new Response("Not found", { status: 404 });
-  const body = (await req.json()) as { label?: string; data?: ResumeData };
+  const body = (await req.json()) as { label?: string; data?: ResumeData; template?: string };
   if (body.label) r.label = body.label;
   if (body.data) r.data = body.data;
+  if (typeof body.template === "string") r.template = body.template;
   return Response.json(saveResume(r));
 }
 

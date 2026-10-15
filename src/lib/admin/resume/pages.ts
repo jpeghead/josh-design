@@ -13,7 +13,7 @@ import type { Resume } from "./types";
  */
 export async function resumePages(r: Resume): Promise<{ dir: string; count: number; hash: string }> {
   // hash the rendered HTML, so a change to the renderer re-rasterizes as surely as a change to the data
-  const hash = createHash("sha1").update(renderResumeHtml(r.data)).digest("hex").slice(0, 10);
+  const hash = createHash("sha1").update(renderResumeHtml(r.data, { template: r.template })).digest("hex").slice(0, 10);
   const pdf = await toPdf(r);
   const dir = dirname(pdf);
   const stamp = join(dir, `.pages-${hash}`);

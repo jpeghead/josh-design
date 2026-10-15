@@ -11,6 +11,8 @@ export type Numbers = {
   medianDaysToReply: number | null;
   byPersona: { persona: string; submitted: number; responded: number }[];
   bySource: { source: string; submitted: number; responded: number }[];
+  byTemplate: { template: string; submitted: number; responded: number }[];
+  byCoverage: { bucket: string; submitted: number; responded: number }[];
 };
 
 const RESPONDED = new Set(["replied", "interviewing", "offer", "rejected"]);
@@ -48,5 +50,12 @@ export function numbers(apps: Application[], jobs: Posting[], resumes: Resume[])
     medianDaysToReply: days.length ? days[Math.floor(days.length / 2)] : null,
     byPersona: group((a) => resumes.find((r) => r.id === a.resumeId)?.persona ?? "unknown").map(({ key, ...v }) => ({ persona: key, ...v })),
     bySource: group((a) => jobs.find((j) => j.id === a.jobId)?.source ?? "unknown").map(({ key, ...v }) => ({ source: key, ...v })),
+    byTemplate: group((a) => a.template ?? resumes.find((r) => r.id === a.resumeId)?.template ?? "story").map(({ key, ...v }) => ({ template: key, ...v })),
+    byCoverage: group((a) => {
+      const k = resumes.find((r) => r.id === a.resumeId)?.keywords;
+      if (!k) return "untailored";
+      const pct = k.covered.length / Math.max(1, k.covered.length + k.missing.length);
+      return pct >= 0.7 ? "70%+ of the posting's terms" : pct >= 0.5 ? "50–69%" : "under 50%";
+    }).map(({ key, ...v }) => ({ bucket: key, ...v })),
   };
 }

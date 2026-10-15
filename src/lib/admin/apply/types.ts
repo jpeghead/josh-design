@@ -22,6 +22,8 @@ export type Application = {
   resumeId: string;
   /** "Tailored for Render · 12/20 terms", so the queue says what went in. */
   resumeNote?: string;
+  /** The template the sent PDF was set in, for the A/B numbers. */
+  template?: string;
   autoSubmit: boolean;
   status: "queued" | "starting" | "filling" | "review" | "needs-you" | "submitting" | "submitted" | "failed" | "stopped";
   /** Prepared in the background without a window; the queue shows the screenshot and fields instead. */

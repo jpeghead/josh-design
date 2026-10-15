@@ -2,6 +2,9 @@ import { readJson } from "../store";
 import type { Posting } from "../types";
 import { currentBase, listResumes } from "../resume/store";
 import { tailoredFor } from "../resume/tailor";
+import { pickTemplate } from "../resume/ab";
+import { saveResume } from "../resume/store";
+import { templateById } from "../resume/templates";
 import { getApplication, listApplications, newApplication, saveApplication } from "./store";
 import { isLive, startApplication } from "./agent";
 
@@ -65,6 +68,14 @@ export async function kick(): Promise<void> {
         resume = listResumes().find((r) => r.id === next.resumeId) ?? currentBase(job.persona);
         next.resumeNote = `Base résumé (tailoring failed: ${(e as Error).message.slice(0, 80)})`;
       }
+      // the template for this run: rotated for the A/B numbers, or the base's
+      const template = pickTemplate(currentBase(job.persona));
+      if (resume.template !== template) {
+        resume.template = template;
+        saveResume(resume);
+      }
+      next.template = template;
+      next.resumeNote += ` · set in ${templateById(template).name}`;
       next.resumeId = resume.id;
       next.steps.push({ at: new Date().toISOString(), text: next.resumeNote });
       saveApplication(next);

@@ -31,7 +31,7 @@ export async function toPdf(r: Resume): Promise<string> {
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
-    await page.setContent(renderResumeHtml(r.data, { fontCss: resumeFontCss() }), { waitUntil: "load" });
+    await page.setContent(renderResumeHtml(r.data, { fontCss: resumeFontCss(), template: r.template }), { waitUntil: "load" });
     await page.pdf({ path: file, format: "Letter", printBackground: true, preferCSSPageSize: true });
   } finally {
     await browser.close();

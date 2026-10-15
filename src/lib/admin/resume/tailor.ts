@@ -24,6 +24,7 @@ export async function tailorFor(job: Posting, from?: Resume): Promise<Resume> {
     basedOn: base.id,
     jobId: job.id,
     company: job.company,
+    template: base.template,
     instruction: hasModel ? `Tailored to ${job.company} — ${job.title}` : `Reordered by rule for ${job.company} — ${job.title} (no model, no rewording)`,
     keywords: coverage(data, keywords),
   });
