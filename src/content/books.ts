@@ -26,7 +26,7 @@ export const books: Book[] = [
     status: "Out now",
     blurb:
       "A field manual for the collapse of expertise: how AI is restructuring twenty-five white-collar careers, what survives, what doesn't, and what to do if you work in one. 618 pages, paperback.",
-    cover: "/img/products/mastery-is-dead.png",
+    cover: "/img/products/mastery-is-dead.jpg",
     link: { label: "Paperback on Amazon", href: "https://www.amazon.com/dp/B0H3ZC9FDN" },
     site: "https://masteryisdead.com",
   },

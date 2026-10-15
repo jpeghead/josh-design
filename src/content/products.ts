@@ -44,7 +44,7 @@ export const products: Product[] = [
     blurb:
       "Weaver keeps everything your channel has established — subjects, takes, running bits, cast — and writes every new script from all of it.",
     detail: ["Opening the writers' room: a memory of the channel first, then the writing.", "Built for creators who publish on a schedule and can't start from a blank page every time."],
-    image: "/img/products/weaver.png",
+    image: "/img/products/weaver.jpg",
     aspect: "1200/630",
     link: { label: "useweaver.app", href: "https://useweaver.app" },
   },
@@ -81,13 +81,9 @@ export const products: Product[] = [
     status: "Released",
     blurb: "A fun typeface inspired by one of my favorite sci-fi films.",
     detail: ["A made thing, offered as a free resource."],
-    image: "/framer/cms/downloads/xenomorph-typeface__image.png",
+    image: "/img/products/xenomorph.jpg",
     aspect: "4/3",
     link: { label: "Get it on Gumroad", href: "https://jpeghead.gumroad.com/l/xenomorphtypefacebyjoshwhitehead" },
-    gallery: [
-      "/framer/cms/downloads/xenomorph-typeface__image.png",
-      "/framer/cms/downloads/xenomorph-typeface__image-2.png",
-      "/framer/cms/downloads/xenomorph-typeface__image-3.png",
-    ],
+    gallery: ["/img/products/xenomorph.jpg", "/img/products/xenomorph-2.jpg", "/img/products/xenomorph-3.jpg"],
   },
 ];
