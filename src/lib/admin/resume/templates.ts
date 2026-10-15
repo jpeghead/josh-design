@@ -49,12 +49,16 @@ export const TEMPLATES: Template[] = [
   {
     id: "editorial",
     name: "Editorial",
-    blurb: "Serif for the name, the lead, and every title; the summary set large like a standfirst.",
+    blurb: "Serif throughout, like the site's story pages: the summary as a standfirst, role lines in serif, Geist only for labels.",
     css: `
+      body { font-family: ${SERIF}; font-size: 10.6pt; line-height: 1.3; }
       h1 { font-size: 34pt; }
-      .lead { font-family: ${SERIF}; font-size: 12.5pt; line-height: 1.32; color: #1a1a1a; }
+      .headline, .contact, h2, .meta, strong, .skill strong { font-family: ${SANS}; }
+      .lead { font-size: 12.5pt; line-height: 1.32; color: #1a1a1a; }
       h3 { font-size: 14pt; }
-      h2 { color: #141414; border-bottom-color: #141414; }`,
+      h2 { color: #141414; border-bottom-color: #141414; }
+      strong { font-weight: 500; font-size: 9.4pt; }
+      @page { margin: 0.5in 0.72in 0.55in; }`,
   },
   {
     id: "rules",
@@ -104,13 +108,15 @@ export const TEMPLATES: Template[] = [
   {
     id: "ink",
     name: "Ink",
-    blurb: "One warm accent, the color of the site's story rules, on the name and section rules.",
+    blurb: "One warm ink, oxblood, on the name, the role titles, and the rules; everything else stays black.",
     css: `
-      h1 { color: #4a2a1f; }
-      h2 { color: #4a2a1f; border-bottom-color: #c9b8ae; }
-      header { border-bottom-color: #4a2a1f; }
-      li::marker { color: #b89a8c; }
-      .meta .co { color: #4a2a1f; }`,
+      h1 { color: #5a1f1a; }
+      h3 { color: #5a1f1a; }
+      h2 { color: #5a1f1a; border-bottom-color: #d9c3bf; }
+      header { border-bottom: 1.2pt solid #5a1f1a; }
+      li::marker { color: #b5908a; }
+      .meta .co { color: #333; }
+      .url { color: #8a5a54; }`,
   },
   {
     id: "monochrome",

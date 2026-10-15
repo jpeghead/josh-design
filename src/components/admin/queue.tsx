@@ -66,6 +66,16 @@ export function Queue({ initial, snapshot }: { initial: Application[]; snapshot:
     } else setMsg(`Could not set the fields (${r.status}). The form may have closed; open it visibly instead.`);
     setBusy(null);
   };
+  const draft = async (key: string) => {
+    if (!a) return;
+    setBusy(`draft:${key}`);
+    setMsg(null);
+    const r = await fetch(`/api/admin/apply/${a.id}/draft`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key }) });
+    const j = await r.json();
+    if (!r.ok || j.error) setMsg(j.error ?? `Could not draft (${r.status}).`);
+    else setEdits((x) => ({ ...x, [key]: j.text }));
+    setBusy(null);
+  };
   const openVisibly = async () => {
     if (!a) return;
     setBusy("open");
@@ -166,8 +176,13 @@ export function Queue({ initial, snapshot }: { initial: Application[]; snapshot:
                               <option key={o} value={o}>{o}</option>
                             ))}
                           </select>
-                        ) : f.kind === "textarea" || (v && v.length > 90) ? (
-                          <textarea value={v} onChange={(e) => setEdits((x) => ({ ...x, [f.key]: e.target.value }))} rows={4} className="mt-1 w-full rounded border border-line bg-transparent px-2 py-1 text-[13px] text-fg focus:border-fg focus:outline-none" />
+                        ) : f.kind === "textarea" || (v && v.length > 90) || (f.status === "review" && /question|free-text|your call|write it/i.test(f.note ?? "")) ? (
+                          <div>
+                            <textarea value={v} onChange={(e) => setEdits((x) => ({ ...x, [f.key]: e.target.value }))} rows={4} className="mt-1 w-full rounded border border-line bg-transparent px-2 py-1 text-[13px] text-fg focus:border-fg focus:outline-none" />
+                            <button type="button" disabled={!!busy} onClick={() => draft(f.key)} className="mt-1 text-xs text-fg-3 underline underline-offset-2 hover:text-fg disabled:opacity-50">
+                              {busy === `draft:${f.key}` ? "Drafting…" : "Draft it from my record"}
+                            </button>
+                          </div>
                         ) : (
                           <input value={v} onChange={(e) => setEdits((x) => ({ ...x, [f.key]: e.target.value }))} className="mt-1 w-full rounded border border-line bg-transparent px-2 py-1 text-[13px] text-fg focus:border-fg focus:outline-none" />
                         )

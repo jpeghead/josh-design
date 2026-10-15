@@ -13,6 +13,7 @@ export type Numbers = {
   bySource: { source: string; submitted: number; responded: number }[];
   byTemplate: { template: string; submitted: number; responded: number }[];
   byCoverage: { bucket: string; submitted: number; responded: number }[];
+  byHeadline: { headline: string; submitted: number; responded: number }[];
 };
 
 const RESPONDED = new Set(["replied", "interviewing", "offer", "rejected"]);
@@ -57,5 +58,6 @@ export function numbers(apps: Application[], jobs: Posting[], resumes: Resume[])
       const pct = k.covered.length / Math.max(1, k.covered.length + k.missing.length);
       return pct >= 0.7 ? "70%+ of the posting's terms" : pct >= 0.5 ? "50–69%" : "under 50%";
     }).map(({ key, ...v }) => ({ bucket: key, ...v })),
+    byHeadline: group((a) => a.resumeHeadline ?? resumes.find((r) => r.id === a.resumeId)?.data.headline ?? "unknown").map(({ key, ...v }) => ({ headline: key, ...v })),
   };
 }

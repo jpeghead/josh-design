@@ -7,6 +7,9 @@ import { DATA_DIR } from "../store";
 import { getProfile, type Profile } from "../resume/profile";
 import { socials } from "@/content/about";
 import { toPdf } from "../resume/export";
+import { getResume } from "../resume/store";
+import { readJson } from "../store";
+import { renderLetterHtml } from "../resume/letter";
 import { renderResumeText } from "../resume/render";
 import type { Resume } from "../resume/types";
 import type { Posting } from "../types";
@@ -350,11 +353,13 @@ async function draftCoverLetter(job: Posting, profile: Profile, resume: Resume):
   return res.content.map((c) => (c.type === "text" ? c.text : "")).join("").trim();
 }
 
-async function coverLetterPdf(text: string, profile: Profile, job: Posting, appId: string): Promise<string> {
+async function coverLetterPdf(text: string, profile: Profile, job: Posting, appId: string, template?: string): Promise<string> {
   const { chromium } = await import("playwright");
-  const esc = (x: string) => x.replace(/&/g, "&amp;").replace(/</g, "&lt;");
-  const html = `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:Letter;margin:1in}body{font-family:Georgia,serif;font-size:11pt;line-height:1.5;color:#111}h1{font-size:16pt;margin:0 0 2pt}.meta{color:#333;font-size:9.5pt;margin:0 0 18pt}p{margin:0 0 10pt}</style></head><body><h1>${esc(profile.name)}</h1><p class="meta">${esc([profile.location, profile.email, profile.links[0]?.url ?? ""].filter(Boolean).join(" · "))}</p><p class="meta">${esc(new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }))} · ${esc(job.title)}, ${esc(job.company)}</p>${text.split(/\n\s*\n/).map((para) => `<p>${esc(para.trim())}</p>`).join("")}</body></html>`;
-  const file = join(OUT, `${appId}-cover-letter.pdf`);
+  const html = renderLetterHtml(text, profile, job, template);
+  // named like the résumé, so what the recruiter downloads reads as a document, not a run id
+  const dir = join(OUT, appId);
+  mkdirSync(dir, { recursive: true });
+  const file = join(dir, `${profile.name.trim().split(/\s+/).join("-")}-Cover-Letter-${job.company.replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "")}.pdf`);
   const browser = await chromium.launch();
   try {
     const pg = await browser.newPage();
@@ -479,6 +484,7 @@ export async function startApplication(app: Application, job: Posting, resume: R
     mkdirSync(PROFILE_DIR, { recursive: true });
     const profile = getProfile();
     log(a, "Exporting the résumé PDF.");
+    a.resumeHeadline = resume.data.headline;
     const pdfPath = await toPdf(resume);
     if (opts.headless) {
       // a background run gets its own copy of the sign-in profile, so several can be open at once
@@ -540,7 +546,7 @@ export async function startApplication(app: Application, job: Posting, resume: R
       try {
         coverText = await draftCoverLetter(job, profile, resume);
         if (coverText) {
-          coverPath = await coverLetterPdf(coverText, profile, job, a.id);
+          coverPath = await coverLetterPdf(coverText, profile, job, a.id, resume.template);
           a.coverLetter = coverPath;
           log(a, "Drafted a cover letter with Claude; it is uploaded where the form asks for one. Read it.");
         } else log(a, anthropicConfigured() ? "The model returned no cover letter text." : "No model reachable, so no cover letter was drafted.");
@@ -716,4 +722,19 @@ export async function stopApplication(id: string): Promise<Application | undefin
 
 export function isLive(id: string) {
   return live.has(id);
+}
+
+/** Draft one written answer for a field on a live run, from the record and the posting; returns the text without setting it. */
+export async function draftAnswer(id: string, key: string): Promise<string> {
+  const a = getApplication(id);
+  if (!a) throw new Error("No such run");
+  const f = a.fields.find((x) => x.key === key);
+  if (!f) throw new Error("No such field");
+  const job = readJson<Posting[]>("jobs", []).find((j) => j.id === a.jobId);
+  const resume = getResume(a.resumeId);
+  if (!job || !resume) throw new Error("The posting or résumé is gone");
+  const answers = await answerWithClaude([{ key, label: f.label || "The question on the form" }], job, getProfile(), resume);
+  const text = answers[key];
+  if (!text || text.trim() === "REVIEW") throw new Error("The record does not answer this one; write it yourself");
+  return text;
 }

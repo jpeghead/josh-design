@@ -24,6 +24,8 @@ export type Application = {
   resumeNote?: string;
   /** The template the sent PDF was set in, for the A/B numbers. */
   template?: string;
+  /** The headline the sent résumé led with, for the language numbers. */
+  resumeHeadline?: string;
   autoSubmit: boolean;
   status: "queued" | "starting" | "filling" | "review" | "needs-you" | "submitting" | "submitted" | "failed" | "stopped";
   /** Prepared in the background without a window; the queue shows the screenshot and fields instead. */
