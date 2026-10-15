@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Container, PageHeader } from "@/components/ui";
 import { Ask } from "@/components/lab/ask";
+import { LocalLLM } from "@/components/lab/local-llm";
+import { localSystemPrompt } from "@/content/grounding";
 
 export const metadata: Metadata = {
   title: "Ask my portfolio — Builds",
@@ -27,12 +29,15 @@ export default function Page() {
         {live ? (
           <Ask />
         ) : (
-          <div className="rounded-xl border border-line bg-fill/60 p-6 text-fg-2">
-            <p>
-              This deployment has no model key, so the demo is off. The route, prompt, grounding, streaming, and rate limiting are all in the repo under{" "}
-              <code className="font-mono text-sm">src/app/api/ask</code>; set <code className="font-mono text-sm">ANTHROPIC_API_KEY</code> and it turns on.
-            </p>
-          </div>
+          <>
+            <div className="mb-6 rounded-xl border border-line bg-fill/60 p-5 text-[15px] text-fg-2">
+              <p>
+                This deployment has no hosted model key, so the question goes to a model on your own GPU instead. Same facts, smaller model, nothing leaves your machine. The hosted route is in the repo under{" "}
+                <code className="font-mono text-sm">src/app/api/ask</code>; set <code className="font-mono text-sm">ANTHROPIC_API_KEY</code> and it takes over.
+              </p>
+            </div>
+            <LocalLLM system={localSystemPrompt()} />
+          </>
         )}
         <p className="mt-6 max-w-2xl text-sm text-fg-3">
           How it&rsquo;s built: a Next.js route handler streams from the Anthropic SDK. The system prompt is generated from the same content files that render these pages, so the model can&rsquo;t know anything the site doesn&rsquo;t say. Twenty questions per visitor per ten minutes.

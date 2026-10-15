@@ -106,7 +106,16 @@ export const workMedia: Record<string, WorkMedia> = {
       { src: img("vJ1DLjtkb8TgVsXD7ylsPWmblg"), alt: "A theatre app on two phones: a red splash screen and an account screen", caption: "Splash and account.", aspect: "4 / 3" },
     ],
   },
-  saucey: { field: "#1a1408", cover: { src: "", alt: "", aspect: "1 / 1" }, gallery: [] },
+  saucey: {
+    field: "#1a1408",
+    cover: {
+      src: img("XnMDZ7CNfuJRlYXyMPhTjlUHs"),
+      alt: "Marker sketch on paper of order-status, receipt, and map wireframes for the Saucey app, with notes like 'Rate & Tip' and 'Contact the driver'",
+      caption: "Where it started: marker wireframes for order status, receipt, and the map.",
+      aspect: "615 / 776",
+    },
+    gallery: [],
+  },
   nationbuilder: { field: "#0d1a2a", cover: { src: "", alt: "", aspect: "1 / 1" }, gallery: [] },
   differential: { field: "#141414", cover: { src: "", alt: "", aspect: "1 / 1" }, gallery: [] },
   boneyard: { field: "#101010", cover: { src: "", alt: "", aspect: "1 / 1" }, gallery: [] },

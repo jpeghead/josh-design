@@ -44,14 +44,14 @@ function Index({ label, rows }: { label: string; rows: Row[] }) {
 
 function RowInner({ r }: { r: Row }) {
   return (
-    <span className="flex items-baseline gap-3">
+    <span className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-3">
       <span className="min-w-0 flex-1">
         <span className="tight text-[15px] font-medium underline-offset-4 group-hover:underline">{r.title}</span>
         <span className="text-[15px] text-fg-2"> — {r.line}</span>
       </span>
-      {r.meta && <span className="shrink-0 text-xs tabular-nums text-fg-3">{r.meta}</span>}
-      <span aria-hidden className="shrink-0 text-xs text-fg-3 transition-transform duration-300 group-hover:translate-x-0.5">
-        {r.external ? "↗" : "›"}
+      <span className="flex shrink-0 items-baseline gap-3 text-xs text-fg-3">
+        {r.meta && <span className="tabular-nums">{r.meta}</span>}
+        <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">{r.external ? "↗" : "›"}</span>
       </span>
     </span>
   );
@@ -130,6 +130,7 @@ export default async function Home() {
                 <ul className="flex flex-wrap gap-x-6 gap-y-2 text-[15px] text-fg-2">
                   <li><Link href="/lab" className="hover:text-fg">All builds ›</Link></li>
                   <li><Link href="/process" className="hover:text-fg">How I work with agents ›</Link></li>
+                  <li><Link href="/log" className="hover:text-fg">Build log ›</Link></li>
                   <li><Link href="/resume" className="hover:text-fg">Résumé ›</Link></li>
                   <li><Link href="/about" className="hover:text-fg">The story ›</Link></li>
                   {REPO.isPublic && <li><a href={REPO.url} target="_blank" rel="noreferrer" className="hover:text-fg">GitHub ↗</a></li>}

@@ -9,6 +9,7 @@
 - [Work](https://josh.design/work): case studies — Spin, Hush, Very Good Ventures, Saucey, NationBuilder, Differential, Boneyard.
 - [Products](https://josh.design/products): OLO (olomode.com), Weaver (useweaver.app), StoryMode (playstorymode.app), SignalScan (in development), Xenomorph typeface.
 - [Writing](https://josh.design/writing): build logs and essays.
+- [Build log](https://josh.design/log): every commit to this site, live from GitHub.
 - [About](https://josh.design/about): the story and the principles.
 - Contact: josh@josh.design
 

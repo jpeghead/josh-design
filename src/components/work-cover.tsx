@@ -52,9 +52,11 @@ export function WorkCover({ project, index, flip = false }: { project: Project; 
                 </div>
               </dl>
             )}
-            <p className="mt-4 text-sm text-fg-3">
-              {project.role} · {years}
-            </p>
+            {media?.proof && (
+              <p className="mt-4 text-sm text-fg-3">
+                {project.role} · {years}
+              </p>
+            )}
             <Link
               href={href}
               className="group mt-10 inline-flex items-center gap-2 rounded-full bg-fg px-5 py-2.5 text-[15px] font-medium text-bg transition-opacity hover:opacity-85"

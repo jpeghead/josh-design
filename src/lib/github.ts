@@ -38,3 +38,15 @@ export function ago(iso: string): string {
   if (s < 86400 * 30) return `${Math.round(s / 86400)}d ago`;
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
+
+/** Up to a hundred recent commits on the default branch, newest first. */
+export async function recentCommits(repo: string, n = 100): Promise<Commit[]> {
+  try {
+    const r = await fetch(`https://api.github.com/repos/${repo}/commits?per_page=${Math.min(100, n)}`, { headers: H, next: { revalidate: 900 } });
+    if (!r.ok) return [];
+    const j = (await r.json()) as { sha: string; commit: { message: string; author: { date: string } }; html_url: string }[];
+    return j.map((c) => ({ message: c.commit.message.split("\n")[0], date: c.commit.author.date, url: c.html_url, repo }));
+  } catch {
+    return [];
+  }
+}

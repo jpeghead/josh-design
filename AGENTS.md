@@ -13,6 +13,7 @@
 > The real products (OLO, Weaver, StoryMode, the Mastery is Dead book) have
 > live sites; `src/content/products.ts` and `books.ts` mirror their own copy
 > and link out. Re-read the live sites before changing those entries.
+> `/log` lists the repo's commits live from the GitHub API (ISR, fails soft).
 > Machine layer: `/resume`, JSON-LD in `components/json-ld.tsx`,
 > `app/opengraph-image.tsx`, `public/llms.txt`, AI-open `robots.ts`.
 > Open-source spin-offs live in `jpeghead/agent-ui-patterns` and

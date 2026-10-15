@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Container, PageHeader } from "@/components/ui";
 import { LocalLLM } from "@/components/lab/local-llm";
-import { groundingSummary } from "@/content/grounding";
+import { localSystemPrompt } from "@/content/grounding";
 
 export const metadata: Metadata = {
   title: "A model in your browser — Builds",
   description: "A language model running on your GPU through WebGPU. No server, no key, nothing leaves your machine. Grounded on this site.",
 };
 
-const SYSTEM = `You answer questions about Josh Whitehead using only the FACTS below. Copy years and names exactly as written; never guess a date. Be brief: one to three sentences. If the facts don't cover the question, say "The site doesn't say." Refer to Josh in the third person.\n\nFACTS:\n${groundingSummary()}`;
+const SYSTEM = localSystemPrompt();
 
 export default function Page() {
   return (
