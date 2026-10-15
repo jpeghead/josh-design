@@ -274,5 +274,12 @@ flow (Apply) does the same. Cover letters are named
   agent now closes any open list before clicking the next control; the first
   run picked "Female" for Gender because the previous list was still open
   under the click. Labels come from `<span id="field-N-label">`.
+- **Greenhouse, headless, with the Setup answers** (Anthropic, Safeguards):
+  17 of 25, phone and relocation from Setup, "open to working in-person"
+  from the workplace answer, "Why Anthropic?" drafted (a paragraph box is
+  always a written question now, whatever its wording), optional questions
+  the record cannot answer left blank rather than flagged. What stays for
+  Josh: start date (blank on Setup), a deadlines question, "interviewed here
+  before?", the arbitration agreement, and the AI-policy acknowledgment.
 - Model calls use `thinking: between_tools` so short budgets go to the
   answer; the first cover-letter attempt spent its whole budget thinking.

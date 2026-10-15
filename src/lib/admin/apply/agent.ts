@@ -177,7 +177,7 @@ const RX = {
   salary: /salary|compensation|pay expectation/i,
   start: /start date|when (can|could|would) you (start|begin)|earliest.*start|start working|notice period/i,
   relocate: /relocat/i,
-  workplace: /\b(hybrid|in[- ]?office|on[- ]?site|onsite|remote)\b.*\?|open to (working|coming) (from|to|into) (the|our) office|work from (the|our) office|days? (a|per) week in/i,
+  workplace: /\b(hybrid|in[- ]?office|in[- ]?person|on[- ]?site|onsite|remote)\b.*\?|open to (working|coming) (from|to|into|in) (the|our|one of our) office|work from (the|our) office|days? (a|per) week in/i,
   eeo: /gender|race|ethnicit|veteran|disabilit|hispanic|latino|sexual orientation|transgender/i,
   company: /current (company|employer)|^company$|organization/i,
   title: /current (title|role)|^title$|job title/i,
@@ -269,8 +269,10 @@ function decide(f: Field, profile: Profile, resume: Resume): { value?: string; s
   if (RX.privacy.test(L) && f.kind === "checkbox") return { value: f.options?.[0] ?? "yes", status: "review", note: "consent box: read it, then tick it yourself" };
   if (!L.trim() || /^\w+\[.*\]/.test(L)) return f.kind === "radio" || f.kind === "checkbox" ? { status: "review", note: "a question the form did not label; answer it in the browser" } : { status: "skipped", note: "no label; part of a dropdown" };
   if (/arbitrat|agreement|acknowledg|i have read|consent/i.test(L)) return { status: "review", note: "an agreement: read it, then answer yourself" };
+  // a paragraph box is a written question whatever its wording ("Why Anthropic?"): draft it from the record
+  if (f.kind === "textarea") return { status: "review", note: "free-text question" };
   if (/^(are|do|would|have|will|can|is|were) you\b/i.test(L) || /\?$/.test(L)) return { status: "review", note: "your call" };
-  if (f.kind === "textarea" || (f.kind === "text" && f.required)) return { status: "review", note: "free-text question" };
+  if (f.kind === "text" && f.required) return { status: "review", note: "free-text question" };
   return { status: "left" };
 }
 
@@ -595,7 +597,10 @@ export async function startApplication(app: Application, job: Posting, resume: R
         const ans = answers[f.key];
         if (!ans) continue;
         if (ans.trim() === "REVIEW") {
-          f.note = "the profile does not answer this; write it yourself";
+          if (!f.required) {
+            f.status = "left";
+            f.note = "optional, and the record has nothing to say; left blank";
+          } else f.note = "the record does not answer this; write it yourself";
           continue;
         }
         try {

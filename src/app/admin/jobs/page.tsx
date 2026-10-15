@@ -30,6 +30,7 @@ export default async function JobsList({ searchParams }: { searchParams: Promise
   const payNum = (x?: string) => (x ? Number((x.match(/\$(\d+)K/g) ?? []).map((m) => m.replace(/\D/g, "")).pop() ?? 0) : 0);
   const when = (p: { postedAt: string | null; firstSeen: string }) => Date.parse(p.postedAt ?? p.firstSeen) || Date.parse(p.firstSeen);
   rows.sort((a, b) => (sort === "newest" ? when(b) - when(a) : sort === "pay" ? payNum(b.pay) - payNum(a.pay) : b.score - a.score));
+  const light = rows.map((p) => ({ ...p, description: p.description.length > 1500 ? `${p.description.slice(0, 1500)}…` : p.description }));
   const counts = { ai: all.filter((p) => p.status === "new" && (p.ai ?? 0) >= 3).length, fresh: all.filter((p) => p.status === "new" && new Date(p.firstSeen).getTime() >= weekAgo).length, new: all.filter((p) => p.status === "new").length, saved: all.filter((p) => p.status === "saved").length, applied: all.filter((p) => p.status === "applied").length, hidden: all.filter((p) => p.status === "hidden").length };
   return (
     <div>
@@ -41,7 +42,7 @@ export default async function JobsList({ searchParams }: { searchParams: Promise
           </p>
         </div>
       </div>
-      <JobsTable rows={rows} counts={counts} filters={{ status, tier, min, q: sp.q ?? "", fresh, ai: aiOnly, sort }} errors={runs[0]?.errors ?? []} lastScanAt={runs[0]?.at ?? null} />
+      <JobsTable rows={light} counts={counts} filters={{ status, tier, min, q: sp.q ?? "", fresh, ai: aiOnly, sort }} errors={runs[0]?.errors ?? []} lastScanAt={runs[0]?.at ?? null} />
     </div>
   );
 }
