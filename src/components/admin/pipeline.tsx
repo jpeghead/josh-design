@@ -11,6 +11,15 @@ const STAGES: NonNullable<Application["stage"]>[] = ["applied", "replied", "inte
 export function Pipeline({ apps }: { apps: Application[] }) {
   const router = useRouter();
   const [open, setOpen] = useState<string | null>(null);
+  const [draft, setDraft] = useState<{ id: string; text: string } | null>(null);
+  const [drafting, setDrafting] = useState<string | null>(null);
+  const followUp = async (id: string) => {
+    setDrafting(id);
+    const r = await fetch(`/api/admin/apply/${id}/followup`, { method: "POST" });
+    const j = await r.json();
+    setDraft({ id, text: j.text ?? j.error ?? `Failed (${r.status})` });
+    setDrafting(null);
+  };
   const remove = async (id: string) => {
     await fetch(`/api/admin/apply/${id}`, { method: "DELETE" });
     router.refresh();
@@ -32,7 +41,20 @@ export function Pipeline({ apps }: { apps: Application[] }) {
           <ul className="mt-2 space-y-1 text-[13px] text-fg-2">
             {due.map((a) => (
               <li key={a.id}>
-                <Link href={`/admin/applications/${a.id}`} className="text-fg hover:underline">{a.title} · {a.company}</Link> — {a.nextAction?.note} ({a.nextAction?.date})
+                <Link href={`/admin/applications/${a.id}`} className="text-fg hover:underline">{a.title} · {a.company}</Link> — {a.nextAction?.note} ({a.nextAction?.date}){" "}
+                <button type="button" onClick={() => followUp(a.id)} disabled={drafting === a.id} className="ml-1 rounded-full border border-line px-2 py-0.5 text-[11px] text-fg-3 hover:text-fg disabled:opacity-50">
+                  {drafting === a.id ? "drafting…" : "draft follow-up"}
+                </button>
+                {draft?.id === a.id && (
+                  <div className="mt-2 rounded-md border border-line bg-bg p-3">
+                    <pre className="whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-fg-2">{draft.text}</pre>
+                    <div className="mt-2 flex gap-3 text-[11px]">
+                      <button type="button" onClick={() => navigator.clipboard?.writeText(draft.text)} className="text-fg-3 underline underline-offset-2 hover:text-fg">Copy</button>
+                      <button type="button" onClick={() => followUp(a.id)} className="text-fg-3 underline underline-offset-2 hover:text-fg">Again</button>
+                      <span className="text-fg-3">Paste into your own mail. Nothing is sent from here.</span>
+                    </div>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -56,7 +78,14 @@ export function Pipeline({ apps }: { apps: Application[] }) {
                         <button key={x} type="button" onClick={() => patch(a.id, { stage: x })} className="rounded-full border border-line px-2 py-0.5 text-[11px] text-fg-3 hover:text-fg">{x}</button>
                       ))}
                       <button type="button" onClick={() => setOpen(open === a.id ? null : a.id)} className="rounded-full border border-line px-2 py-0.5 text-[11px] text-fg-3 hover:text-fg">edit</button>
+                      <button type="button" onClick={() => followUp(a.id)} disabled={drafting === a.id} className="rounded-full border border-line px-2 py-0.5 text-[11px] text-fg-3 hover:text-fg disabled:opacity-50">{drafting === a.id ? "drafting…" : "follow-up"}</button>
                     </div>
+                    {draft?.id === a.id && !due.some((d) => d.id === a.id) && (
+                      <div className="mt-2 rounded-md border border-line bg-fill/40 p-2">
+                        <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-fg-2">{draft.text}</pre>
+                        <button type="button" onClick={() => navigator.clipboard?.writeText(draft.text)} className="mt-1 text-[11px] text-fg-3 underline underline-offset-2 hover:text-fg">Copy</button>
+                      </div>
+                    )}
                     {open === a.id && (
                       <form
                         className="mt-2 space-y-2"
