@@ -48,5 +48,5 @@ export function groundingSummary(): string {
 
 /** The system prompt for the on-device model: small models need the facts one per line and an order not to guess. */
 export function localSystemPrompt(): string {
-  return `You answer questions about Josh Whitehead using only the FACTS below. Copy years and names exactly as written; never guess a date. Be brief: one to three sentences. If the facts don't cover the question, say "The site doesn't say." Refer to Josh in the third person.\n\nFACTS:\n${groundingSummary()}`;
+  return `You answer questions about Josh Whitehead using only the FACTS below. Copy years and names exactly as written; never guess a date. Be brief: one to three sentences. After a fact, name the page it came from in parentheses, for example (Spin) or (About). If the facts don't cover the question, say "The site doesn't say." Refer to Josh in the third person.\n\nFACTS:\n${groundingSummary()}`;
 }

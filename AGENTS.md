@@ -21,6 +21,8 @@
 > (node:test, native type stripping, tests beside the code as `*.test.ts`),
 > and builds on every push. `app/error.tsx` and `app/global-error.tsx` exist.
 > `components/lab/desktop-only.tsx` keeps phones from booting the 3D city.
+> Model answers' parenthetical sources become links via `components/lab/cited.tsx`
+> (`lib/sources.ts` builds the label→route table; `lib/citation.ts` is the pure resolver).
 > Machine layer: `/resume`, JSON-LD in `components/json-ld.tsx`,
 > `app/opengraph-image.tsx` (Instrument Serif + Geist TTFs in `app/fonts`),
 > `app/feed.xml` (RSS of the essays), `public/llms.txt`, AI-open `robots.ts`.

@@ -7,6 +7,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { Cited } from "./cited";
 import type { MLCEngine } from "@mlc-ai/web-llm";
 
 const MODELS = [
@@ -157,7 +158,7 @@ export function LocalLLM({ system }: { system: string }) {
                 <li key={i} className={m.role === "user" ? "text-fg" : "text-fg-2"}>
                   <span className="block text-xs text-fg-3">{m.role === "user" ? "You" : MODELS.find((x) => x.id === model)?.label}</span>
                   <p className="mt-1 whitespace-pre-wrap text-[15px] leading-relaxed">
-                    {m.content || <span className="inline-block h-4 w-2 animate-pulse rounded-sm bg-fg-3/60 align-middle" aria-label="thinking" />}
+                    {m.content ? m.role === "assistant" ? <Cited text={m.content} /> : m.content : <span className="inline-block h-4 w-2 animate-pulse rounded-sm bg-fg-3/60 align-middle" aria-label="thinking" />}
                   </p>
                 </li>
               ))}
