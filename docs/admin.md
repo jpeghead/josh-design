@@ -82,6 +82,13 @@ data/admin/               companies.json, jobs.json, profile.json,
   submitted | failed | stopped`), steps[], screenshots[], answers{},
   startedAt, finishedAt, error.
 
+## Adding companies
+
+Setup → "Add a company": type a name or careers URL; `lib/admin/discover.ts`
+probes Greenhouse, Ashby, and Lever with a few slug spellings and offers the
+boards that answered. Companies without a public board on those three
+cannot be scanned; paste the exact slug from the careers URL if a guess misses.
+
 ## Verified systems (dry runs, never submitted)
 
 - **Greenhouse** (Anthropic): 12 of 25 fields by rule, custom dropdowns read

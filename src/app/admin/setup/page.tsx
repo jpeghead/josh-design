@@ -3,6 +3,7 @@ import { anthropicConfigured } from "@/lib/anthropic";
 import type { Company } from "@/lib/admin/types";
 import { getProfile } from "@/lib/admin/resume/profile";
 import { ProfileEditor } from "@/components/admin/profile-editor";
+import { AddCompany } from "@/components/admin/add-company";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export default function Setup() {
         <dt className="text-fg-3">Phone</dt>
         <dd className="text-fg-2">{profile.phone ? profile.phone : "Not set. Forms that require a phone will wait for you; add it to the profile below."}</dd>
       </dl>
+      <AddCompany />
       <ProfileEditor initial={profile} />
     </div>
   );
