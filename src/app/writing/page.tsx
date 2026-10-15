@@ -43,7 +43,7 @@ export default function WritingPage() {
                 key={e.slug}
                 href={`/writing/${e.slug}`}
                 title={e.title}
-                meta={e.date ? new Date(e.date).getFullYear() : undefined}
+                meta={[e.date ? new Date(e.date).getFullYear() : null, `${Math.max(1, Math.round(e.html.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length / 230))} min read`].filter(Boolean).join(" · ")}
                 body={e.description}
               />
             ))}

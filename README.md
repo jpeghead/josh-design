@@ -1,5 +1,7 @@
 # josh.design
 
+[![CI](https://github.com/jpeghead/josh-design/actions/workflows/ci.yml/badge.svg)](https://github.com/jpeghead/josh-design/actions/workflows/ci.yml)
+
 The personal site of Josh Whitehead: a designer who builds AI products, with
 agents in the loop. Live at josh.design (soon); runs locally with the commands
 below.

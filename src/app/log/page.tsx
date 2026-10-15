@@ -28,6 +28,18 @@ export default async function Page() {
   }
   const first = commits[commits.length - 1];
   const spanDays = first ? Math.max(1, Math.round((Date.now() - Date.parse(first.date)) / 86400000)) : 0;
+  // one bar per day from the first shown commit to today, LA time
+  const dayKey = (ms: number) => new Date(ms).toLocaleDateString("en-CA", { timeZone: "America/Los_Angeles" });
+  const perDay: { key: string; n: number }[] = [];
+  if (first) {
+    const counts = new Map<string, number>();
+    for (const c of commits) counts.set(dayKey(Date.parse(c.date)), (counts.get(dayKey(Date.parse(c.date))) ?? 0) + 1);
+    for (let t = Date.parse(first.date); t <= Date.now() + 86400000; t += 86400000) {
+      const k = dayKey(t);
+      if (!perDay.length || perDay[perDay.length - 1].key !== k) perDay.push({ key: k, n: counts.get(k) ?? 0 });
+    }
+  }
+  const maxDay = Math.max(1, ...perDay.map((d) => d.n));
 
   return (
     <Container>
@@ -61,6 +73,23 @@ export default async function Page() {
               <dd className="tighter mt-1 text-2xl font-semibold">{ago(commits[0].date)}</dd>
             </div>
           </dl>
+          <div className="mt-8" aria-label="Commits per day">
+            <div className="flex h-14 items-end gap-px">
+              {perDay.map((d) => (
+                <span
+                  key={d.key}
+                  title={`${d.key}: ${d.n} commit${d.n === 1 ? "" : "s"}`}
+                  className={`min-w-[2px] flex-1 rounded-sm ${d.n ? (d.n === maxDay ? "bg-fg" : "bg-fg-3") : "bg-line"}`}
+                  style={{ height: d.n ? `${Math.max(12, (d.n / maxDay) * 100)}%` : "4px" }}
+                />
+              ))}
+            </div>
+            <div className="mt-2 flex justify-between text-[11px] tabular-nums text-fg-3">
+              <span>{perDay[0]?.key}</span>
+              <span>one bar per day · brightest is the busiest</span>
+              <span>today</span>
+            </div>
+          </div>
           {[...groups.entries()].map(([d, list]) => (
             <section key={d} className="grid gap-4 border-b border-line py-8 sm:grid-cols-[14rem_1fr]" aria-label={d}>
               <Label>
