@@ -695,8 +695,11 @@ export async function submitApplication(id: string): Promise<Application | undef
     a.status = "submitting";
     log(a, "Submitting.");
     const btn = l.page.locator('button[type=submit], input[type=submit], button:has-text("Submit"), button:has-text("Submit application"), button:has-text("Apply")').last();
+    const urlBefore = l.page.url();
+    const fieldsBefore = await l.page.locator("[data-apply-key]").count();
     await btn.click();
-    await l.page.waitForTimeout(4000);
+    await Promise.race([l.page.waitForURL((u) => u.toString() !== urlBefore, { timeout: 6000 }).catch(() => undefined), l.page.waitForTimeout(4000)]);
+    await l.page.waitForTimeout(1500);
     const shot = join(OUT, `${a.id}-submitted.png`);
     await l.page.screenshot({ path: shot, fullPage: true });
     a.screenshot = shot;
@@ -706,8 +709,12 @@ export async function submitApplication(id: string): Promise<Application | undef
       log(a, a.message);
       return a;
     }
+    // a real confirmation says so in so many words, and the form is gone; a job description that mentions "success" is not one
     const body = (await l.page.textContent("body")) ?? "";
-    if (/thank|received|submitted|success|we'll be in touch|application has been/i.test(body)) {
+    const fieldsAfter = await l.page.locator("[data-apply-key]").count();
+    const formGone = fieldsAfter < Math.ceil(fieldsBefore / 2) || l.page.url() !== urlBefore;
+    const saidSo = /thank you for (applying|your application|your interest)|application (has been |was )?(received|submitted|sent)|we('ve| have) received your application|successfully (submitted|applied)|your application is in|we'll be in touch/i.test(body);
+    if (saidSo && formGone) {
       a.status = "submitted";
       a.stage = "applied";
       a.submittedAt = new Date().toISOString();
@@ -716,7 +723,9 @@ export async function submitApplication(id: string): Promise<Application | undef
       a.message = "Submitted. The confirmation is in the screenshot.";
     } else {
       a.status = "review";
-      a.message = "Clicked Submit but saw no confirmation. Check the open browser: a required field or a CAPTCHA may be waiting.";
+      const errors = await l.page.locator('[aria-invalid="true"], .error, [class*="error" i]:not(:empty)').allInnerTexts().catch(() => [] as string[]);
+      const hint = errors.map((e) => e.trim()).filter((e) => e && e.length < 120).slice(0, 3).join(" · ");
+      a.message = `Clicked Submit but saw no confirmation${formGone ? "" : " and the form is still there"}. ${hint ? `The form says: ${hint}.` : "A required field or a CAPTCHA may be waiting; check the screenshot."}`;
     }
     a.finishedAt = new Date().toISOString();
     log(a, a.message);

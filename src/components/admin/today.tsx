@@ -200,6 +200,17 @@ export function Today(p: Props) {
             </ul>
           )}
         </section>
+        <details className="rounded-xl border border-line bg-fill/40 p-4 text-[13px] text-fg-2">
+          <summary className="cursor-pointer text-sm text-fg">How the cockpit works</summary>
+          <ol className="mt-3 list-decimal space-y-2 pl-5">
+            <li><span className="text-fg">Scan.</span> 225 boards and the Hacker News thread, on their own when the last scan is twelve hours old. Rules keep design and builder titles; Claude scores each against your record, 0 to 100. ↑ and ↓ on any role teach it.</li>
+            <li><span className="text-fg">Prepare.</span> Here or on Jobs. Each run tailors the résumé from your approved base to that posting, sets it in a template (rotating for the A/B), fills the form in a background browser, drafts the cover letter and written answers, and stops.</li>
+            <li><span className="text-fg">Review.</span> The Queue shows one run at a time: screenshot, every field editable, Draft for written questions, then Submit. Nothing is sent until you press it. CAPTCHAs and agreements are yours; Open visibly gives you a window.</li>
+            <li><span className="text-fg">Track.</span> Applications holds every submission. Click the stage when something happens (replied, interviewing, offer); each click stamps the date and suggests a next action, and anything due shows here.</li>
+            <li><span className="text-fg">Prepare for the call.</span> Each job page has a brief (what they want, where you are strong and thin, likely questions) and a practice interview.</li>
+            <li><span className="text-fg">The record.</span> Setup holds the answers forms ask and the facts every résumé may use. Nothing is ever invented; add a fact there and every version can use it.</li>
+          </ol>
+        </details>
         <section className="text-[13px] text-fg-3">
           <p><Link href="/admin/jobs" className="text-fg-2 hover:text-fg">Jobs</Link> is the full list with keys (press ? there).</p>
           <p className="mt-1"><Link href="/admin/queue" className="text-fg-2 hover:text-fg">Queue</Link> holds what the agent prepared.</p>
