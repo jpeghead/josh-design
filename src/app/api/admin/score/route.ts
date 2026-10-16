@@ -63,7 +63,18 @@ ${profile}${exampleText}`,
   };
   // five at a time: fast enough, gentle on rate limits
   for (let i = 0; i < todo.length; i += 5) await Promise.all(todo.slice(i, i + 5).map((p) => scoreOne(p).catch(() => undefined)));
-  jobs.sort((a, b) => b.score - a.score);
-  writeJson("jobs", jobs);
+  // apply the scores to the file as it stands now, so hides, saves, notes, and ↑/↓ made during the run survive
+  const scoredIds = new Map(todo.filter((p) => p.scoredBy === "claude").map((p) => [p.id, p]));
+  const current = readJson<Posting[]>("jobs", []);
+  for (const p of current) {
+    const s = scoredIds.get(p.id);
+    if (!s) continue;
+    p.score = s.score;
+    p.scoreWhy = s.scoreWhy;
+    p.persona = s.persona;
+    p.scoredBy = "claude";
+  }
+  current.sort((a, b) => b.score - a.score);
+  writeJson("jobs", current);
   return Response.json({ scored });
 }

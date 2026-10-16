@@ -1,5 +1,5 @@
 import { anthropicConfigured } from "@/lib/anthropic";
-import { buildResume } from "./build";
+import { buildResume, bulletBudget } from "./build";
 import { postingKeywords, roughKeywords, tailorResume } from "./model";
 import { getProfile } from "./profile";
 import { coverage, currentBase, listResumes, newResume, saveResume } from "./store";
@@ -52,8 +52,7 @@ export async function fitToTwoPages(r: Resume): Promise<Resume> {
     if (count <= 2) return r;
     const d = r.data;
     // first, any role over its budget for its position (the model likes to add one); then the oldest roles' extras
-    const caps = [4, 3, 3, 2, 2, 1, 1];
-    const over = d.experience.find((e, i) => e.bullets.length > (caps[i] ?? 1));
+    const over = d.experience.find((e, i) => e.bullets.length > bulletBudget(i));
     const roles = [...d.experience].reverse();
     const victim = over ?? roles.find((e) => e.bullets.length > 1) ?? null;
     if (victim) victim.bullets.pop();

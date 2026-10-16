@@ -32,7 +32,7 @@ export async function runScan(): Promise<ScanRun> {
       kept++;
       const prev = byId.get(p.id);
       if (prev) {
-        byId.set(p.id, { ...p, status: prev.status, notes: prev.notes, firstSeen: prev.firstSeen, lastSeen: now, score: prev.scoredBy === "claude" ? prev.score : p.score, scoreWhy: prev.scoredBy === "claude" ? prev.scoreWhy : p.scoreWhy, scoredBy: prev.scoredBy, persona: prev.scoredBy === "claude" ? prev.persona : p.persona });
+        byId.set(p.id, { ...p, status: prev.status, notes: prev.notes, verdict: prev.verdict, firstSeen: prev.firstSeen, lastSeen: now, score: prev.scoredBy === "claude" ? prev.score : p.score, scoreWhy: prev.scoredBy === "claude" ? prev.scoreWhy : p.scoreWhy, scoredBy: prev.scoredBy, persona: prev.scoredBy === "claude" ? prev.persona : p.persona });
       } else {
         byId.set(p.id, p);
         added++;
@@ -40,6 +40,21 @@ export async function runScan(): Promise<ScanRun> {
     }
   });
 
+  // the boards took a while; anything Josh did to a posting meanwhile (hide, save, ↑/↓, a note, a Claude score) wins
+  const latest = new Map(readJson<Posting[]>("jobs", []).map((p) => [p.id, p]));
+  for (const [id, p] of byId) {
+    const cur = latest.get(id);
+    if (!cur) continue;
+    p.status = cur.status;
+    p.notes = cur.notes;
+    p.verdict = cur.verdict;
+    if (cur.scoredBy === "claude") {
+      p.score = cur.score;
+      p.scoreWhy = cur.scoreWhy;
+      p.persona = cur.persona;
+      p.scoredBy = "claude";
+    }
+  }
   const cutoff = Date.now() - 30 * 86400000;
   const merged = [...byId.values()].filter((p) => Date.parse(p.lastSeen) > cutoff || p.status === "applied" || p.status === "saved");
   merged.sort((a, b) => b.score - a.score);

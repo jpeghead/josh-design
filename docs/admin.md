@@ -82,6 +82,26 @@ data/admin/               companies.json, jobs.json, profile.json,
   submitted | failed | stopped`), steps[], screenshots[], answers{},
   startedAt, finishedAt, error.
 
+## Review pass, 2026-10-16
+
+A correctness review over the admin code found twenty things; all fixed:
+scan and Claude scoring now write their results into the jobs file as it
+stands at the end of the run rather than a snapshot from the start (an
+edit made during a two-minute scoring run used to vanish); scans keep
+verdicts; an instruction edit keeps the template; a run whose tailoring
+fails gets a copy of the base rather than mutating the base's template;
+the two-page fit is re-run after the A/B template is chosen; the visible
+Apply tailors the base Josh picked; a run still tailoring is not marked
+lost; short terms like "AI" need a whole-word match for coverage; a model
+reply missing a section keeps the section it was given instead of saving
+an unrenderable résumé; one headless Chromium prints every PDF
+(thumbnails no longer print the whole résumé to find a folder); the
+profile cleanup killed only the window on the shared profile, not the
+background copies; a login wall on a background run says to open it
+visibly and leaves a screenshot; answers from Setup are escaped before
+they become patterns; Lever pay keeps one currency; the Word export lists
+service once.
+
 ## The résumé, as a document
 
 What screeners read in October 2026, from the sources below (practitioner

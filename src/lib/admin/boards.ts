@@ -104,7 +104,12 @@ export async function lever(c: Company): Promise<Posting[]> {
       applyUrl: x.applyUrl ?? x.hostedUrl,
       description: (x.descriptionPlain ?? "").slice(0, 12000),
       postedAt: x.createdAt ? new Date(x.createdAt).toISOString() : null,
-      pay: x.salaryRange?.min && x.salaryRange?.max ? `${x.salaryRange.currency === "USD" || !x.salaryRange.currency ? "$" : `${x.salaryRange.currency} `}${Math.round(x.salaryRange.min / 1000)}K – $${Math.round(x.salaryRange.max / 1000)}K` : undefined,
+      pay: (() => {
+        const r = x.salaryRange;
+        if (!r?.min || !r?.max) return undefined;
+        const unit = r.currency === "USD" || !r.currency ? "$" : `${r.currency} `;
+        return `${unit}${Math.round(r.min / 1000)}K – ${unit}${Math.round(r.max / 1000)}K`;
+      })(),
     })
   );
 }

@@ -36,12 +36,16 @@ function restates(summary: string, bullet: string): boolean {
   return hit / b.size >= 0.7;
 }
 
+/** How many bullets a role gets by position: the current role carries the most; the oldest two get one line each so the whole thing holds two pages. */
+export function bulletBudget(i: number, maxBullets = 4): number {
+  return i === 0 ? maxBullets : i < 3 ? maxBullets - 1 : i < 5 ? 2 : 1;
+}
+
 /** Build a résumé from the profile for a persona. Keywords (from a posting) reorder bullets but never add facts. */
 export function buildResume(profile: Profile, persona: Persona, keywords: string[] = [], maxBullets = 4): ResumeData {
   const experience = profile.experience.map((e, i) => {
     const sorted = [...e.bullets].filter((b) => !restates(e.summary, b.text)).sort((a, b) => rank(b.tags, b.text, persona, keywords) - rank(a.tags, a.text, persona, keywords));
-    // the current role carries the most; the oldest two get one line each so the whole thing holds two pages
-    const n = i === 0 ? maxBullets : i < 3 ? maxBullets - 1 : i < 5 ? 2 : 1;
+    const n = bulletBudget(i, maxBullets);
     // the oldest roles keep their bullets but lose the role summary; two pages is the whole budget
     return { company: e.company, role: e.role, start: e.start, end: e.end, location: e.location, summary: i < 4 ? e.summary : undefined, bullets: sorted.slice(0, n).map((b) => b.text), client: e.client };
   });

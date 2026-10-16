@@ -1,12 +1,12 @@
 import { dirname, join } from "node:path";
-import { mkdirSync } from "node:fs";
-import { execSync } from "node:child_process";
+import { mkdirSync, rmSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import type { Browser, BrowserContext, Page } from "playwright";
 import { anthropicClient, anthropicConfigured } from "@/lib/anthropic";
 import { DATA_DIR } from "../store";
 import { getProfile, type Profile } from "../resume/profile";
 import { socials } from "@/content/about";
-import { toPdf } from "../resume/export";
+import { printPdf, toPdf } from "../resume/export";
 import { getResume } from "../resume/store";
 import { readJson } from "../store";
 import { renderLetterHtml } from "../resume/letter";
@@ -38,7 +38,7 @@ async function closeRun(id: string) {
   if (!l) return;
   await l.context.close().catch(() => {});
   live.delete(id);
-  if (l.profileDir && l.profileDir !== PROFILE_DIR) execSync(`rm -rf "${l.profileDir}"`);
+  if (l.profileDir && l.profileDir !== PROFILE_DIR) rmSync(l.profileDir, { recursive: true, force: true });
 }
 
 function log(a: Application, text: string) {
@@ -193,6 +193,8 @@ const RX = {
   privacy: /privacy|consent|agree|acknowledg|terms/i,
 };
 
+const rxEscape = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 function pickOption(options: string[] | undefined, prefer: RegExp[]): string | undefined {
   if (!options) return undefined;
   for (const r of prefer) {
@@ -235,12 +237,12 @@ function decide(f: Field, profile: Profile, resume: Resume): { value?: string; s
   if (RX.portfolio.test(L)) return { value: profile.links[0]?.url ?? "", status: "filled" };
   if (RX.relocate.test(L)) {
     if (!a.willingToRelocate) return { status: "review", note: "relocation: answer it on Setup" };
-    const v = pickOption(f.options, [new RegExp(`^${a.willingToRelocate.split(" ")[0]}`, "i")]);
+    const v = pickOption(f.options, [new RegExp(`^${rxEscape(a.willingToRelocate.split(" ")[0])}`, "i")]);
     return { value: v ?? a.willingToRelocate, status: "filled" };
   }
   if (RX.workplace.test(L)) {
     if (!a.workplace) return { status: "review", note: "remote or office: answer it on Setup" };
-    const v = pickOption(f.options, [new RegExp(a.workplace.split(" ")[0], "i"), /^yes/i]);
+    const v = pickOption(f.options, [new RegExp(rxEscape(a.workplace.split(" ")[0]), "i"), /^yes/i]);
     return { value: v ?? a.workplace, status: "filled" };
   }
   if (RX.country.test(L)) {
@@ -274,7 +276,6 @@ function decide(f: Field, profile: Profile, resume: Resume): { value?: string; s
   if (RX.pronoun.test(L)) return a.pronouns ? { value: a.pronouns, status: "filled" } : { status: "left" };
   if (RX.salary.test(L)) return a.salary ? { value: a.salary, status: "filled" } : { status: "review", note: "salary: answer it on Setup" };
   if (RX.start.test(L)) return a.startDate ? { value: a.startDate, status: "filled" } : { status: "review", note: "start date: answer it on Setup" };
-  if (RX.relocate.test(L)) return a.willingToRelocate ? { value: a.willingToRelocate, status: "filled" } : { status: "review", note: "relocation: you decide" };
   if (RX.company.test(L)) return { value: "Boneyard Collective", status: "filled" };
   if (RX.title.test(L)) return { value: "Founder & Design Lead", status: "filled" };
   if (RX.years.test(L)) return { value: "15", status: "filled" };
@@ -368,20 +369,12 @@ async function draftCoverLetter(job: Posting, profile: Profile, resume: Resume):
 }
 
 async function coverLetterPdf(text: string, profile: Profile, job: Posting, appId: string, template?: string): Promise<string> {
-  const { chromium } = await import("playwright");
   const html = renderLetterHtml(text, profile, job, template);
   // named like the résumé, so what the recruiter downloads reads as a document, not a run id
   const dir = join(OUT, appId);
   mkdirSync(dir, { recursive: true });
   const file = join(dir, `${profile.name.trim().split(/\s+/).join("-")}-Cover-Letter-${job.company.replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "")}.pdf`);
-  const browser = await chromium.launch();
-  try {
-    const pg = await browser.newPage();
-    await pg.setContent(html, { waitUntil: "load" });
-    await pg.pdf({ path: file, format: "Letter", preferCSSPageSize: true });
-  } finally {
-    await browser.close();
-  }
+  await printPdf(html, file);
   return file;
 }
 
@@ -504,7 +497,9 @@ export async function startApplication(app: Application, job: Posting, resume: R
       // a background run gets its own copy of the sign-in profile, so several can be open at once
       profileDir = join(DATA_DIR, "browser-runs", a.id);
       // sign-ins and site data come along; the 30 MB of caches do not
-      execSync(`rm -rf "${profileDir}" && mkdir -p "${profileDir}" && rsync -a --exclude 'Cache' --exclude 'Code Cache' --exclude 'GPUCache' --exclude 'Dawn*Cache' --exclude 'Singleton*' --exclude 'LOCK' "${PROFILE_DIR}/" "${profileDir}/"`);
+      rmSync(profileDir, { recursive: true, force: true });
+      mkdirSync(profileDir, { recursive: true });
+      execFileSync("rsync", ["-a", "--exclude", "Cache", "--exclude", "Code Cache", "--exclude", "GPUCache", "--exclude", "Dawn*Cache", "--exclude", "Singleton*", "--exclude", "LOCK", `${PROFILE_DIR}/`, `${profileDir}/`]);
       a.headless = true;
       log(a, "Preparing in the background.");
     } else log(a, "Opening a browser you can watch.");
@@ -517,7 +512,7 @@ export async function startApplication(app: Application, job: Posting, resume: R
       // a browser from an earlier run still holds the profile (the dev server reloaded under it); close it and try once more
       log(a, "An earlier browser was still open on this profile; closing it.");
       try {
-        execSync(`pkill -f "${PROFILE_DIR}"`);
+        execFileSync("pkill", ["-f", `user-data-dir=${PROFILE_DIR}($| )`]);
       } catch {
         /* nothing matched */
       }
@@ -539,8 +534,11 @@ export async function startApplication(app: Application, job: Posting, resume: R
     const wall = await loginWall(page);
     if (wall) {
       a.status = "needs-you";
-      a.message = wall;
-      log(a, wall);
+      a.message = opts.headless ? "This board wants an account, which needs a window: press Open visibly, sign in there (it is remembered), then prepare it again." : wall;
+      const shot = join(OUT, `${a.id}.png`);
+      await page.screenshot({ path: shot, fullPage: true }).catch(() => {});
+      a.screenshot = shot;
+      log(a, a.message);
       return;
     }
     page.setDefaultTimeout(8000);
@@ -655,7 +653,7 @@ export async function startApplication(app: Application, job: Posting, resume: R
     a.message = (e as Error).message.slice(0, 300);
     log(a, `Failed: ${a.message}`);
     await closeRun(a.id);
-    if (profileDir !== PROFILE_DIR) execSync(`rm -rf "${profileDir}"`);
+    if (profileDir !== PROFILE_DIR) rmSync(profileDir, { recursive: true, force: true });
   }
 }
 

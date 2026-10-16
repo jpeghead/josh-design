@@ -13,7 +13,7 @@ const OUT = join(DATA_DIR, "out");
  * name recruiters and parsers expect: First-Last-Resume.pdf, with the
  * company appended on a tailored one. The folder keeps versions apart.
  */
-function outDir(r: Resume) {
+export function outDir(r: Resume) {
   const dir = join(OUT, r.id);
   mkdirSync(dir, { recursive: true });
   return dir;
@@ -24,18 +24,37 @@ function fileBase(r: Resume) {
   return `${name}-Resume${co}`;
 }
 
-/** Text-layer PDF through Chromium: the same HTML as the preview, printed at Letter. */
-export async function toPdf(r: Resume): Promise<string> {
+/**
+ * One headless Chromium for every PDF this process prints (résumés,
+ * thumbnails, cover letters), kept on globalThis so dev reloads share it.
+ * A page per print; the browser is relaunched if it has gone away.
+ */
+const g = globalThis as unknown as { __printBrowser?: Promise<import("playwright").Browser> };
+export async function printBrowser(): Promise<import("playwright").Browser> {
   const { chromium } = await import("playwright");
-  const file = join(outDir(r), `${fileBase(r)}.pdf`);
-  const browser = await chromium.launch();
+  if (g.__printBrowser) {
+    const b = await g.__printBrowser.catch(() => null);
+    if (b && b.isConnected()) return b;
+  }
+  g.__printBrowser = chromium.launch();
+  return g.__printBrowser;
+}
+
+/** Print HTML to a PDF file through the shared browser. */
+export async function printPdf(html: string, file: string): Promise<void> {
+  const page = await (await printBrowser()).newPage();
   try {
-    const page = await browser.newPage();
-    await page.setContent(renderResumeHtml(r.data, { fontCss: resumeFontCss(), template: r.template }), { waitUntil: "load" });
+    await page.setContent(html, { waitUntil: "load" });
     await page.pdf({ path: file, format: "Letter", printBackground: true, preferCSSPageSize: true });
   } finally {
-    await browser.close();
+    await page.close().catch(() => {});
   }
+}
+
+/** Text-layer PDF: the same HTML as the preview, printed at Letter. */
+export async function toPdf(r: Resume): Promise<string> {
+  const file = join(outDir(r), `${fileBase(r)}.pdf`);
+  await printPdf(renderResumeHtml(r.data, { fontCss: resumeFontCss(), template: r.template }), file);
   return file;
 }
 
@@ -78,7 +97,7 @@ export async function toDocx(r: Resume): Promise<string> {
       children.push(H("Publications"));
       for (const p of d.publications) children.push(P(`${p.title}. ${p.detail}${p.url ? ` ${p.url}` : ""}`));
     }
-    if (s === "education" && d.service) children.push(P(`${d.service.branch}, ${d.service.years}. ${d.service.role}.`));
+    if (s === "education" && d.service && d.education.length) children.push(P(`${d.service.branch}, ${d.service.years}. ${d.service.role}.`));
     if (s === "service" && d.service && !d.education.length) children.push(H("Military service"), P(`${d.service.role}, ${d.service.branch}, ${d.service.years}.`));
   }
   const doc = new Document({ styles: { default: { document: { run: { font: "Calibri", size: 21 } } } }, sections: [{ properties: { page: { margin: { top: 864, bottom: 864, left: 936, right: 936 } } }, children }] });

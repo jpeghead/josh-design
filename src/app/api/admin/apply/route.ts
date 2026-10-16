@@ -2,9 +2,9 @@ import { readJson } from "@/lib/admin/store";
 import type { Posting } from "@/lib/admin/types";
 import { getResume } from "@/lib/admin/resume/store";
 import { newApplication, saveApplication } from "@/lib/admin/apply/store";
-import { tailoredFor } from "@/lib/admin/resume/tailor";
+import { fitToTwoPages, tailorFor } from "@/lib/admin/resume/tailor";
 import { pickTemplate } from "@/lib/admin/resume/ab";
-import { currentBase, saveResume } from "@/lib/admin/resume/store";
+import { currentBase, newResume, saveResume } from "@/lib/admin/resume/store";
 import { templateById } from "@/lib/admin/resume/templates";
 import { startApplication } from "@/lib/admin/apply/agent";
 import { listApplications } from "@/lib/admin/apply/store";
@@ -26,14 +26,16 @@ export async function POST(req: Request) {
     // a base résumé is tailored to the posting first; a version already made for this posting is used as is
     let use = resume;
     if (!resume.jobId) {
+      // the base Josh picked is the one tailored, whatever persona the posting leans to
       try {
-        use = await tailoredFor(job);
+        use = await tailorFor(job, resume);
         const k = use.keywords;
-        app.resumeId = use.id;
         app.resumeNote = `Tailored for ${job.company}${k ? ` · ${k.covered.length}/${k.covered.length + k.missing.length} of the posting's terms` : ""}`;
       } catch (e) {
+        use = newResume(resume.persona, `${resume.label} → ${job.company} (untailored)`, structuredClone(resume.data), { basedOn: resume.id, jobId: job.id, company: job.company, template: resume.template, instruction: "copy of the base; tailoring failed" });
         app.resumeNote = `Base résumé (tailoring failed: ${(e as Error).message.slice(0, 80)})`;
       }
+      app.resumeId = use.id;
       app.steps.push({ at: new Date().toISOString(), text: app.resumeNote ?? "" });
       saveApplication(app);
     }
@@ -41,6 +43,7 @@ export async function POST(req: Request) {
     if (use.template !== template) {
       use.template = template;
       saveResume(use);
+      use = await fitToTwoPages(use);
     }
     app.template = template;
     app.resumeNote = `${app.resumeNote ?? "Résumé"} · set in ${templateById(template).name}`;

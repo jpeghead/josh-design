@@ -1,7 +1,7 @@
 import { readJson } from "../store";
 import type { Posting } from "../types";
-import { currentBase, listResumes } from "../resume/store";
-import { tailoredFor } from "../resume/tailor";
+import { currentBase, listResumes, newResume } from "../resume/store";
+import { fitToTwoPages, tailoredFor } from "../resume/tailor";
 import { pickTemplate } from "../resume/ab";
 import { saveResume } from "../resume/store";
 import { templateById } from "../resume/templates";
@@ -74,14 +74,17 @@ export async function kick(): Promise<void> {
         const k = resume.keywords;
         next.resumeNote = `Tailored for ${job.company}${k ? ` · ${k.covered.length}/${k.covered.length + k.missing.length} of the posting's terms` : ""}`;
       } catch (e) {
-        resume = listResumes().find((r) => r.id === next.resumeId) ?? currentBase(job.persona);
+        // a copy of the base for this run, so the approved base itself is never touched
+        const base = listResumes().find((r) => r.id === next.resumeId) ?? currentBase(job.persona);
+        resume = newResume(base.persona, `${base.label} → ${job.company} (untailored)`, structuredClone(base.data), { basedOn: base.id, jobId: job.id, company: job.company, template: base.template, instruction: "copy of the base; tailoring failed" });
         next.resumeNote = `Base résumé (tailoring failed: ${(e as Error).message.slice(0, 80)})`;
       }
-      // the template for this run: rotated for the A/B numbers, or the base's
+      // the template for this run: rotated for the A/B numbers, or the base's; then the two-page check again in that template
       const template = pickTemplate(currentBase(job.persona));
       if (resume.template !== template) {
         resume.template = template;
         saveResume(resume);
+        resume = await fitToTwoPages(resume);
       }
       next.template = template;
       next.resumeNote += ` · set in ${templateById(template).name}`;
@@ -117,7 +120,8 @@ export function queued(id: string) {
 export function reconcile(): number {
   let n = 0;
   for (const a of listApplications()) {
-    if (["starting", "filling", "review", "needs-you", "submitting"].includes(a.status) && !isLive(a.id)) {
+    const young = Date.now() - Date.parse(a.startedAt) < 5 * 60000;
+    if (["filling", "review", "needs-you", "submitting"].includes(a.status) && !isLive(a.id) && !(a.status === "filling" && young)) {
       a.status = "stopped";
       a.finishedAt = new Date().toISOString();
       a.message = "The browser behind this run was lost (the server restarted). Prepare it again.";

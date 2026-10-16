@@ -15,7 +15,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   try {
     const data = await editResume(r.data, instruction.trim(), getProfile());
     const keywords = r.keywords ? coverage(data, [...r.keywords.covered, ...r.keywords.missing]) : undefined;
-    const next = newResume(r.persona, r.label, data, { basedOn: r.id, instruction: instruction.trim(), jobId: r.jobId, company: r.company, keywords });
+    const next = newResume(r.persona, r.label, data, { basedOn: r.id, instruction: instruction.trim(), jobId: r.jobId, company: r.company, template: r.template, keywords });
     return Response.json(await fitToTwoPages(next));
   } catch (e) {
     return Response.json({ error: (e as Error).message }, { status: 500 });

@@ -30,12 +30,27 @@ function bank(p: Profile): string {
   ].join("\n");
 }
 
-function parse(txt: string): ResumeData {
+function parse(txt: string, base: ResumeData): ResumeData {
   const m = txt.match(/\{[\s\S]*\}/);
   if (!m) throw new Error("The model did not return JSON.");
-  const d = JSON.parse(m[0]) as ResumeData;
+  const d = JSON.parse(m[0]) as Partial<ResumeData>;
   if (!d.name || !Array.isArray(d.experience) || !Array.isArray(d.sections)) throw new Error("The model returned an incomplete résumé.");
-  return d;
+  // anything the model left out keeps the value it was given, so a reply missing "skills" cannot save a résumé no renderer can draw
+  const arr = <T>(v: unknown, fallback: T[]): T[] => (Array.isArray(v) ? (v as T[]) : fallback);
+  return {
+    ...base,
+    ...d,
+    name: d.name,
+    headline: typeof d.headline === "string" ? d.headline : base.headline,
+    summary: typeof d.summary === "string" ? d.summary : base.summary,
+    links: arr(d.links, base.links),
+    experience: arr(d.experience, base.experience),
+    builds: arr(d.builds, base.builds),
+    skills: arr(d.skills, base.skills),
+    education: arr(d.education, base.education),
+    publications: arr(d.publications, base.publications),
+    sections: arr(d.sections, base.sections),
+  } as ResumeData;
 }
 
 /** Apply a plain-English instruction ("make the summary shorter", "lead with the Apple work") to a résumé. */
@@ -47,7 +62,7 @@ export async function editResume(data: ResumeData, instruction: string, profile:
     system: `${RULES}\n\nBANK:\n${bank(profile)}`,
     messages: [{ role: "user", content: `CURRENT RESUME JSON:\n${JSON.stringify(data)}\n\nINSTRUCTION: ${instruction}\n\nReturn the full updated JSON.` }],
   });
-  return parse(res.content.map((c) => (c.type === "text" ? c.text : "")).join(""));
+  return parse(res.content.map((c) => (c.type === "text" ? c.text : "")).join(""), data);
 }
 
 /** Pull the terms a parser would look for from a posting: skills, tools, title words, responsibilities. */
@@ -83,7 +98,7 @@ export async function tailorResume(data: ResumeData, p: Posting, keywords: strin
       },
     ],
   });
-  return parse(res.content.map((c) => (c.type === "text" ? c.text : "")).join(""));
+  return parse(res.content.map((c) => (c.type === "text" ? c.text : "")).join(""), data);
 }
 
 /** Rule-based keyword pull for when there is no key: capitalized tool names and known skill words in the posting. */

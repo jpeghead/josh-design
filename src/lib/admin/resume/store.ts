@@ -33,7 +33,9 @@ export function coverage(data: ResumeData, keywords: string[]): { covered: strin
     const key = k.toLowerCase();
     // exact phrase, else every significant word of the term (parentheticals aside), the way semantic screeners credit it
     const parts = key.replace(/\(.*?\)/g, "").split(/[^a-z0-9+#.]+/).map(stem).filter((w) => w.length > 2 && !["and", "the", "for", "with"].includes(w));
-    const hit = text.includes(key) || (parts.length > 0 && parts.every((w) => words.has(w)));
+    const whole = new RegExp(`(^|[^a-z0-9])${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z0-9]|$)`, "i");
+    // a short term ("AI", "ML", "UX") must stand alone; "detail" does not cover "AI"
+    const hit = parts.length > 0 ? text.includes(key) || parts.every((w) => words.has(w)) : whole.test(text);
     (hit ? covered : missing).push(k);
   }
   return { covered, missing };

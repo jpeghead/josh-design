@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
-import { toPdf } from "./export";
+import { outDir, printPdf, toPdf } from "./export";
 import { resumeFontCss } from "./fonts";
 import { renderResumeHtml } from "./render";
 import type { Resume } from "./types";
@@ -19,12 +19,12 @@ export async function resumePages(r: Resume): Promise<{ dir: string; count: numb
   const dir = dirname(pdf);
   const stamp = join(dir, `.pages-${hash}`);
   if (!existsSync(stamp)) {
-    for (const f of readdirSync(dir)) if (/^page-\d+\.png$/.test(f) || f.startsWith(".pages-")) execFileSync("rm", ["-f", join(dir, f)]);
+    for (const f of readdirSync(dir)) if (/^page-\d+\.png$/.test(f) || f.startsWith(".pages-")) rmSync(join(dir, f), { force: true });
     execFileSync("/opt/homebrew/bin/pdftoppm", ["-png", "-r", "120", pdf, join(dir, "page")]);
     // pdftoppm names page-1.png or page-01.png depending on count; normalize
     for (const f of readdirSync(dir)) {
       const m = f.match(/^page-0*(\d+)\.png$/);
-      if (m && f !== `page-${m[1]}.png`) execFileSync("mv", [join(dir, f), join(dir, `page-${m[1]}.png`)]);
+      if (m && f !== `page-${m[1]}.png`) renameSync(join(dir, f), join(dir, `page-${m[1]}.png`));
     }
     writeFileSync(stamp, new Date().toISOString());
   }
@@ -44,22 +44,14 @@ export function pagePng(dir: string, n: number): Buffer | null {
 export async function thumbnail(r: Resume, template: string): Promise<Buffer> {
   const html = renderResumeHtml(r.data, { fontCss: resumeFontCss(), template });
   const hash = createHash("sha1").update(html).digest("hex").slice(0, 10);
-  const dir = join(dirname(await toPdf(r)), "thumbs");
+  const dir = join(outDir(r), "thumbs");
   const file = join(dir, `${template}-${hash}.png`);
   if (existsSync(file)) return readFileSync(file);
-  execFileSync("mkdir", ["-p", dir]);
-  for (const f of readdirSync(dir)) if (f.startsWith(`${template}-`)) execFileSync("rm", ["-f", join(dir, f)]);
-  const { chromium } = await import("playwright");
-  const browser = await chromium.launch();
-  try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "load" });
-    const pdf = join(dir, `${template}-${hash}.pdf`);
-    await page.pdf({ path: pdf, format: "Letter", printBackground: true, preferCSSPageSize: true });
-    execFileSync("/opt/homebrew/bin/pdftoppm", ["-png", "-r", "40", "-f", "1", "-l", "1", "-singlefile", pdf, join(dir, `${template}-${hash}`)]);
-    execFileSync("rm", ["-f", pdf]);
-  } finally {
-    await browser.close();
-  }
+  mkdirSync(dir, { recursive: true });
+  for (const f of readdirSync(dir)) if (f.startsWith(`${template}-`)) rmSync(join(dir, f), { force: true });
+  const pdf = join(dir, `${template}-${hash}.pdf`);
+  await printPdf(html, pdf);
+  execFileSync("/opt/homebrew/bin/pdftoppm", ["-png", "-r", "40", "-f", "1", "-l", "1", "-singlefile", pdf, join(dir, `${template}-${hash}`)]);
+  rmSync(pdf, { force: true });
   return readFileSync(file);
 }
