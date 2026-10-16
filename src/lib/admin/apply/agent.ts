@@ -112,8 +112,14 @@ async function readForm(page: Page): Promise<Field[]> {
     for (const [name, els] of groups) {
       els.forEach((e) => seen.add(e));
       const first = els[0];
-      const fieldset = first.closest("fieldset, [role=group], [role=radiogroup], [class*=question], [class*=field]");
-      const legend = fieldset?.querySelector("legend, [class*=label], label:not(:has(input))")?.textContent?.replace(/\s+/g, " ").trim() ?? name;
+      // the question text may sit a level or two above the box the inputs live in (Lever: .application-label beside .application-field)
+      let legend = "";
+      for (let node: Element | null = first.parentElement, depth = 0; node && depth < 5 && !legend; depth++, node = node.parentElement) {
+        const cand = [...node.querySelectorAll("legend, [class*='label' i], label:not(:has(input)), [class*='question' i] > div:first-child")].find((c) => !c.querySelector("input, select, textarea") && (c.textContent ?? "").trim().length > 2);
+        if (cand) legend = (cand.textContent ?? "").replace(/\s+/g, " ").replace(/[*✱]/g, "").trim();
+        if (node.matches("form, main, body")) break;
+      }
+      if (!legend) legend = name;
       const options = els.map((e) => {
         const lb = e.getAttribute("aria-labelledby")?.split(/\s+/).map((x) => document.getElementById(x)?.textContent ?? "").join(" ").trim();
         return (e.closest("label")?.textContent ?? (e.id ? document.querySelector(`label[for="${CSS.escape(e.id)}"]`)?.textContent : null) ?? lb ?? e.value).replace(/\s+/g, " ").trim();
@@ -620,7 +626,9 @@ export async function startApplication(app: Application, job: Posting, resume: R
     const reviewCount = fields.filter((f) => f.status === "review").length;
     if (await visibleCaptcha(page)) {
       a.status = "needs-you";
-      a.message = "A CAPTCHA is showing. Solve it in the open browser, then press Submit here.";
+      a.message = opts.headless
+        ? "This board shows a CAPTCHA, which needs a window: press Open visibly, solve it there, then Submit."
+        : "A CAPTCHA is showing. Solve it in the open browser, then press Submit here.";
       log(a, a.message);
       return;
     }

@@ -298,5 +298,9 @@ flow (Apply) does the same. Cover letters are named
   the record cannot answer left blank rather than flagged. What stays for
   Josh: start date (blank on Setup), a deadlines question, "interviewed here
   before?", the arbitration agreement, and the AI-policy acknowledgment.
+- **Lever, headless** (Contentsquare): 16 of 20. A custom multiple-choice
+  question whose label sits beside the box the inputs live in is found by
+  walking a few ancestors; the visible hCaptcha ends the run as needs-you
+  with "press Open visibly", since a background run has no window.
 - Model calls use `thinking: between_tools` so short budgets go to the
   answer; the first cover-letter attempt spent its whole budget thinking.
