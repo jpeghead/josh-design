@@ -48,6 +48,7 @@ export async function thumbnail(r: Resume, template: string): Promise<Buffer> {
   const file = join(dir, `${template}-${hash}.png`);
   if (existsSync(file)) return readFileSync(file);
   execFileSync("mkdir", ["-p", dir]);
+  for (const f of readdirSync(dir)) if (f.startsWith(`${template}-`)) execFileSync("rm", ["-f", join(dir, f)]);
   const { chromium } = await import("playwright");
   const browser = await chromium.launch();
   try {

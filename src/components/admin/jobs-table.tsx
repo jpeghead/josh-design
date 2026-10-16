@@ -279,7 +279,10 @@ export function JobsTable({ rows, counts, filters, errors, lastScanAt }: { rows:
             </div>
             {open === p.id && (
               <div className="mt-3 grid gap-4 rounded-lg border border-line bg-fill/50 p-4 text-sm sm:grid-cols-[1fr_16rem]">
-                <pre className="max-h-80 overflow-auto whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-fg-2">{p.description}</pre>
+                <div>
+                  <pre className="max-h-80 overflow-auto whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-fg-2">{p.description}</pre>
+                  <a href={`/admin/jobs/${encodeURIComponent(p.id)}`} className="mt-2 inline-block text-[13px] text-fg-2 underline decoration-fg-3 underline-offset-2 hover:text-fg">The whole posting, fit, and brief →</a>
+                </div>
                 <div className="text-xs text-fg-3">
                   <p className="text-fg-2">Why this score</p>
                   <p className="mt-1">{p.scoreWhy}</p>

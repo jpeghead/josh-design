@@ -23,7 +23,7 @@
 > `components/lab/desktop-only.tsx` keeps phones from booting the 3D city.
 > **Admin cockpit (local only, October 2026):** `/admin` is Josh's job-hunt
 > tool: Today (new since last visit, waiting, due, watchlist), a scanner over
-> ~150 Greenhouse/Ashby/Lever/Workable/Rippling boards plus Hacker News with a
+> ~225 Greenhouse/Ashby/Lever/Workable/Rippling boards plus Hacker News with a
 > role taxonomy, rule scoring, and Claude scoring that learns from ↑/↓
 > verdicts, one page per job (pay, keyword fit, tailoring, brief, practice
 > interview), the résumé studio (the PDF's own pages, two personas, one
