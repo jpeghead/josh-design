@@ -39,10 +39,6 @@ export default function Applications() {
               <p className="text-xs uppercase tracking-[0.14em] text-fg-3">By template (the visual A/B)</p>
               {n.byTemplate.map((p) => <p key={p.template}>{p.template}: {p.submitted} sent, {p.responded} replied</p>)}
             </div>
-            <div className="sm:col-span-4 text-[13px] text-fg-2">
-              <p className="text-xs uppercase tracking-[0.14em] text-fg-3">By the headline the résumé led with</p>
-              {n.byHeadline.map((p) => <p key={p.headline}>{p.headline}: {p.submitted} sent, {p.responded} replied</p>)}
-            </div>
             <div className="sm:col-span-2 text-[13px] text-fg-2">
               <p className="text-xs uppercase tracking-[0.14em] text-fg-3">By how much of the posting&rsquo;s language the résumé carried</p>
               {n.byCoverage.map((p) => <p key={p.bucket}>{p.bucket}: {p.submitted} sent, {p.responded} replied</p>)}

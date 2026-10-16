@@ -172,6 +172,7 @@ const RX = {
   twitter: /twitter|\bx (url|profile|handle)/i,
   other: /^other (website|url|link)/i,
   portfolio: /portfolio|website|personal site|url|link/i,
+  office: /which (office|location|city)|preferred (office|location|city)|office (location|preference)|location preference|where would you (like|prefer) to work/i,
   location: /^(current )?location\b|^city$|where (are|do) you (live|based)|city and state|^address|what is your location/i,
   country: /^country$|country of residence/i,
   resume: /resume|résumé|cv\b/i,
@@ -245,6 +246,11 @@ function decide(f: Field, profile: Profile, resume: Resume): { value?: string; s
   if (RX.country.test(L)) {
     const v = pickOption(f.options, [/^united states/i, /^usa?$/i]);
     return { value: v ?? "United States", status: "filled" };
+  }
+  if (RX.office.test(L) && f.options?.length) {
+    const cities = (a.locations ?? "").split(/[,;]/).map((c) => c.trim()).filter(Boolean);
+    const v = cities.map((c) => f.options?.find((o) => o.toLowerCase().includes(c.toLowerCase().split(",")[0]))).find(Boolean) ?? pickOption(f.options, [/remote/i, /any|no preference|flexible/i]);
+    return v ? { value: v, status: "filled" } : { status: "review", note: "which office: none of your cities is listed" };
   }
   if (RX.location.test(L)) {
     if (f.options?.length) {
@@ -497,7 +503,8 @@ export async function startApplication(app: Application, job: Posting, resume: R
     if (opts.headless) {
       // a background run gets its own copy of the sign-in profile, so several can be open at once
       profileDir = join(DATA_DIR, "browser-runs", a.id);
-      execSync(`rm -rf "${profileDir}" && mkdir -p "${dirname(profileDir)}" && cp -R "${PROFILE_DIR}" "${profileDir}" && rm -f "${profileDir}/SingletonLock" "${profileDir}/SingletonSocket" "${profileDir}/SingletonCookie"`);
+      // sign-ins and site data come along; the 30 MB of caches do not
+      execSync(`rm -rf "${profileDir}" && mkdir -p "${profileDir}" && rsync -a --exclude 'Cache' --exclude 'Code Cache' --exclude 'GPUCache' --exclude 'Dawn*Cache' --exclude 'Singleton*' --exclude 'LOCK' "${PROFILE_DIR}/" "${profileDir}/"`);
       a.headless = true;
       log(a, "Preparing in the background.");
     } else log(a, "Opening a browser you can watch.");
