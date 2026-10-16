@@ -30,7 +30,8 @@ export default async function TodayPage() {
   const waiting = apps.filter((a) => ["review", "needs-you"].includes(a.status));
   const weekMs = Date.now() - 7 * 86400000;
   const week = {
-    prepared: apps.filter((a) => Date.parse(a.startedAt) > weekMs && a.status !== "failed").length,
+    // runs that reached review or went out; dropped test runs do not count as work done
+    prepared: apps.filter((a) => Date.parse(a.startedAt) > weekMs && ["review", "needs-you", "submitting", "submitted"].includes(a.status)).length,
     submitted: apps.filter((a) => a.submittedAt && Date.parse(a.submittedAt) > weekMs).length,
     replies: apps.filter((a) => a.stageAt?.replied && Date.parse(a.stageAt.replied) > weekMs).length,
     interviews: apps.filter((a) => a.stageAt?.interviewing && Date.parse(a.stageAt.interviewing) > weekMs).length,

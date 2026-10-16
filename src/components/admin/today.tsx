@@ -50,6 +50,20 @@ export function Today(p: Props) {
     await fetch("/api/admin/companies", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ source: c.source, slug: c.slug, watch: on }) });
     router.refresh();
   };
+  const [busy, setBusy] = useState<string | null>(null);
+  const prepare = async (ids: string[]) => {
+    if (!ids.length) return;
+    setBusy(ids.length === 1 ? ids[0] : "all");
+    const r = await fetch("/api/admin/apply/batch", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobIds: ids }) });
+    setBusy(null);
+    if (r.ok) router.push("/admin/queue");
+    else setMsg(`Could not queue (${r.status}).`);
+  };
+  const hide = async (id: string) => {
+    await fetch("/api/admin/jobs", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status: "hidden" }) });
+    router.refresh();
+  };
+  const shown = p.fresh.length ? p.fresh : p.top;
   const watched = p.companies.filter((c) => c.watch);
   const matches = q.trim() ? p.companies.filter((c) => !c.watch && c.name.toLowerCase().includes(q.toLowerCase())).slice(0, 6) : [];
   const sinceText = p.since ? new Date(p.since).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "a week ago";
@@ -108,7 +122,14 @@ export function Today(p: Props) {
         )}
 
         <section>
-          <h2 className="text-xs uppercase tracking-[0.14em] text-fg-3">{p.fresh.length ? `New since ${sinceText} · ${p.fresh.length}` : "The best fits right now · 10"}</h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 className="text-xs uppercase tracking-[0.14em] text-fg-3">{p.fresh.length ? `New since ${sinceText} · ${p.fresh.length}` : "The best fits right now · 10"}</h2>
+            {shown.length > 0 && (
+              <button type="button" disabled={!!busy} onClick={() => prepare(shown.map((j) => j.id))} className="rounded-full bg-fg px-3.5 py-1 text-[13px] font-medium text-bg disabled:opacity-50" title="Fill all of these in the background; review them in the queue">
+                {busy === "all" ? "Queuing…" : `Prepare all ${shown.length}`}
+              </button>
+            )}
+          </div>
           <p className="mt-1 text-xs text-fg-3">
             {p.fresh.length ? "Ranked by fit score, highest first. " : `Nothing new above 60 since ${sinceText}, so here is the top of the list. `}
             The score is Claude&rsquo;s read of the chance you get a first interview and would want the job, 0 to 100, from the posting against your record; the line under each is its reason.
@@ -117,14 +138,18 @@ export function Today(p: Props) {
             <p className="mt-2 text-sm text-fg-3">No postings yet. Run a scan from <Link href="/admin/jobs" className="underline decoration-fg-3 underline-offset-2 hover:text-fg">Jobs</Link>.</p>
           ) : (
             <ul className="mt-3 divide-y divide-line border-y border-line">
-              {(p.fresh.length ? p.fresh : p.top).map((j) => (
-                <li key={j.id} className="grid gap-x-4 gap-y-1 py-3 sm:grid-cols-[3rem_1fr]">
+              {shown.map((j) => (
+                <li key={j.id} className="grid gap-x-4 gap-y-1 py-3 sm:grid-cols-[3rem_1fr_auto]">
                   <span className={`tabular-nums text-[15px] font-semibold ${j.score >= 70 ? "text-fg" : "text-fg-2"}`}>{j.score}</span>
                   <div className="min-w-0">
                     <Link href={`/admin/jobs/${encodeURIComponent(j.id)}`} className="text-[15px] text-fg hover:underline">{j.title}</Link>
                     <span className="text-[15px] text-fg-2"> · {j.company}</span>
                     <p className="text-xs text-fg-3">{j.location || "location not stated"}{j.pay ? ` · ${j.pay}` : ""}</p>
                     <p className="mt-1 text-[13px] leading-snug text-fg-2">{j.why}</p>
+                  </div>
+                  <div className="flex items-start gap-2 text-[13px]">
+                    <button type="button" disabled={!!busy} onClick={() => prepare([j.id])} className="rounded-full border border-line px-3 py-1 text-fg-2 hover:text-fg disabled:opacity-50">{busy === j.id ? "…" : "Prepare"}</button>
+                    <button type="button" onClick={() => hide(j.id)} className="rounded-full px-2 py-1 text-fg-3 hover:text-fg" aria-label="Hide">×</button>
                   </div>
                 </li>
               ))}
