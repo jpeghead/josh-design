@@ -196,6 +196,17 @@ failed boards are listed under the scan summary and picked up next time.
 
 ## Adding companies
 
+`scripts/admin-companies.json` is a copy of the board list (name, source,
+slug; nothing private) so the cockpit can be rebuilt on a fresh machine:
+copy it to `data/admin/companies.json` and scan. A second probe on
+2026-10-16 of about 225 more AI-native names found 81 boards and added 75
+companies (Cresta, Decagon, WorkOS, Gumloop, Braintrust, Exa, Firecrawl,
+HeyGen, Tavus, Udio, Rogo, Magic Patterns, Handshake, Oura, and so on);
+the first scan over them kept 247 postings, twelve scoring 70 or more.
+Ambiguous slugs (ro, eve, figure, carbon, beam, vast, glide) were added
+under the name the slug most likely belongs to; a wrong guess only adds
+postings the scorer marks low.
+
 Setup → "Add a company": type a name or careers URL; `lib/admin/discover.ts`
 probes Greenhouse, Ashby, Lever, Workable, and Rippling with a few slug
 spellings and offers the boards that answered. Companies without a public
